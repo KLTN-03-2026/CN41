@@ -6,14 +6,14 @@ class BulkRestoreStudentsRequest extends BaseBulkRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return auth('admin')->check();
     }
 
     public function rules(): array
     {
         return [
             'ids'   => 'required|array|min:1|max:100',
-            'ids.*' => 'required|integer',
+            'ids.*' => 'required|integer|exists:students,id',
         ];
     }
 
@@ -25,6 +25,7 @@ class BulkRestoreStudentsRequest extends BaseBulkRequest
             'ids.min'       => 'Phải chọn ít nhất 1 student.',
             'ids.max'       => 'Không thể xử lý quá 100 student cùng lúc.',
             'ids.*.integer' => 'ID phải là số nguyên.',
+            'ids.*.exists'  => 'Một hoặc nhiều student không tồn tại.',
         ];
     }
 }

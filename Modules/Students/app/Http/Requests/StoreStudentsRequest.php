@@ -13,34 +13,32 @@ class StoreStudentsRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        return auth('admin')->check();
     }
 
-    /**
-     * Validation rules cho việc tạo mới Students.
-     * TODO: Thêm rules cần thiết.
-     */
     public function rules(): array
     {
         return [
-            'name'          => 'required|string|max:255',
-            'email'         => 'required|email|max:255|unique:students,email',
-            'password'      => 'required|string|min:8|confirmed',
-            'avatar'        => 'nullable|url|max:2048',
-            'date_of_birth' => 'nullable|date|before:today',
+            'name'                  => 'required|string|max:255',
+            'email'                 => 'required|email|max:255|unique:students,email',
+            'password'              => 'required|string|min:8|confirmed',
+            'password_confirmation' => 'required|string',
+            'avatar'                => 'nullable|url|max:2048',
+            'date_of_birth'         => 'nullable|date|before:today',
         ];
     }
 
     public function messages(): array
     {
         return [
-            'name.required'          => 'Tên là bắt buộc.',
-            'email.required'         => 'Email là bắt buộc.',
-            'email.unique'           => 'Email đã tồn tại.',
-            'password.required'      => 'Mật khẩu là bắt buộc.',
-            'password.min'           => 'Mật khẩu tối thiểu 8 ký tự.',
-            'password.confirmed'     => 'Xác nhận mật khẩu không khớp.',
-            'date_of_birth.before'   => 'Ngày sinh phải trước hôm nay.',
+            'name.required'                  => 'Tên là bắt buộc.',
+            'email.required'                 => 'Email là bắt buộc.',
+            'email.unique'                   => 'Email đã tồn tại.',
+            'password.required'              => 'Mật khẩu là bắt buộc.',
+            'password.min'                   => 'Mật khẩu tối thiểu 8 ký tự.',
+            'password.confirmed'             => 'Xác nhận mật khẩu không khớp.',
+            'password_confirmation.required' => 'Xác nhận mật khẩu là bắt buộc.',
+            'date_of_birth.before'           => 'Ngày sinh phải trước hôm nay.',
         ];
     }
 

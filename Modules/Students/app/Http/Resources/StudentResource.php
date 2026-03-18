@@ -18,7 +18,6 @@ class StudentResource extends JsonResource
             'email_verified_at' => $this->email_verified_at?->toISOString(),
             'created_at'        => $this->created_at->toISOString(),
             'updated_at'        => $this->updated_at->toISOString(),
-            'deleted_at'        => $this->deleted_at?->toISOString(),
         ];
     }
 }
