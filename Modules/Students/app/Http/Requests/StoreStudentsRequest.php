@@ -23,17 +23,24 @@ class StoreStudentsRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'name'          => 'required|string|max:255',
+            'email'         => 'required|email|max:255|unique:students,email',
+            'password'      => 'required|string|min:8|confirmed',
+            'avatar'        => 'nullable|url|max:2048',
+            'date_of_birth' => 'nullable|date|before:today',
         ];
     }
 
-    /**
-     * Custom messages cho validation errors.
-     */
     public function messages(): array
     {
         return [
-            //
+            'name.required'          => 'Tên là bắt buộc.',
+            'email.required'         => 'Email là bắt buộc.',
+            'email.unique'           => 'Email đã tồn tại.',
+            'password.required'      => 'Mật khẩu là bắt buộc.',
+            'password.min'           => 'Mật khẩu tối thiểu 8 ký tự.',
+            'password.confirmed'     => 'Xác nhận mật khẩu không khớp.',
+            'date_of_birth.before'   => 'Ngày sinh phải trước hôm nay.',
         ];
     }
 

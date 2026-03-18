@@ -3,7 +3,7 @@
 namespace Modules\Students\Repositories;
 
 use App\Repositories\BaseRepository;
-use Modules\Students\Models\Students;
+use Modules\Students\Models\Student;
 
 /**
  * Class StudentsRepository
@@ -14,7 +14,7 @@ use Modules\Students\Models\Students;
  */
 class StudentsRepository extends BaseRepository implements StudentsRepositoryInterface
 {
-    public function __construct(Students $model)
+    public function __construct(Student $model)
     {
         parent::__construct($model);
     }

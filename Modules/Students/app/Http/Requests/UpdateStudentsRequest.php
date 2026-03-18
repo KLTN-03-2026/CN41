@@ -22,18 +22,24 @@ class UpdateStudentsRequest extends FormRequest
      */
     public function rules(): array
     {
+        $id = $this->route('student');
+
         return [
-            //
+            'name'          => 'sometimes|string|max:255',
+            'email'         => "sometimes|email|max:255|unique:students,email,{$id}",
+            'password'      => 'sometimes|string|min:8|confirmed',
+            'avatar'        => 'nullable|url|max:2048',
+            'date_of_birth' => 'nullable|date|before:today',
         ];
     }
 
-    /**
-     * Custom messages cho validation errors.
-     */
     public function messages(): array
     {
         return [
-            //
+            'email.unique'           => 'Email đã tồn tại.',
+            'password.min'           => 'Mật khẩu tối thiểu 8 ký tự.',
+            'password.confirmed'     => 'Xác nhận mật khẩu không khớp.',
+            'date_of_birth.before'   => 'Ngày sinh phải trước hôm nay.',
         ];
     }
 
