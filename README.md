@@ -18,15 +18,18 @@
 
 ## 🛠️ Công nghệ sử dụng
 
-- **Vue.js 3** + **Vite**
+- **Vue.js 3** + **Vite** + **TypeScript** (composables)
 - **Vue Router 4** + **Pinia**
-- **Tailwind CSS** + **Flowbite Vue** (Client UI)
-- **TailAdmin Vue** (Admin UI)
+- **Tailwind CSS v3** (`darkMode: 'class'`) + **Flowbite Vue** (Client UI)
+- **TailAdmin Vue** (Admin UI — đã tích hợp template: sidebar, header, dashboard, dark mode, icons)
 - **Axios** — kết nối Backend API Laravel 12 tại `http://localhost:8000`
-- **lucide-vue-next** — icon system
+- **lucide-vue-next** + **TailAdmin SVG icons** — icon system
 - **VeeValidate + Zod** — form validation
 - **Video.js** — video player
 - **vue3-apexcharts** — biểu đồ Dashboard
+- **vue-toastification** — toast notification
+- **NProgress** — loading bar khi navigate route
+- **@vueuse/core** — composables (useDebounce, useLocalStorage...)
 
 ---
 
@@ -57,14 +60,18 @@ Truy cập: `http://localhost:5173`
 
 ```
 src/
-├── api/          # HTTP calls (Axios)
-├── components/   # common/ | admin/ | client/
-├── layouts/      # AdminLayout.vue | ClientLayout.vue
-├── pages/        # admin/ | client/ | auth/
-├── plugins/      # axios.js (instance + interceptors)
-├── router/       # index.js (routes + guards)
-├── stores/       # adminAuth.js | studentAuth.js | cart.js
-└── utils/        # formatCurrency.js | formatDate.js | formatDuration.js
+├── api/            # HTTP calls (Axios)
+├── components/
+│   ├── common/     # ThemeToggler, CommonGridShape
+│   └── layout/     # TailAdmin: AppSidebar, AppHeader, ThemeProvider, SidebarProvider, header/*
+├── composables/    # useSidebar.ts, useTheme.ts
+├── icons/          # TailAdmin SVG icon components (~48 icons)
+├── layouts/        # AdminLayout.vue (TailAdmin) | ClientLayout.vue (Flowbite)
+├── pages/          # admin/ | client/ | auth/ | ForbiddenPage | NotFoundPage
+├── plugins/        # axios.js (instance + interceptors) | nprogress.js
+├── router/         # index.js (routes + guards)
+├── stores/         # adminAuth.js | studentAuth.js | cart.js
+└── utils/          # formatCurrency.js | formatDate.js | formatDuration.js
 ```
 
 ---

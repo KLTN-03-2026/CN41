@@ -182,16 +182,17 @@ import { useRoute } from 'vue-router'
 
 import {
   GridIcon,
-  CalenderIcon,
   UserCircleIcon,
+  UserGroupIcon,
   PieChartIcon,
   ChevronDownIcon,
   HorizontalDots,
   PageIcon,
-  TableIcon,
+  BoxIcon,
+  BoxCubeIcon,
   ListIcon,
+  TaskIcon,
 } from '@/icons'
-import BoxCubeIcon from '@/icons/BoxCubeIcon.vue'
 import { useSidebar } from '@/composables/useSidebar'
 
 const route = useRoute()
@@ -226,7 +227,7 @@ const menuGroups = [
         path: '/admin/teachers',
       },
       {
-        icon: CalenderIcon,
+        icon: UserGroupIcon,
         name: 'Học viên',
         path: '/admin/students',
       },
@@ -236,12 +237,12 @@ const menuGroups = [
     title: 'Kinh doanh',
     items: [
       {
-        icon: TableIcon,
+        icon: BoxIcon,
         name: 'Đơn hàng',
         path: '/admin/orders',
       },
       {
-        icon: PageIcon,
+        icon: TaskIcon,
         name: 'Mã giảm giá',
         path: '/admin/coupons',
       },

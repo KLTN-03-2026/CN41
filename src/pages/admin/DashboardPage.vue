@@ -105,10 +105,10 @@
           </div>
           <div v-else class="flex items-end gap-2 h-40">
             <div
-              v-for="i in 12"
+              v-for="(h, i) in SKELETON_HEIGHTS"
               :key="i"
               class="flex-1 bg-gray-100 dark:bg-gray-800 rounded animate-pulse"
-              :style="{ height: (Math.random() * 60 + 30) + 'px' }"
+              :style="{ height: h + 'px' }"
             ></div>
           </div>
         </div>
@@ -158,9 +158,7 @@
               class="text-sm text-blue-500 hover:text-blue-600 dark:text-blue-400 flex items-center gap-1"
             >
               Xem tất cả
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-              </svg>
+              <ChevronRightIcon class="w-4 h-4" />
             </router-link>
           </div>
 
@@ -216,8 +214,10 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, markRaw, type Component } from 'vue'
-import { Users, BookOpen, ShoppingBag, TrendingUp } from 'lucide-vue-next'
+import { UserGroupIcon, BoxCubeIcon, BoxIcon, BarChartIcon, ChevronRightIcon } from '@/icons'
 import { formatCurrency } from '@/utils/formatCurrency'
+
+const SKELETON_HEIGHTS = [55, 72, 48, 85, 63, 90, 78, 42, 68, 80, 58, 45]
 
 interface StatItem {
   label: string
@@ -263,7 +263,7 @@ const stats = computed<StatItem[]>(() => [
   {
     label: 'Học viên',
     value: statValues.value.students.toLocaleString('vi'),
-    icon: markRaw(Users),
+    icon: markRaw(UserGroupIcon),
     iconBg: 'bg-blue-100 dark:bg-blue-500/10',
     iconColor: 'text-blue-600 dark:text-blue-400',
     change: '11.01%',
@@ -272,7 +272,7 @@ const stats = computed<StatItem[]>(() => [
   {
     label: 'Khóa học',
     value: statValues.value.courses.toLocaleString('vi'),
-    icon: markRaw(BookOpen),
+    icon: markRaw(BoxCubeIcon),
     iconBg: 'bg-green-100 dark:bg-green-500/10',
     iconColor: 'text-green-600 dark:text-green-400',
     change: '5.2%',
@@ -281,7 +281,7 @@ const stats = computed<StatItem[]>(() => [
   {
     label: 'Đơn hàng',
     value: statValues.value.orders.toLocaleString('vi'),
-    icon: markRaw(ShoppingBag),
+    icon: markRaw(BoxIcon),
     iconBg: 'bg-orange-100 dark:bg-orange-500/10',
     iconColor: 'text-orange-600 dark:text-orange-400',
     change: '9.05%',
@@ -290,7 +290,7 @@ const stats = computed<StatItem[]>(() => [
   {
     label: 'Doanh thu',
     value: formatCurrency(statValues.value.revenue),
-    icon: markRaw(TrendingUp),
+    icon: markRaw(BarChartIcon),
     iconBg: 'bg-purple-100 dark:bg-purple-500/10',
     iconColor: 'text-purple-600 dark:text-purple-400',
     change: '12.3%',
