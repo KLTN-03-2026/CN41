@@ -19,12 +19,19 @@ http.interceptors.request.use((config) => {
 })
 
 // Response interceptor — xử lý lỗi chung
+// Bỏ qua redirect 401 cho các endpoint auth (login/register trả 401 khi sai credentials là bình thường)
+const AUTH_PATHS = ['/admin/auth/login', '/auth/login', '/auth/register', '/auth/forgot-password', '/auth/reset-password']
+
 http.interceptors.response.use(
   (res) => res,
   async (error) => {
     const status = error.response?.status
-    const isAdminRoute = error.config?.url?.startsWith('/admin')
-    if (status === 401) {
+    const requestUrl = error.config?.url || ''
+    const isAuthEndpoint = AUTH_PATHS.some((p) => requestUrl.includes(p))
+
+    // Chỉ redirect khi 401 xảy ra trên route CẦN auth (token hết hạn), không phải trên login/register
+    if (status === 401 && !isAuthEndpoint) {
+      const isAdminRoute = requestUrl.startsWith('/admin')
       if (isAdminRoute) {
         const { useAdminAuthStore } = await import('@/stores/adminAuth')
         const adminStore = useAdminAuthStore()
