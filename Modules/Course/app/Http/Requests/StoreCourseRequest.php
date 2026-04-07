@@ -29,7 +29,7 @@ class StoreCourseRequest extends FormRequest
             'category_ids'   => 'nullable|array',
             'category_ids.*' => 'integer|exists:categories,id',
             'description'    => 'nullable|string|max:10000',
-            'thumbnail'      => 'nullable|url|max:2048',
+            'thumbnail'      => 'nullable|string|max:2048',
             'price'          => 'required|numeric|min:0',
             'sale_price'     => 'nullable|numeric|min:0|lte:price',
             'level'          => 'required|in:beginner,intermediate,advanced',
