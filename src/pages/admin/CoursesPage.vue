@@ -7,6 +7,7 @@
         <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Quản lý tất cả khóa học</p>
       </div>
       <router-link
+        v-if="!isTrashed"
         to="/admin/courses/create"
         class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-colors"
       >
@@ -15,8 +16,40 @@
       </router-link>
     </div>
 
+    <!-- Tabs: Đang hoạt động / Thùng rác -->
+    <div class="flex items-center gap-1 mb-4 p-1 bg-gray-100 dark:bg-white/5 rounded-xl w-fit">
+      <button
+        @click="switchTab(false)"
+        :class="!isTrashed
+          ? 'bg-white dark:bg-gray-800 text-gray-800 dark:text-white shadow-sm'
+          : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'"
+        class="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200"
+      >
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+        </svg>
+        Đang hoạt động
+      </button>
+      <button
+        @click="switchTab(true)"
+        :class="isTrashed
+          ? 'bg-white dark:bg-gray-800 text-red-600 dark:text-red-400 shadow-sm'
+          : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'"
+        class="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200"
+      >
+        <TrashIcon class="w-4 h-4" />
+        Thùng rác
+        <span
+          v-if="trashedCount > 0"
+          class="px-1.5 py-0.5 text-[10px] font-semibold rounded-full bg-red-100 text-red-600 dark:bg-red-500/20 dark:text-red-400"
+        >
+          {{ trashedCount }}
+        </span>
+      </button>
+    </div>
+
     <!-- Filters -->
-    <div class="flex flex-wrap gap-3 mb-4">
+    <div v-if="!isTrashed" class="flex flex-wrap gap-3 mb-4">
       <input
         v-model="filters.search"
         type="text"
@@ -37,12 +70,32 @@
       </select>
     </div>
 
-    <!-- Table -->
-    <div class="rounded-2xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-white/5 overflow-hidden">
+    <!-- Trashed search -->
+    <div v-if="isTrashed" class="flex flex-wrap gap-3 mb-4">
+      <input
+        v-model="trashedFilters.search"
+        type="text"
+        placeholder="Tìm trong thùng rác..."
+        class="input-field w-64"
+        @input="debouncedFetchTrashed"
+      />
+    </div>
+
+    <!-- ═══════════ ACTIVE TABLE ═══════════ -->
+    <div v-if="!isTrashed" class="rounded-2xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-white/5 overflow-hidden">
       <div class="overflow-x-auto">
         <table class="w-full text-sm">
           <thead>
             <tr class="border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-white/5">
+              <th class="w-10 px-4 py-3">
+                <input
+                  type="checkbox"
+                  :checked="isAllSelected"
+                  :indeterminate="isIndeterminate"
+                  @change="toggleSelectAll"
+                  class="w-4 h-4 rounded border-gray-300 text-blue-500 focus:ring-blue-500"
+                />
+              </th>
               <th class="text-left text-xs font-medium text-gray-500 dark:text-gray-400 px-6 py-3">Khóa học</th>
               <th class="text-left text-xs font-medium text-gray-500 dark:text-gray-400 px-6 py-3">Giảng viên</th>
               <th class="text-left text-xs font-medium text-gray-500 dark:text-gray-400 px-6 py-3">Giá</th>
@@ -53,7 +106,7 @@
           </thead>
           <tbody class="divide-y divide-gray-50 dark:divide-gray-800">
             <tr v-if="loading">
-              <td colspan="6" class="text-center py-10 text-gray-400">
+              <td colspan="7" class="text-center py-10 text-gray-400">
                 <svg class="animate-spin w-6 h-6 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
                   <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
@@ -61,13 +114,22 @@
               </td>
             </tr>
             <tr v-else-if="!courses.length">
-              <td colspan="6" class="text-center py-10 text-gray-400 text-sm">Chưa có khóa học nào</td>
+              <td colspan="7" class="text-center py-10 text-gray-400 text-sm">Chưa có khóa học nào</td>
             </tr>
             <tr
               v-for="course in courses"
               :key="course.id"
+              :class="selectedIds.has(course.id) ? 'bg-blue-50 dark:bg-blue-500/5' : ''"
               class="hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
             >
+              <td class="w-10 px-4 py-4">
+                <input
+                  type="checkbox"
+                  :checked="selectedIds.has(course.id)"
+                  @change="toggleSelect(course.id)"
+                  class="w-4 h-4 rounded border-gray-300 text-blue-500 focus:ring-blue-500"
+                />
+              </td>
               <td class="px-6 py-4">
                 <div class="flex items-center gap-3">
                   <img
@@ -168,7 +230,155 @@
       </div>
     </div>
 
-    <!-- Confirm Delete -->
+    <!-- ═══════════ TRASHED TABLE ═══════════ -->
+    <div v-if="isTrashed" class="rounded-2xl border border-red-200 bg-white dark:border-red-900/50 dark:bg-white/5 overflow-hidden">
+      <!-- Warning banner -->
+      <div class="px-6 py-3 bg-red-50 dark:bg-red-500/5 border-b border-red-100 dark:border-red-900/30">
+        <div class="flex items-center gap-2 text-sm text-red-600 dark:text-red-400">
+          <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+          </svg>
+          <span>Các khóa học trong thùng rác. Bạn có thể khôi phục hoặc xóa vĩnh viễn.</span>
+        </div>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-white/5">
+              <th class="w-10 px-4 py-3">
+                <input
+                  type="checkbox"
+                  :checked="isTrashedAllSelected"
+                  :indeterminate="isTrashedIndeterminate"
+                  @change="toggleTrashedSelectAll"
+                  class="w-4 h-4 rounded border-gray-300 text-red-500 focus:ring-red-500"
+                />
+              </th>
+              <th class="text-left text-xs font-medium text-gray-500 dark:text-gray-400 px-6 py-3">Khóa học</th>
+              <th class="text-left text-xs font-medium text-gray-500 dark:text-gray-400 px-6 py-3">Giảng viên</th>
+              <th class="text-left text-xs font-medium text-gray-500 dark:text-gray-400 px-6 py-3">Giá</th>
+              <th class="text-left text-xs font-medium text-gray-500 dark:text-gray-400 px-6 py-3">Đã xóa lúc</th>
+              <th class="text-right text-xs font-medium text-gray-500 dark:text-gray-400 px-6 py-3">Thao tác</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-50 dark:divide-gray-800">
+            <tr v-if="trashedLoading">
+              <td colspan="6" class="text-center py-10 text-gray-400">
+                <svg class="animate-spin w-6 h-6 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                </svg>
+              </td>
+            </tr>
+            <tr v-else-if="!trashedCourses.length">
+              <td colspan="6" class="text-center py-10">
+                <div class="flex flex-col items-center gap-2">
+                  <svg class="w-10 h-10 text-gray-300 dark:text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                  </svg>
+                  <p class="text-sm text-gray-400">Thùng rác trống</p>
+                </div>
+              </td>
+            </tr>
+            <tr
+              v-for="course in trashedCourses"
+              :key="course.id"
+              :class="trashedSelectedIds.has(course.id) ? 'bg-red-50 dark:bg-red-500/5' : ''"
+              class="hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
+            >
+              <td class="w-10 px-4 py-4">
+                <input
+                  type="checkbox"
+                  :checked="trashedSelectedIds.has(course.id)"
+                  @change="toggleTrashedSelect(course.id)"
+                  class="w-4 h-4 rounded border-gray-300 text-red-500 focus:ring-red-500"
+                />
+              </td>
+              <td class="px-6 py-4">
+                <div class="flex items-center gap-3">
+                  <img
+                    v-if="course.thumbnail"
+                    :src="course.thumbnail"
+                    :alt="course.name"
+                    class="w-12 h-8 object-cover rounded shrink-0 opacity-60"
+                  />
+                  <div
+                    v-else
+                    class="w-12 h-8 bg-gray-100 dark:bg-gray-800 rounded shrink-0 flex items-center justify-center opacity-60"
+                  >
+                    <BoxCubeIcon class="w-4 h-4 text-gray-400" />
+                  </div>
+                  <div class="min-w-0">
+                    <p class="font-medium text-gray-500 dark:text-gray-400 truncate max-w-[200px]">{{ course.name }}</p>
+                    <p class="text-xs text-gray-400 mt-0.5">{{ levelLabel(course.level) }}</p>
+                  </div>
+                </div>
+              </td>
+              <td class="px-6 py-4 text-gray-500 dark:text-gray-500">
+                {{ course.teacher?.name || '—' }}
+              </td>
+              <td class="px-6 py-4 text-gray-500 dark:text-gray-500">
+                {{ formatCurrency(Number(course.price)) }}
+              </td>
+              <td class="px-6 py-4 text-gray-500 dark:text-gray-500 text-xs">
+                {{ formatDate(course.deleted_at) }}
+              </td>
+              <td class="px-6 py-4 text-right">
+                <div class="flex items-center justify-end gap-2">
+                  <button
+                    @click="doRestore(course)"
+                    :disabled="restoringId === course.id"
+                    class="p-1.5 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg dark:hover:bg-green-500/10 transition-colors disabled:opacity-50"
+                    title="Khôi phục"
+                  >
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                  </button>
+                  <button
+                    @click="confirmForceDelete(course)"
+                    class="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg dark:hover:bg-red-500/10 transition-colors"
+                    title="Xóa vĩnh viễn"
+                  >
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Trashed Pagination -->
+      <div
+        v-if="trashedPagination && trashedPagination.last_page > 1"
+        class="flex items-center justify-between px-6 py-3 border-t border-gray-100 dark:border-gray-700"
+      >
+        <p class="text-xs text-gray-500 dark:text-gray-400">
+          {{ trashedPagination.from }}–{{ trashedPagination.to }} / {{ trashedPagination.total }} khóa học
+        </p>
+        <div class="flex gap-1">
+          <button
+            v-for="p in trashedPagination.last_page"
+            :key="p"
+            @click="fetchTrashedPage(p)"
+            :class="p === trashedPagination.current_page
+              ? 'bg-red-500 text-white border-red-500'
+              : 'bg-white text-gray-600 dark:bg-white/5 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/10'"
+            class="w-8 h-8 rounded-lg text-sm border border-gray-200 dark:border-gray-700 transition-colors"
+          >
+            {{ p }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════ MODALS ═══════ -->
+
+    <!-- Confirm Soft Delete -->
     <Teleport to="body">
       <div
         v-if="deleteTarget"
@@ -180,6 +390,7 @@
           <p class="text-sm text-gray-500 dark:text-gray-400 mb-5">
             Bạn có chắc muốn xóa khóa học
             <strong class="text-gray-800 dark:text-white/90">{{ deleteTarget.name }}</strong>?
+            <span class="block mt-1 text-xs text-gray-400">Khóa học sẽ được chuyển vào thùng rác.</span>
           </p>
           <div class="flex justify-end gap-3">
             <button
@@ -199,11 +410,223 @@
         </div>
       </div>
     </Teleport>
+
+    <!-- Confirm Force Delete -->
+    <Teleport to="body">
+      <div
+        v-if="forceDeleteTarget"
+        class="fixed inset-0 z-[100000] flex items-center justify-center bg-black/50 px-4"
+        @click.self="forceDeleteTarget = null"
+      >
+        <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-sm p-6">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-full bg-red-100 dark:bg-red-500/10 flex items-center justify-center flex-shrink-0">
+              <svg class="w-5 h-5 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+              </svg>
+            </div>
+            <div>
+              <h3 class="text-base font-semibold text-gray-800 dark:text-white/90">Xóa vĩnh viễn</h3>
+              <p class="text-xs text-red-500">Hành động này không thể hoàn tác!</p>
+            </div>
+          </div>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mb-5">
+            Bạn có chắc muốn xóa vĩnh viễn khóa học
+            <strong class="text-gray-800 dark:text-white/90">{{ forceDeleteTarget.name }}</strong>?
+          </p>
+          <div class="flex justify-end gap-3">
+            <button
+              @click="forceDeleteTarget = null"
+              class="px-4 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400"
+            >
+              Hủy
+            </button>
+            <button
+              @click="doForceDelete"
+              :disabled="forceDeleting"
+              class="px-4 py-2 text-sm rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
+            >
+              {{ forceDeleting ? 'Đang xóa...' : 'Xóa vĩnh viễn' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
+    <!-- Confirm Bulk Delete -->
+    <Teleport to="body">
+      <div
+        v-if="showBulkDeleteConfirm"
+        class="fixed inset-0 z-[100000] flex items-center justify-center bg-black/50 px-4"
+        @click.self="showBulkDeleteConfirm = false"
+      >
+        <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-sm p-6">
+          <h3 class="text-base font-semibold text-gray-800 dark:text-white/90 mb-2">Xóa nhiều khóa học</h3>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mb-5">
+            Bạn có chắc muốn xóa <strong class="text-gray-800 dark:text-white/90">{{ selectedIds.size }}</strong> khóa học đã chọn?
+          </p>
+          <div class="flex justify-end gap-3">
+            <button
+              @click="showBulkDeleteConfirm = false"
+              class="px-4 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400"
+            >
+              Hủy
+            </button>
+            <button
+              @click="doBulkDelete"
+              :disabled="bulkDeleting"
+              class="px-4 py-2 text-sm rounded-lg bg-red-500 text-white hover:bg-red-600 disabled:opacity-50"
+            >
+              {{ bulkDeleting ? 'Đang xóa...' : 'Xóa tất cả' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
+    <!-- Confirm Bulk Force Delete -->
+    <Teleport to="body">
+      <div
+        v-if="showBulkForceDeleteConfirm"
+        class="fixed inset-0 z-[100000] flex items-center justify-center bg-black/50 px-4"
+        @click.self="showBulkForceDeleteConfirm = false"
+      >
+        <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-sm p-6">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-full bg-red-100 dark:bg-red-500/10 flex items-center justify-center flex-shrink-0">
+              <svg class="w-5 h-5 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+              </svg>
+            </div>
+            <div>
+              <h3 class="text-base font-semibold text-gray-800 dark:text-white/90">Xóa vĩnh viễn nhiều khóa học</h3>
+              <p class="text-xs text-red-500">Hành động này không thể hoàn tác!</p>
+            </div>
+          </div>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mb-5">
+            Bạn có chắc muốn xóa vĩnh viễn <strong class="text-gray-800 dark:text-white/90">{{ trashedSelectedIds.size }}</strong> khóa học?
+          </p>
+          <div class="flex justify-end gap-3">
+            <button
+              @click="showBulkForceDeleteConfirm = false"
+              class="px-4 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400"
+            >
+              Hủy
+            </button>
+            <button
+              @click="doBulkForceDelete"
+              :disabled="bulkForceDeleting"
+              class="px-4 py-2 text-sm rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
+            >
+              {{ bulkForceDeleting ? 'Đang xóa...' : 'Xóa vĩnh viễn tất cả' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
+    <!-- ═══════ BULK ACTION BARS ═══════ -->
+
+    <!-- Active Bulk Action Bar -->
+    <Transition
+      enter-active-class="transition duration-200 ease-out"
+      enter-from-class="translate-y-full opacity-0"
+      enter-to-class="translate-y-0 opacity-100"
+      leave-active-class="transition duration-150 ease-in"
+      leave-from-class="translate-y-0 opacity-100"
+      leave-to-class="translate-y-full opacity-0"
+    >
+      <div
+        v-if="!isTrashed && selectedIds.size > 0"
+        class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-4 px-6 py-3 rounded-2xl bg-gray-900 dark:bg-gray-800 text-white shadow-2xl border border-gray-700"
+      >
+        <span class="text-sm font-medium">
+          Đã chọn <strong class="text-blue-400">{{ selectedIds.size }}</strong> khóa học
+        </span>
+        <div class="w-px h-5 bg-gray-600"></div>
+        <button
+          @click="bulkToggleStatus(1)"
+          :disabled="bulkUpdating"
+          class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-green-500/20 text-green-400 hover:bg-green-500/30 transition-colors disabled:opacity-50"
+        >
+          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+          Đăng
+        </button>
+        <button
+          @click="bulkToggleStatus(0)"
+          :disabled="bulkUpdating"
+          class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30 transition-colors disabled:opacity-50"
+        >
+          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          Nháp
+        </button>
+        <button
+          @click="showBulkDeleteConfirm = true"
+          class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors"
+        >
+          <TrashIcon class="w-3.5 h-3.5" />
+          Xóa
+        </button>
+        <button
+          @click="selectedIds.clear()"
+          class="ml-1 p-1.5 text-gray-400 hover:text-white rounded-lg transition-colors"
+          title="Bỏ chọn"
+        >
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+    </Transition>
+
+    <!-- Trashed Bulk Action Bar -->
+    <Transition
+      enter-active-class="transition duration-200 ease-out"
+      enter-from-class="translate-y-full opacity-0"
+      enter-to-class="translate-y-0 opacity-100"
+      leave-active-class="transition duration-150 ease-in"
+      leave-from-class="translate-y-0 opacity-100"
+      leave-to-class="translate-y-full opacity-0"
+    >
+      <div
+        v-if="isTrashed && trashedSelectedIds.size > 0"
+        class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-4 px-6 py-3 rounded-2xl bg-gray-900 dark:bg-gray-800 text-white shadow-2xl border border-gray-700"
+      >
+        <span class="text-sm font-medium">
+          Đã chọn <strong class="text-red-400">{{ trashedSelectedIds.size }}</strong> khóa học
+        </span>
+        <div class="w-px h-5 bg-gray-600"></div>
+        <button
+          @click="doBulkRestore"
+          :disabled="bulkRestoring"
+          class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-green-500/20 text-green-400 hover:bg-green-500/30 transition-colors disabled:opacity-50"
+        >
+          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+          </svg>
+          Khôi phục
+        </button>
+        <button
+          @click="showBulkForceDeleteConfirm = true"
+          class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors"
+        >
+          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+          </svg>
+          Xóa vĩnh viễn
+        </button>
+        <button
+          @click="trashedSelectedIds.clear()"
+          class="ml-1 p-1.5 text-gray-400 hover:text-white rounded-lg transition-colors"
+          title="Bỏ chọn"
+        >
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+    </Transition>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { useToast } from 'vue-toastification'
 import { PlusIcon, TrashIcon, BoxCubeIcon } from '@/icons'
 import { coursesApi } from '@/api/coursesApi'
@@ -222,8 +645,13 @@ interface Course {
   status: number
   total_students: number
   teacher?: { id: number; name: string; slug: string } | null
+  deleted_at?: string | null
 }
 
+// ── Tab state ─────────────────────────────────────────────────
+const isTrashed = ref(false)
+
+// ── Active state ──────────────────────────────────────────────
 const courses     = ref<Course[]>([])
 const pagination  = ref<any>(null)
 const loading     = ref(true)
@@ -232,7 +660,37 @@ const togglingId  = ref<number | null>(null)
 const deleteTarget = ref<Course | null>(null)
 const deleting    = ref(false)
 
+// ── Bulk selection (active) ───────────────────────────────────
+const selectedIds = reactive(new Set<number>())
+const showBulkDeleteConfirm = ref(false)
+const bulkDeleting = ref(false)
+const bulkUpdating = ref(false)
+
+const isAllSelected = computed(() => courses.value.length > 0 && courses.value.every(c => selectedIds.has(c.id)))
+const isIndeterminate = computed(() => selectedIds.size > 0 && !isAllSelected.value)
+
+// ── Trashed state ─────────────────────────────────────────────
+const trashedCourses    = ref<Course[]>([])
+const trashedPagination = ref<any>(null)
+const trashedLoading    = ref(false)
+const trashedPage       = ref(1)
+const trashedCount      = ref(0)
+const restoringId       = ref<number | null>(null)
+const forceDeleteTarget = ref<Course | null>(null)
+const forceDeleting     = ref(false)
+
+// ── Bulk selection (trashed) ──────────────────────────────────
+const trashedSelectedIds = reactive(new Set<number>())
+const showBulkForceDeleteConfirm = ref(false)
+const bulkForceDeleting = ref(false)
+const bulkRestoring     = ref(false)
+
+const isTrashedAllSelected = computed(() => trashedCourses.value.length > 0 && trashedCourses.value.every(c => trashedSelectedIds.has(c.id)))
+const isTrashedIndeterminate = computed(() => trashedSelectedIds.size > 0 && !isTrashedAllSelected.value)
+
+// ── Filters ───────────────────────────────────────────────────
 const filters = reactive({ search: '', status: '', level: '' })
+const trashedFilters = reactive({ search: '' })
 
 let debounceTimer: ReturnType<typeof setTimeout> | null = null
 function debouncedFetch() {
@@ -240,6 +698,50 @@ function debouncedFetch() {
   debounceTimer = setTimeout(() => fetchPage(1), 400)
 }
 
+let trashedDebounceTimer: ReturnType<typeof setTimeout> | null = null
+function debouncedFetchTrashed() {
+  if (trashedDebounceTimer) clearTimeout(trashedDebounceTimer)
+  trashedDebounceTimer = setTimeout(() => fetchTrashedPage(1), 400)
+}
+
+// ── Tab switching ─────────────────────────────────────────────
+function switchTab(trashed: boolean) {
+  if (isTrashed.value === trashed) return
+  isTrashed.value = trashed
+  if (trashed) {
+    fetchTrashedPage(1)
+  }
+}
+
+// ── Active: Select toggles ────────────────────────────────────
+function toggleSelectAll() {
+  if (isAllSelected.value) {
+    courses.value.forEach(c => selectedIds.delete(c.id))
+  } else {
+    courses.value.forEach(c => selectedIds.add(c.id))
+  }
+}
+
+function toggleSelect(id: number) {
+  if (selectedIds.has(id)) selectedIds.delete(id)
+  else selectedIds.add(id)
+}
+
+// ── Trashed: Select toggles ──────────────────────────────────
+function toggleTrashedSelectAll() {
+  if (isTrashedAllSelected.value) {
+    trashedCourses.value.forEach(c => trashedSelectedIds.delete(c.id))
+  } else {
+    trashedCourses.value.forEach(c => trashedSelectedIds.add(c.id))
+  }
+}
+
+function toggleTrashedSelect(id: number) {
+  if (trashedSelectedIds.has(id)) trashedSelectedIds.delete(id)
+  else trashedSelectedIds.add(id)
+}
+
+// ── Active: Fetch ─────────────────────────────────────────────
 async function fetchPage(page = 1) {
   loading.value = true
   currentPage.value = page
@@ -259,12 +761,52 @@ async function fetchPage(page = 1) {
   }
 }
 
-onMounted(() => fetchPage())
+// ── Trashed: Fetch ────────────────────────────────────────────
+async function fetchTrashedPage(page = 1) {
+  trashedLoading.value = true
+  trashedPage.value = page
+  try {
+    const params: Record<string, any> = { page, per_page: 15 }
+    if (trashedFilters.search) params.search = trashedFilters.search
 
+    const res = await coursesApi.trashed(params)
+    trashedCourses.value = res.data.data
+    trashedPagination.value = res.data.pagination
+    trashedCount.value = res.data.pagination?.total || res.data.data?.length || 0
+  } catch {
+    toast.error('Không thể tải thùng rác')
+  } finally {
+    trashedLoading.value = false
+  }
+}
+
+// Lấy count thùng rác (gọi lúc mount để hiển thị badge)
+async function fetchTrashedCount() {
+  try {
+    const res = await coursesApi.trashed({ per_page: 1 })
+    trashedCount.value = res.data.pagination?.total || res.data.data?.length || 0
+  } catch {
+    // im lặng
+  }
+}
+
+onMounted(() => {
+  fetchPage()
+  fetchTrashedCount()
+})
+
+// ── Helpers ───────────────────────────────────────────────────
 function levelLabel(level: string) {
   return { beginner: 'Cơ bản', intermediate: 'Trung cấp', advanced: 'Nâng cao' }[level] || level
 }
 
+function formatDate(dateStr: string | null | undefined): string {
+  if (!dateStr) return '—'
+  const d = new Date(dateStr)
+  return d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+}
+
+// ── Active: Toggle status ─────────────────────────────────────
 async function toggleStatus(course: Course) {
   togglingId.value = course.id
   try {
@@ -278,6 +820,7 @@ async function toggleStatus(course: Course) {
   }
 }
 
+// ── Active: Delete (soft) ─────────────────────────────────────
 function confirmDelete(course: Course) {
   deleteTarget.value = course
 }
@@ -290,10 +833,116 @@ async function doDelete() {
     toast.success('Xóa khóa học thành công')
     deleteTarget.value = null
     fetchPage(currentPage.value)
+    fetchTrashedCount()
   } catch (err: any) {
     toast.error(err.response?.data?.message || 'Xóa thất bại')
   } finally {
     deleting.value = false
+  }
+}
+
+// ── Active: Bulk delete ───────────────────────────────────────
+async function doBulkDelete() {
+  bulkDeleting.value = true
+  try {
+    await coursesApi.bulkDelete([...selectedIds])
+    toast.success(`Đã xóa ${selectedIds.size} khóa học`)
+    selectedIds.clear()
+    showBulkDeleteConfirm.value = false
+    fetchPage(currentPage.value)
+    fetchTrashedCount()
+  } catch (err: any) {
+    toast.error(err.response?.data?.message || 'Xóa nhiều thất bại')
+  } finally {
+    bulkDeleting.value = false
+  }
+}
+
+// ── Active: Bulk toggle status ────────────────────────────────
+async function bulkToggleStatus(status: number) {
+  bulkUpdating.value = true
+  try {
+    const ids = [...selectedIds]
+    await Promise.all(ids.map(id => coursesApi.update(id, { status })))
+    toast.success(`Đã cập nhật ${ids.length} khóa học`)
+    selectedIds.clear()
+    fetchPage(currentPage.value)
+  } catch {
+    toast.error('Cập nhật trạng thái thất bại')
+  } finally {
+    bulkUpdating.value = false
+  }
+}
+
+// ── Trashed: Restore ──────────────────────────────────────────
+async function doRestore(course: Course) {
+  restoringId.value = course.id
+  try {
+    await coursesApi.restore(course.id)
+    toast.success(`Đã khôi phục "${course.name}"`)
+    fetchTrashedPage(trashedPage.value)
+    fetchTrashedCount()
+    // Refresh active list nếu cần
+    fetchPage(currentPage.value)
+  } catch (err: any) {
+    toast.error(err.response?.data?.message || 'Khôi phục thất bại')
+  } finally {
+    restoringId.value = null
+  }
+}
+
+// ── Trashed: Force delete ─────────────────────────────────────
+function confirmForceDelete(course: Course) {
+  forceDeleteTarget.value = course
+}
+
+async function doForceDelete() {
+  if (!forceDeleteTarget.value) return
+  forceDeleting.value = true
+  try {
+    await coursesApi.forceDelete(forceDeleteTarget.value.id)
+    toast.success('Đã xóa vĩnh viễn khóa học')
+    forceDeleteTarget.value = null
+    fetchTrashedPage(trashedPage.value)
+    fetchTrashedCount()
+  } catch (err: any) {
+    toast.error(err.response?.data?.message || 'Xóa vĩnh viễn thất bại')
+  } finally {
+    forceDeleting.value = false
+  }
+}
+
+// ── Trashed: Bulk restore ─────────────────────────────────────
+async function doBulkRestore() {
+  bulkRestoring.value = true
+  try {
+    await coursesApi.bulkRestore([...trashedSelectedIds])
+    toast.success(`Đã khôi phục ${trashedSelectedIds.size} khóa học`)
+    trashedSelectedIds.clear()
+    fetchTrashedPage(trashedPage.value)
+    fetchTrashedCount()
+    fetchPage(currentPage.value)
+  } catch (err: any) {
+    toast.error(err.response?.data?.message || 'Khôi phục nhiều thất bại')
+  } finally {
+    bulkRestoring.value = false
+  }
+}
+
+// ── Trashed: Bulk force delete ────────────────────────────────
+async function doBulkForceDelete() {
+  bulkForceDeleting.value = true
+  try {
+    await coursesApi.bulkForceDelete([...trashedSelectedIds])
+    toast.success(`Đã xóa vĩnh viễn ${trashedSelectedIds.size} khóa học`)
+    trashedSelectedIds.clear()
+    showBulkForceDeleteConfirm.value = false
+    fetchTrashedPage(trashedPage.value)
+    fetchTrashedCount()
+  } catch (err: any) {
+    toast.error(err.response?.data?.message || 'Xóa vĩnh viễn nhiều thất bại')
+  } finally {
+    bulkForceDeleting.value = false
   }
 }
 </script>
