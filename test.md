@@ -50,7 +50,27 @@
 
 ---
 
-## 🗂️ MODULE 3: CATEGORIES — Admin CRUD ⬜ Chưa test
+## 🗂️ MODULE 3: CATEGORIES — Admin CRUD ✅ PASSED
+
+| # | Test Case | Kết quả | Ghi chú |
+|---|-----------|---------|---------|
+| 3.1 | Vào trang `/admin/categories` → hiển thị danh sách | ✅ Pass | Fix: backend route prefix `api` → `api/v1` |
+| 3.2 | Danh sách hiển thị dạng cây cha-con | ✅ Pass | Chuyển từ `index` (flat) sang `flatTree` API |
+| 3.3 | Click mũi tên ▶ → expand/collapse danh mục con | ✅ Pass | Mặc định thu gọn, chỉ hiện danh mục cha |
+| 3.4 | Nút "Mở rộng tất cả" / "Thu gọn tất cả" | ✅ Pass | |
+| 3.5 | Tìm kiếm danh mục → lọc + highlight kết quả | ✅ Pass | Giữ chuỗi cha (ancestor chain) khi search |
+| 3.6 | Tạo category — Tên tiếng Việt + ký tự đặc biệt (`C++`, `C#`) | ✅ Pass | Fix: autoSlug chuyển `+` → `plus`, `#` → `sharp` |
+| 3.7 | Tạo category — slug tự sinh từ tên | ✅ Pass | |
+| 3.8 | Tạo category — chọn danh mục cha | ✅ Pass | Dropdown dạng flat-tree với indentation |
+| 3.9 | Sửa category — form điền sẵn dữ liệu cũ | ✅ Pass | |
+| 3.10 | Xóa category — confirm modal + toast thành công | ✅ Pass | |
+| 3.11 | Modal overlay đè lên sidebar | ✅ Pass | Fix: z-index `z-50` → `z-[100000]` |
+
+### Bugs đã fix trong module này:
+1. **Backend 404 — Route prefix thiếu `v1`** — `Modules/Categories/app/Providers/RouteServiceProvider.php` — prefix `api` thay vì `api/v1`, frontend gọi `/api/v1/admin/categories` → 404. Fix: thêm `v1` vào prefix cho 5 modules (Categories, Course, Lessons, Teachers, Upload).
+2. **Modal overlay không đè sidebar** — `CategoriesPage.vue` — Modal `z-50` bị sidebar `z-[99999]` đè. Fix: tăng modal lên `z-[100000]`.
+3. **AutoSlug mất ký tự đặc biệt** — `CategoriesPage.vue` — `C++` → slug `c` (++ bị xóa). Fix: chuyển `++` → `plus-plus`, `#` → `sharp`, `&` → `and` trước khi strip.
+4. **Danh sách flat không thể hiện cây** — `CategoriesPage.vue` — Chuyển từ `categoriesApi.index()` (flat paginated) sang `categoriesApi.flatTree()` với tree view expand/collapse + search/filter.
 
 ## 📚 MODULE 4: COURSES — Admin ⬜ Chưa test
 
@@ -70,13 +90,13 @@
 |--------|-------|--------|--------|------------|
 | Auth Admin | 9 | 9 | 0 | 3 |
 | Auth Student | 12 | 12 | 0 | 3 |
-| Categories | 10 | — | — | — |
+| Categories | 11 | 11 | 0 | 4 |
 | Courses Admin | 10 | — | — | — |
 | Lessons Admin | 6 | — | — | — |
 | Public Courses | 5 | — | — | — |
 | My Courses | 2 | — | — | — |
 | Learn Page | 6 | — | — | — |
-| **Tổng** | **60** | **21** | **0** | **6** |
+| **Tổng** | **61** | **32** | **0** | **10** |
 
 ---
 
@@ -88,3 +108,14 @@
 | `src/pages/auth/AdminLoginPage.vue` | Zod v4 `z.string({ error })` + `.min(6)` password |
 | `src/pages/auth/LoginPage.vue` | Zod v4 `z.string({ error })` + `.min(6)` password |
 | `src/pages/auth/RegisterPage.vue` | Zod v4 `z.string({ error })` + `.refine()` → `.superRefine()` |
+| `src/pages/admin/CategoriesPage.vue` | Tree view + expand/collapse + search/filter + fix autoSlug + fix modal z-index |
+| `src/pages/admin/CoursesPage.vue` | Fix modal z-index `z-50` → `z-[100000]` |
+| `Modules/Categories/app/Providers/RouteServiceProvider.php` | Fix prefix `api` → `api/v1` |
+| `Modules/Course/app/Providers/RouteServiceProvider.php` | Fix prefix `api` → `api/v1` |
+| `Modules/Lessons/app/Providers/RouteServiceProvider.php` | Fix prefix `api` → `api/v1` |
+| `Modules/Teachers/app/Providers/RouteServiceProvider.php` | Fix prefix `api` → `api/v1` |
+| `Modules/Upload/app/Providers/RouteServiceProvider.php` | Fix prefix `api` → `api/v1` |
+| `Modules/Categories/routes/api.php` | Xóa prefix `v1` trùng lặp |
+| `Modules/Course/routes/api.php` | Xóa prefix `v1` trùng lặp |
+| `Modules/Lessons/routes/api.php` | Xóa prefix `v1` trùng lặp |
+| `Modules/Teachers/routes/api.php` | Xóa prefix `v1` trùng lặp |

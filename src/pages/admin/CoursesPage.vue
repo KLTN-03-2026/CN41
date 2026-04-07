@@ -172,7 +172,7 @@
     <Teleport to="body">
       <div
         v-if="deleteTarget"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
+        class="fixed inset-0 z-[100000] flex items-center justify-center bg-black/50 px-4"
         @click.self="deleteTarget = null"
       >
         <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-sm p-6">
