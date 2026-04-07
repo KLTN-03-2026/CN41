@@ -54,8 +54,29 @@
             </div>
             <div>
               <label class="label-form">Slug <span class="text-red-500">*</span></label>
-              <input v-model="form.slug" type="text" class="input-field font-mono text-sm" :class="{ 'input-error': errors.slug }" placeholder="laravel-12-tu-co-ban-den-nang-cao" />
+              <div class="flex gap-2">
+                <input
+                  v-model="form.slug"
+                  type="text"
+                  class="input-field font-mono text-sm flex-1"
+                  :class="{ 'input-error': errors.slug, 'opacity-60 cursor-not-allowed': isEdit && !slugUnlocked }"
+                  :disabled="isEdit && !slugUnlocked"
+                  placeholder="laravel-12-tu-co-ban-den-nang-cao"
+                />
+                <button
+                  v-if="isEdit && !slugUnlocked"
+                  type="button"
+                  @click="slugUnlocked = true"
+                  class="px-3 py-1.5 text-xs rounded-lg border border-gray-200 dark:border-gray-700 text-gray-500 hover:text-orange-600 hover:border-orange-300 transition-colors whitespace-nowrap"
+                  title="Đổi slug có thể ảnh hưởng SEO và link đã chia sẻ"
+                >
+                  🔒 Mở khóa
+                </button>
+              </div>
               <p v-if="errors.slug" class="error-msg">{{ errors.slug }}</p>
+              <p v-if="isEdit && slugUnlocked" class="text-xs text-orange-500 mt-1">
+                ⚠️ Đổi slug sẽ ảnh hưởng URL, SEO và các link đã chia sẻ
+              </p>
             </div>
             <div>
               <label class="label-form">Mô tả</label>
@@ -115,24 +136,78 @@
             </div>
             <div>
               <label class="label-form">Giá khuyến mãi (VNĐ)</label>
-              <input v-model.number="form.sale_price" type="number" min="0" class="input-field" placeholder="399000" />
+              <input v-model.number="form.sale_price" type="number" min="0" class="input-field" :class="{ 'input-error': errors.sale_price }" placeholder="399000" />
+              <p v-if="errors.sale_price" class="error-msg">{{ errors.sale_price }}</p>
             </div>
           </div>
         </div>
 
-        <!-- Thumbnail -->
+        <!-- Thumbnail Upload -->
         <div class="card-box">
           <h3 class="section-title">Thumbnail</h3>
-          <div>
-            <label class="label-form">URL ảnh thumbnail</label>
-            <input v-model="form.thumbnail" type="url" class="input-field" placeholder="https://..." />
+
+          <!-- Preview ảnh đã upload -->
+          <div v-if="form.thumbnail" class="relative w-fit mb-4">
             <img
-              v-if="form.thumbnail"
               :src="form.thumbnail"
               alt="Thumbnail preview"
-              class="mt-3 w-48 h-28 object-cover rounded-lg border border-gray-200 dark:border-gray-700"
+              class="w-56 h-32 object-cover rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm"
             />
+            <button
+              type="button"
+              @click="removeThumbnail"
+              class="absolute -top-2 -right-2 w-6 h-6 flex items-center justify-center bg-red-500 hover:bg-red-600 text-white rounded-full shadow-md transition-colors"
+              title="Xóa ảnh"
+            >
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+            </button>
           </div>
+
+          <!-- Dropzone khi chưa có ảnh -->
+          <div
+            v-else
+            @dragover.prevent="isDragging = true"
+            @dragleave.prevent="isDragging = false"
+            @drop.prevent="handleDrop"
+            @click="thumbnailInput?.click()"
+            :class="isDragging ? 'border-blue-400 bg-blue-50 dark:bg-blue-500/10' : 'border-gray-300 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-500'"
+            class="border-2 border-dashed rounded-xl px-6 py-8 text-center cursor-pointer transition-all"
+          >
+            <svg class="w-10 h-10 mx-auto text-gray-400 dark:text-gray-500 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z"/>
+            </svg>
+            <p class="text-sm text-gray-500 dark:text-gray-400">
+              <span class="text-blue-500 font-medium">Click để chọn</span> hoặc kéo thả ảnh vào đây
+            </p>
+            <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">JPG, PNG, WebP — tối đa 5MB</p>
+          </div>
+
+          <input
+            ref="thumbnailInput"
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            class="hidden"
+            @change="handleFileSelect"
+          />
+
+          <!-- Progress bar -->
+          <div v-if="uploadProgress > 0 && uploadProgress < 100" class="mt-3">
+            <div class="flex justify-between text-xs text-gray-500 mb-1">
+              <span>Đang tải lên...</span>
+              <span>{{ uploadProgress }}%</span>
+            </div>
+            <div class="w-full h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+              <div
+                class="h-full bg-blue-500 rounded-full transition-all duration-300"
+                :style="{ width: uploadProgress + '%' }"
+              />
+            </div>
+          </div>
+
+          <!-- Upload error -->
+          <p v-if="uploadError" class="error-msg mt-2">{{ uploadError }}</p>
         </div>
 
         <!-- Error chung -->
@@ -164,18 +239,19 @@
 
     <!-- Tab: Bài giảng -->
     <div v-if="activeTab === 'lessons' && isEdit">
-      <LessonsManager :course-id="courseId!" />
+      <LessonsManager :course-id="courseId ?? 0" />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useToast } from 'vue-toastification'
 import { coursesApi } from '@/api/coursesApi'
 import { categoriesApi } from '@/api/categoriesApi'
 import { teachersApi } from '@/api/teachersApi'
+import { uploadApi } from '@/api/uploadApi'
 import LessonsManager from '@/components/admin/LessonsManager.vue'
 
 const route  = useRoute()
@@ -186,14 +262,23 @@ const courseId  = computed(() => route.params.id ? Number(route.params.id) : nul
 const isEdit    = computed(() => !!courseId.value)
 const activeTab = ref<'info' | 'lessons'>('info')
 const tabs = [
-  { key: 'info',    label: 'Thông tin' },
-  { key: 'lessons', label: 'Bài giảng' },
+  { key: 'info' as const,    label: 'Thông tin' },
+  { key: 'lessons' as const, label: 'Bài giảng' },
 ]
 
 const pageLoading = ref(false)
 const submitting  = ref(false)
+const slugUnlocked = ref(false) // Slug bị khóa khi edit, admin phải bấm "Mở khóa" để sửa
 const submitError = ref('')
 const errors      = ref<Record<string, string>>({})
+
+// Upload thumbnail state
+const isDragging       = ref(false)
+const uploadProgress   = ref(0)
+const uploadError      = ref('')
+const thumbnailMediaId = ref<number | null>(null) // media_files.id để sau này có thể xóa
+const thumbnailInput   = ref<HTMLInputElement>()   // template ref cho file input
+const thumbnailPreview = ref('')                   // blob URL để preview trước khi upload xong
 
 const teachers       = ref<{ id: number; name: string }[]>([])
 const flatCategories = ref<{ id: number; name: string; depth: number }[]>([])
@@ -211,6 +296,119 @@ const defaultForm = () => ({
   thumbnail: '' as string,
 })
 const form = ref(defaultForm())
+
+// Reset form khi route thay đổi (VD: từ edit → create, hoặc click "Thêm mới" lại)
+watch(courseId, (newId, oldId) => {
+  if (newId !== oldId) {
+    form.value = defaultForm()
+    errors.value = {}
+    submitError.value = ''
+    uploadProgress.value = 0
+    uploadError.value = ''
+    thumbnailMediaId.value = null
+    activeTab.value = 'info'
+  }
+})
+
+// ── Thumbnail Upload ──────────────────────────────────────────
+async function handleFileSelect(event: Event) {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (file) await uploadThumbnail(file)
+  input.value = '' // reset để có thể chọn lại cùng file
+}
+
+function handleDrop(event: DragEvent) {
+  isDragging.value = false
+  const file = event.dataTransfer?.files?.[0]
+  if (file && file.type.startsWith('image/')) {
+    uploadThumbnail(file)
+  } else {
+    uploadError.value = 'Vui lòng chọn file ảnh (JPG, PNG, WebP)'
+  }
+}
+
+async function uploadThumbnail(file: File) {
+  // Validate client-side
+  const maxSize = 5 * 1024 * 1024 // 5MB
+  if (file.size > maxSize) {
+    uploadError.value = 'File quá lớn. Tối đa 5MB.'
+    return
+  }
+  const allowedTypes = ['image/jpeg', 'image/png', 'image/webp']
+  if (!allowedTypes.includes(file.type)) {
+    uploadError.value = 'Định dạng không hỗ trợ. Chỉ JPG, PNG, WebP.'
+    return
+  }
+
+  uploadError.value = ''
+  uploadProgress.value = 0
+
+  // Hiển thị preview ngay lập tức bằng blob URL
+  if (thumbnailPreview.value) URL.revokeObjectURL(thumbnailPreview.value)
+  thumbnailPreview.value = URL.createObjectURL(file)
+  form.value.thumbnail = thumbnailPreview.value
+
+  try {
+    const res = await uploadApi.image(file, 'thumbnails', (progressEvent: any) => {
+      if (progressEvent.total) {
+        uploadProgress.value = Math.round((progressEvent.loaded / progressEvent.total) * 100)
+      }
+    })
+
+    const media = res.data.data
+    console.log('[upload] media:', media)
+    // Normalize URL: nếu là absolute URL của backend, chuyển về relative path để dùng proxy
+    let url: string = media.url
+    try {
+      const parsed = new URL(url)
+      // Nếu URL cùng host với backend (không phải frontend), lấy pathname để proxy qua Vite
+      if (parsed.origin !== window.location.origin) {
+        url = parsed.pathname
+      }
+    } catch {
+      // url đã là relative path, giữ nguyên
+    }
+    // Set URL mới trước khi revoke blob để tránh flash trắng
+    form.value.thumbnail = url
+    thumbnailMediaId.value = media.id
+    // Revoke sau khi browser đã nhận URL mới
+    const blobToRevoke = thumbnailPreview.value
+    thumbnailPreview.value = ''
+    setTimeout(() => URL.revokeObjectURL(blobToRevoke), 100)
+    uploadProgress.value = 100
+    toast.success('Upload ảnh thành công')
+
+    // Reset progress sau 1 giây
+    setTimeout(() => { uploadProgress.value = 0 }, 1000)
+  } catch (err: any) {
+    // Rollback preview nếu upload thất bại
+    URL.revokeObjectURL(thumbnailPreview.value)
+    thumbnailPreview.value = ''
+    form.value.thumbnail = ''
+    uploadProgress.value = 0
+    const msg = err.response?.data?.message || 'Upload ảnh thất bại'
+    uploadError.value = msg
+  }
+}
+
+async function removeThumbnail() {
+  // Nếu có media_id → gọi API xóa file trên server
+  if (thumbnailMediaId.value) {
+    try {
+      await uploadApi.destroy(thumbnailMediaId.value)
+    } catch {
+      // Bỏ qua lỗi xóa — vẫn cho xóa trên FE
+    }
+  }
+  if (thumbnailPreview.value) {
+    URL.revokeObjectURL(thumbnailPreview.value)
+    thumbnailPreview.value = ''
+  }
+  form.value.thumbnail = ''
+  thumbnailMediaId.value = null
+  uploadError.value = ''
+}
 
 // ── Init ───────────────────────────────────────────────────────
 onMounted(async () => {
@@ -266,10 +464,24 @@ async function submitForm() {
   errors.value = {}
   submitError.value = ''
 
-  // Client-side required check
-  if (!form.value.name) { errors.value.name = 'Vui lòng nhập tên khóa học'; return }
-  if (!form.value.slug) { errors.value.slug = 'Vui lòng nhập slug'; return }
-  if (!form.value.teacher_id) { errors.value.teacher_id = 'Vui lòng chọn giảng viên'; return }
+  // Client-side validation — check tất cả trường cùng lúc
+  const slugRegex = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
+  if (!form.value.name) errors.value.name = 'Vui lòng nhập tên khóa học'
+  if (!form.value.slug) {
+    errors.value.slug = 'Vui lòng nhập slug'
+  } else if (!slugRegex.test(form.value.slug)) {
+    errors.value.slug = 'Slug chỉ chứa chữ thường, số và dấu gạch ngang'
+  }
+  if (!form.value.teacher_id) errors.value.teacher_id = 'Vui lòng chọn giảng viên'
+  if (form.value.price < 0) errors.value.price = 'Giá không được âm'
+  if (form.value.sale_price && form.value.sale_price < 0) {
+    errors.value.sale_price = 'Giá khuyến mãi không được âm'
+  } else if (form.value.sale_price && form.value.sale_price > form.value.price) {
+    errors.value.sale_price = 'Giá khuyến mãi phải nhỏ hơn hoặc bằng giá gốc'
+  }
+
+  // Nếu có lỗi → dừng, không gửi request
+  if (Object.keys(errors.value).length > 0) return
 
   submitting.value = true
   const payload: Record<string, any> = {
@@ -292,7 +504,7 @@ async function submitForm() {
     } else {
       const res = await coursesApi.store(payload)
       toast.success('Tạo khóa học thành công')
-      router.push(`/admin/courses/${res.data.data.id}/edit`)
+      router.push('/admin/courses')
     }
   } catch (err: any) {
     const data = err.response?.data
