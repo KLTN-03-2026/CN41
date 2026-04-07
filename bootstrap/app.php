@@ -93,4 +93,8 @@ return Application::configure(basePath: dirname(__DIR__))
             }
         });
 
-    })->create();
+    })
+    ->withSchedule(function (\Illuminate\Console\Scheduling\Schedule $schedule) {
+        $schedule->command('media:prune-orphans')->dailyAt('03:00');
+    })
+    ->create();
