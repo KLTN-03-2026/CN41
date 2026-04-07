@@ -154,13 +154,18 @@ export default {
 
     const schema = toTypedSchema(
       z.object({
-        name: z.string().min(2, 'Họ tên tối thiểu 2 ký tự'),
-        email: z.string().min(1, 'Vui lòng nhập email').email('Email không đúng định dạng'),
-        password: z.string().min(8, 'Mật khẩu tối thiểu 8 ký tự'),
-        password_confirmation: z.string().min(1, 'Vui lòng xác nhận mật khẩu'),
-      }).refine((data) => data.password === data.password_confirmation, {
-        message: 'Mật khẩu xác nhận không khớp',
-        path: ['password_confirmation'],
+        name: z.string({ error: 'Vui lòng nhập họ tên' }).min(2, 'Họ tên tối thiểu 2 ký tự'),
+        email: z.string({ error: 'Vui lòng nhập email' }).min(1, 'Vui lòng nhập email').email('Email không đúng định dạng'),
+        password: z.string({ error: 'Vui lòng nhập mật khẩu' }).min(8, 'Mật khẩu tối thiểu 8 ký tự'),
+        password_confirmation: z.string({ error: 'Vui lòng xác nhận mật khẩu' }).min(1, 'Vui lòng xác nhận mật khẩu'),
+      }).superRefine((data, ctx) => {
+        if (data.password && data.password_confirmation && data.password !== data.password_confirmation) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: 'Mật khẩu xác nhận không khớp',
+            path: ['password_confirmation'],
+          })
+        }
       })
     )
 
