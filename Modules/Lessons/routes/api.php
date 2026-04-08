@@ -52,6 +52,7 @@ Route::middleware(['auth:admin'])->prefix('admin')->group(function () {
 // ── Client routes (auth:api — học viên đã đăng nhập) ──────
 Route::middleware(['auth:api'])->group(function () {
     Route::get('my-courses/{slug}/lessons',           [LessonController::class, 'myLessons']);
+    Route::get('my-courses/{slug}/lessons/{lesson_slug}', [LessonController::class, 'myLessonDetail']);
     Route::post('lessons/{id}/progress',              [LessonController::class, 'updateProgress']);
     Route::get('courses/{slug}/progress',             [LessonController::class, 'courseProgress']);
 });
