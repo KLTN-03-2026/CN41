@@ -6,7 +6,9 @@
         <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-800">
           <div class="flex items-center gap-3 overflow-hidden">
             <div :class="typeClass" class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0">
-              <component :is="typeIcon" class="w-5 h-5" />
+              <svg v-if="lesson?.type === 'video'" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+              <svg v-else-if="lesson?.type === 'document'" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+              <svg v-else class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
             </div>
             <div class="overflow-hidden">
               <h3 class="text-base font-semibold text-gray-800 dark:text-white/90 truncate">{{ lesson?.title }}</h3>
@@ -37,16 +39,16 @@
           <div v-else class="h-full">
             <!-- VIDEO TYPE -->
             <div v-if="lesson.type === 'video'" class="w-full flex justify-center">
-              <div v-if="mediaUrl" class="w-full aspect-video bg-black rounded-xl overflow-hidden shadow-lg border border-gray-200 dark:border-gray-800 relative video-container">
-                <video-player
-                  :src="mediaUrl"
+              <div v-if="mediaUrl" class="w-full aspect-video bg-black rounded-xl overflow-hidden shadow-lg border border-gray-200 dark:border-gray-800">
+                <video
+                  ref="videoPlayerRef"
                   controls
-                  :playback-rates="[0.5, 0.75, 1, 1.25, 1.5, 2]"
-                  :volume="0.8"
-                  :user-actions="{ hotkeys: true }"
-                  class="video-js vjs-big-play-centered vjs-theme-city"
-                  style="width: 100%; height: 100%"
-                />
+                  class="w-full h-full"
+                  :src="mediaUrl"
+                  playsinline
+                >
+                  Trình duyệt không hỗ trợ xem video.
+                </video>
               </div>
               <div v-else class="flex flex-col items-center justify-center py-20 text-gray-400">
                 <svg class="w-16 h-16 mb-4 opacity-20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -126,10 +128,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { VideoPlayer } from '@videojs-player/vue'
-import 'video.js/dist/video-js.css'
-import '@videojs/themes/dist/city/index.css' // Tùy chọn theme đẹp hơn
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 
 const props = defineProps({
   lesson: {
@@ -144,6 +143,49 @@ const props = defineProps({
 
 const isOpen = ref(false)
 const emit = defineEmits(['close'])
+
+const videoPlayerRef = ref<HTMLVideoElement | null>(null)
+
+// --- Xử lý Hotkeys cho Video ---
+const handleKeydown = (e: KeyboardEvent) => {
+  if (!isOpen.value || !videoPlayerRef.value || props.lesson?.type !== 'video') return
+
+  const video = videoPlayerRef.value
+  const skipTime = 5 // 5 giây tiêu chuẩn
+
+  switch (e.code) {
+    case 'Space':
+      e.preventDefault()
+      if (video.paused) video.play()
+      else video.pause()
+      break
+    case 'ArrowRight':
+      e.preventDefault()
+      video.currentTime = Math.min(video.duration, video.currentTime + skipTime)
+      break
+    case 'ArrowLeft':
+      e.preventDefault()
+      video.currentTime = Math.max(0, video.currentTime - skipTime)
+      break
+    case 'ArrowUp':
+      e.preventDefault()
+      video.volume = Math.min(1, video.volume + 0.1)
+      break
+    case 'ArrowDown':
+      e.preventDefault()
+      video.volume = Math.max(0, video.volume - 0.1)
+      break
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', handleKeydown)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeydown)
+})
+// -----------------------------
 
 const close = () => {
   isOpen.value = false
@@ -162,15 +204,6 @@ const typeClass = computed(() => {
     case 'document': return 'bg-orange-100 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400'
     case 'text': return 'bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-400'
     default: return 'bg-gray-100 text-gray-600'
-  }
-})
-
-const typeIcon = computed(() => {
-  switch (props.lesson?.type) {
-    case 'video': return VideoIcon
-    case 'document': return DocumentIcon
-    case 'text': return TextIcon
-    default: return TextIcon
   }
 })
 
@@ -204,18 +237,6 @@ function normalizeUrl(url: string) {
   // Nếu là relative path, thêm proxy prefix /api (nếu cần) hoặc rely vào Vite proxy
   return url
 }
-
-// Icons
-const VideoIcon = {
-  template: '<svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>'
-}
-const DocumentIcon = {
-  template: '<svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>'
-}
-const TextIcon = {
-  template: '<svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>'
-}
-
 </script>
 
 <style scoped>
