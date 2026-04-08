@@ -531,9 +531,10 @@ npm run dev
 
 | # | Hành động | Kết quả mong đợi |
 |---|-----------|-------------------|
-| 1 | Mở edit course → Click tab "Nội dung" | Component hiện: header "0 chương · 0 bài giảng", 2 nút "Thêm bài giảng" + "Thêm chương" |
-| 2 | Network | `GET /api/v1/admin/courses/{id}/sections` + `GET /api/v1/admin/courses/{id}/lessons` → **200** |
-| 3 | Nếu không có nội dung | Empty state: "Chưa có nội dung. Hãy thêm chương hoặc bài giảng." |
+| 1 | Mở edit course → Click tab "Nội dung" | Tiêu đề header đổi thành **"Nội dung khóa học"** (thay vì "Chỉnh sửa khóa học"), subtitle hiện tên khóa học. |
+| 2 | Component hiện | Header "0 chương · 0 bài giảng", 2 nút "Thêm bài giảng" + "Thêm chương" |
+| 3 | Network | `GET /api/v1/admin/courses/{id}/sections` + `GET /api/v1/admin/courses/{id}/lessons` → **200** |
+| 4 | Nếu không có nội dung | Empty state: "Chưa có nội dung. Hãy thêm chương hoặc bài giảng." |
 
 ### Test 5.2: Thêm chương (Section) — Thành công ✅
 
@@ -693,6 +694,23 @@ npm run dev
 | 1 | Tạo bài với duration: 300 | Hiện "5:00" (format mm:ss) |
 | 2 | Tạo bài với duration: 3661 | Hiện "1:01:01" (format h:mm:ss) |
 | 3 | Tạo bài không nhập duration | Hiện "—" |
+
+### Test 5.21: Bulk Assign Section — Phân chương hàng loạt ✅
+
+| # | Hành động | Kết quả mong đợi |
+|---|-----------|-------------------|
+| 1 | Chọn nhiều bài giảng (ở các chương khác nhau hoặc bài chưa phân chương) | Floating bar xuất hiện, có nút "Phân chương" (màu tím). |
+| 2 | Click "Phân chương" | Modal "Phân chương hàng loạt" hiện ra với dropdown danh sách chương. |
+| 3 | Chọn 1 chương (VD: Chương 2) → Xác nhận | Toast thông báo thành công, các bài giảng đã chọn chuyển vào Chương 2. |
+| 4 | Network | `POST /api/v1/admin/lessons/bulk-action` với body `{ ids: [...], action: "assign-section", section_id: N }` → **200**. |
+
+### Test 5.22: Bulk Assign Section — Bỏ gán chương hàng loạt
+
+| # | Hành động | Kết quả mong đợi |
+|---|-----------|-------------------|
+| 1 | Chọn nhiều bài giảng đang nằm trong các chương | Floating bar → nút "Phân chương". |
+| 2 | Chọn dropdown: "— Bỏ phân chương (Chưa gán) —" → Xác nhận | Các bài giảng đã chọn chuyển xuống nhóm "Chưa phân chương". |
+| 3 | Network | Request có `section_id: null` → **200**. |
 
 ---
 

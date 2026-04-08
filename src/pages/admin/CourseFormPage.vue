@@ -12,9 +12,11 @@
       </router-link>
       <div>
         <h2 class="text-lg font-semibold text-gray-800 dark:text-white/90">
-          {{ isEdit ? 'Chỉnh sửa khóa học' : 'Thêm khóa học mới' }}
+          {{ isEdit ? (activeTab === 'lessons' ? 'Nội dung khóa học' : 'Thông tin khóa học') : 'Thêm khóa học mới' }}
         </h2>
-        <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5" v-if="isEdit">ID: {{ courseId }}</p>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5" v-if="isEdit">
+          {{ form.name || `ID: ${courseId}` }}
+        </p>
       </div>
     </div>
 

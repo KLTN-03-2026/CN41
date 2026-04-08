@@ -606,11 +606,13 @@
       itemName="bài giảng"
       :is-trashed="currentTab === 'trashed'"
       :loading="bulkActionLoading"
+      :sections="sectionsList"
       @publish="doBulkStatusLessons('activate')"
       @draft="doBulkStatusLessons('deactivate')"
       @delete="doBulkDeleteLessons"
       @restore="doBulkRestoreLessons"
       @force-delete="doBulkForceDeleteLessons"
+      @assign-section="doBulkAssignSection"
       @clear="selectedLessons = []"
     />
   </div>
@@ -810,6 +812,28 @@ async function doBulkForceDeleteLessons() {
     fetchTrashed()
   } catch {
     toast.error('Chưa thể xóa vĩnh viễn hàng loạt')
+  } finally {
+    bulkActionLoading.value = false
+  }
+}
+
+async function doBulkAssignSection(sectionId: number | null) {
+  bulkActionLoading.value = true
+  try {
+    await lessonsApi.bulkAction({
+      ids: selectedLessons.value,
+      action: 'assign-section',
+      section_id: sectionId,
+    })
+    const sectionName = sectionId
+      ? sectionsList.value.find(s => s.id === sectionId)?.title || 'chương đã chọn'
+      : 'Chưa phân chương'
+    toast.success(`Đã gán ${selectedLessons.value.length} bài giảng vào "${sectionName}"`)
+    selectedLessons.value = []
+    bulkActionsRef.value?.closeModal()
+    fetchAll()
+  } catch {
+    toast.error('Chưa thể phân chương hàng loạt')
   } finally {
     bulkActionLoading.value = false
   }

@@ -35,6 +35,15 @@
             {{ draftLabel }}
           </button>
           <button
+            v-if="sections && sections.length"
+            @click="confirmAction('assign-section')"
+            :disabled="loading"
+            class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 transition-colors disabled:opacity-50"
+          >
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+            Phân chương
+          </button>
+          <button
             @click="confirmAction('delete')"
             :disabled="loading"
             class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors disabled:opacity-50"
@@ -108,6 +117,38 @@
             <button @click="actionType = null" class="px-4 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400">Hủy</button>
             <button @click="executeAction" :disabled="loading" class="px-4 py-2 text-sm rounded-lg bg-red-500 text-white hover:bg-red-600 disabled:opacity-50">
               {{ loading ? 'Đang xóa...' : 'Xóa tất cả' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
+    <!-- Assign Section Modal -->
+    <Teleport to="body">
+      <div v-if="actionType === 'assign-section'" class="fixed inset-0 z-[100000] flex items-center justify-center bg-black/50 px-4" @click.self="actionType = null">
+        <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-sm p-6">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-500/10 flex items-center justify-center flex-shrink-0">
+              <svg class="w-5 h-5 text-purple-600 dark:text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+              </svg>
+            </div>
+            <div>
+              <h3 class="text-base font-semibold text-gray-800 dark:text-white/90">Phân chương hàng loạt</h3>
+              <p class="text-xs text-gray-500 dark:text-gray-400">Gán <strong class="text-purple-500">{{ count }}</strong> {{ itemName }} vào chương</p>
+            </div>
+          </div>
+          <div class="mb-5">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-1.5">Chọn chương</label>
+            <select v-model="assignSectionId" class="w-full h-10 px-3 rounded-lg border border-gray-300 bg-transparent text-sm text-gray-800 dark:border-gray-700 dark:text-white/90 dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-400">
+              <option :value="null">— Bỏ phân chương (Chưa gán) —</option>
+              <option v-for="s in sections" :key="s.id" :value="s.id">{{ s.title }}</option>
+            </select>
+          </div>
+          <div class="flex justify-end gap-3">
+            <button @click="actionType = null" class="px-4 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400">Hủy</button>
+            <button @click="executeAssignSection" :disabled="loading" class="px-4 py-2 text-sm rounded-lg bg-purple-500 text-white hover:bg-purple-600 disabled:opacity-50">
+              {{ loading ? 'Đang cập nhật...' : 'Xác nhận' }}
             </button>
           </div>
         </div>
@@ -189,20 +230,33 @@ const props = defineProps({
   draftLabel: {
     type: String,
     default: 'Nháp'
+  },
+  sections: {
+    type: Array as () => Array<{ id: number; title: string }>,
+    default: () => []
   }
 })
 
-const emit = defineEmits(['publish', 'draft', 'delete', 'restore', 'force-delete', 'clear'])
+const emit = defineEmits(['publish', 'draft', 'delete', 'restore', 'force-delete', 'assign-section', 'clear'])
 
-const actionType = ref<'publish'|'draft'|'delete'|'restore'|'force-delete'|null>(null)
+type ActionType = 'publish'|'draft'|'delete'|'restore'|'force-delete'|'assign-section'
+const actionType = ref<ActionType|null>(null)
+const assignSectionId = ref<number|null>(null)
 
-function confirmAction(type: 'publish'|'draft'|'delete'|'restore'|'force-delete') {
+function confirmAction(type: ActionType) {
+  if (type === 'assign-section') {
+    assignSectionId.value = null
+  }
   actionType.value = type
 }
 
 function executeAction() {
   if (!actionType.value) return
   emit(actionType.value)
+}
+
+function executeAssignSection() {
+  emit('assign-section', assignSectionId.value)
 }
 
 defineExpose({
