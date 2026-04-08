@@ -298,18 +298,13 @@ npm run dev
 
 ## 📚 MODULE 4: COURSES — Admin
 
-> [!WARNING]
-> **Vấn đề API prefix**: Theo endpoint.md, Courses dùng prefix `/api/admin/courses` (KHÔNG có `v1`).
-> Nhưng FE axios baseURL là `/api/v1`, nên FE sẽ gọi `/api/v1/admin/courses`.
-> Nếu test thấy **404**, đây là nguyên nhân — cần sửa API prefix.
-
 ### Test 4.1: Danh sách Courses
 
 | # | Hành động | Kết quả mong đợi |
 |---|-----------|-------------------|
-| 1 | Mở `/admin/courses` | Bảng hiển thị: thumbnail, tên, giảng viên, giá, status badge |
-| 2 | Network | `GET .../admin/courses` → **200** |
-| 3 | **Nếu 404** | → prefix sai, cần sửa `coursesApi.js` |
+| 1 | Mở `/admin/courses` | Bảng hiển thị: checkbox chọn, thumbnail, tên + level badge, giảng viên, giá (gốc + sale), học viên, status badge |
+| 2 | Network | `GET /api/v1/admin/courses` → **200** |
+| 3 | Tabs | Có 2 tab: "Đang hoạt động" và "Thùng rác" (có badge số) |
 
 ### Test 4.2: Search debounce
 
@@ -332,26 +327,27 @@ npm run dev
 | # | Hành động | Kết quả mong đợi |
 |---|-----------|-------------------|
 | 1 | Click badge status (VD: "Nháp") trên 1 row | Badge đổi sang "Đã đăng" (hoặc ngược lại) |
-| 2 | Network | `PATCH .../admin/courses/{id}/toggle-status` → **200** |
+| 2 | Network | `PATCH /api/v1/admin/courses/{id}/toggle-status` → **200** |
+| 3 | Toast | Hiện "Đã đăng khóa học" hoặc "Đã chuyển về nháp" |
 
 ### Test 4.5: Tạo khóa học mới
 
 | # | Hành động | Kết quả mong đợi |
 |---|-----------|-------------------|
 | 1 | Click "Thêm khóa học" | Navigate → `/admin/courses/create` |
-| 2 | Form hiện: tên, slug, mô tả, teacher, category, level, giá | — |
+| 2 | Form hiện: tên, slug, mô tả, teacher, category, level, trạng thái, giá, sale price, thumbnail | — |
 | 3 | Gõ tên: `Vue.js từ A-Z` | Slug auto: `vue-js-tu-a-z` |
 | 4 | Chọn teacher, category, level, nhập giá | — |
 | 5 | Submit | Toast thành công |
-| 6 | Network | `POST .../admin/courses` → **201** |
-| 7 | Redirect | → `/admin/courses/{id}/edit` (để mở tab Bài giảng) |
+| 6 | Network | `POST /api/v1/admin/courses` → **201** |
+| 7 | Redirect | → `/admin/courses` (danh sách) |
 
 ### Test 4.6: Tạo khóa học — Thiếu field bắt buộc
 
 | # | Hành động | Kết quả mong đợi |
 |---|-----------|-------------------|
-| 1 | Submit form trống | Lỗi validation: tên, slug, teacher_id, price, level bắt buộc |
-| 2 | Network | `POST ...` → **422** hoặc bị client validate chặn |
+| 1 | Submit form trống | Lỗi validation client-side: tên, slug, teacher bắt buộc |
+| 2 | Network | **Không có request** (client validate chặn) |
 
 ### Test 4.7: Tạo khóa học — Slug trùng
 
@@ -363,72 +359,340 @@ npm run dev
 
 | # | Hành động | Kết quả mong đợi |
 |---|-----------|-------------------|
-| 1 | Nhập price: 100000, sale_price: 200000 | **422**: "Giá khuyến mãi phải nhỏ hơn hoặc bằng giá gốc." |
+| 1 | Nhập price: 100000, sale_price: 200000 | Lỗi client-side: "Giá khuyến mãi phải nhỏ hơn hoặc bằng giá gốc" |
+| 2 | Network | **Không có request** (client validate chặn) |
 
-### Test 4.9: Edit khóa học
-
-| # | Hành động | Kết quả mong đợi |
-|---|-----------|-------------------|
-| 1 | Quay lại `/admin/courses` → Click icon sửa | Navigate → `/admin/courses/{id}/edit` |
-| 2 | Form điền sẵn data | Tên, slug, mô tả, teacher... đã fill |
-| 3 | Có 2 tabs: "Thông tin" + "Bài giảng" | Tab thứ 2 hiện component LessonsManager |
-| 4 | Sửa tên → Submit | Toast thành công |
-
-### Test 4.10: Xóa khóa học
+### Test 4.9: Tạo khóa học — Slug validation format
 
 | # | Hành động | Kết quả mong đợi |
 |---|-----------|-------------------|
-| 1 | Click icon xóa trên 1 row | Confirm dialog |
-| 2 | Xác nhận | Soft delete → row biến mất, toast thành công |
+| 1 | Nhập slug: `UpperCase` hoặc `has space` | Lỗi: "Slug chỉ chứa chữ thường, số và dấu gạch ngang" |
+| 2 | Nhập slug: `valid-slug-123` | Không lỗi |
+
+### Test 4.10: Thumbnail Upload
+
+| # | Hành động | Kết quả mong đợi |
+|---|-----------|-------------------|
+| 1 | Trong form tạo/sửa course, click vùng dropzone | File picker mở |
+| 2 | Chọn file ảnh JPG/PNG/WebP < 5MB | Preview hiện ngay (blob URL), progress bar chạy |
+| 3 | Network | `POST /api/v1/admin/upload/image` → **200** |
+| 4 | Upload xong | Toast "Upload ảnh thành công", ảnh hiện preview final |
+| 5 | Click nút (X) trên ảnh | Ảnh bị xóa, dropzone trở lại |
+
+### Test 4.11: Thumbnail Upload — File quá lớn
+
+| # | Hành động | Kết quả mong đợi |
+|---|-----------|-------------------|
+| 1 | Chọn file > 5MB | Lỗi: "File quá lớn. Tối đa 5MB." |
+| 2 | Network | **Không có request** (client validate) |
+
+### Test 4.12: Thumbnail Upload — Định dạng sai
+
+| # | Hành động | Kết quả mong đợi |
+|---|-----------|-------------------|
+| 1 | Chọn file .gif hoặc .pdf | Lỗi: "Định dạng không hỗ trợ. Chỉ JPG, PNG, WebP." |
+
+### Test 4.13: Thumbnail Drag & Drop
+
+| # | Hành động | Kết quả mong đợi |
+|---|-----------|-------------------|
+| 1 | Kéo file ảnh từ desktop vào dropzone | Dropzone highlight (border xanh), thả → upload bắt đầu |
+| 2 | Kéo file không phải ảnh | Lỗi: "Vui lòng chọn file ảnh (JPG, PNG, WebP)" |
+
+### Test 4.14: Edit khóa học
+
+| # | Hành động | Kết quả mong đợi |
+|---|-----------|-------------------|
+| 1 | Quay lại `/admin/courses` → Click icon sửa (bút chì) | Navigate → `/admin/courses/{id}/edit` |
+| 2 | Form điền sẵn data | Tên, slug, mô tả, teacher, category, level, giá... đã fill |
+| 3 | Có 2 tabs: "Thông tin" + "Nội dung" | Tab "Nội dung" hiện component SectionsLessonsManager |
+| 4 | Slug bị khóa | Có nút "🔒 Mở khóa" để cho phép sửa slug |
+| 5 | Sửa tên → Submit | Toast "Cập nhật khóa học thành công" |
+
+### Test 4.15: Edit khóa học — Category giữ giá trị
+
+| # | Hành động | Kết quả mong đợi |
+|---|-----------|-------------------|
+| 1 | Edit course đã có category → kiểm tra dropdown category | Category đã chọn đúng giá trị (nhiều cấp hiện indent `—`) |
+| 2 | Đổi category → Submit → Mở lại edit | Category mới được giữ đúng |
+
+### Test 4.16: Shortcut "Nội dung" từ danh sách
+
+| # | Hành động | Kết quả mong đợi |
+|---|-----------|-------------------|
+| 1 | Ở danh sách courses, click icon sách (bên cạnh icon bút chì) | Navigate → `/admin/courses/{id}/edit?tab=lessons` |
+| 2 | Trang edit mở | Tab "Nội dung" tự động active (không phải "Thông tin") |
+
+### Test 4.17: Xóa khóa học (Soft Delete)
+
+| # | Hành động | Kết quả mong đợi |
+|---|-----------|-------------------|
+| 1 | Click icon xóa (thùng rác) trên 1 row | Confirm dialog: "Bạn có chắc muốn xóa?" + note "Khóa học sẽ được chuyển vào thùng rác" |
+| 2 | Click "Hủy" | Dialog đóng, không xóa |
+| 3 | Click "Xóa" | Toast thành công, row biến mất, badge "Thùng rác" tăng lên |
+| 4 | Network | `DELETE /api/v1/admin/courses/{id}` → **200** |
+
+### Test 4.18: Tab Thùng rác
+
+| # | Hành động | Kết quả mong đợi |
+|---|-----------|-------------------|
+| 1 | Click tab "Thùng rác" | Chuyển sang bảng trashed: border đỏ, warning banner |
+| 2 | Bảng hiển thị | Thumbnail (mờ), tên, giảng viên, giá, thời gian xóa |
+| 3 | Network | `GET /api/v1/admin/courses/trashed` → **200** |
+| 4 | Có search box | Tìm kiếm trong thùng rác (debounce 400ms) |
+
+### Test 4.19: Khôi phục khóa học từ thùng rác
+
+| # | Hành động | Kết quả mong đợi |
+|---|-----------|-------------------|
+| 1 | Ở tab Thùng rác, click icon khôi phục (mũi tên xoay) | Toast thành công: "Đã khôi phục..." |
+| 2 | Row biến mất khỏi thùng rác | Badge count giảm |
+| 3 | Chuyển tab "Đang hoạt động" | Course vừa khôi phục xuất hiện lại |
+| 4 | Network | `POST /api/v1/admin/courses/{id}/restore` → **200** |
+
+### Test 4.20: Xóa vĩnh viễn
+
+| # | Hành động | Kết quả mong đợi |
+|---|-----------|-------------------|
+| 1 | Ở tab Thùng rác, click icon xóa vĩnh viễn (thùng rác) | Confirm dialog với cảnh báo đỏ: "Hành động này không thể hoàn tác!" |
+| 2 | Click "Xóa vĩnh viễn" | Toast thành công, row biến mất |
+| 3 | Network | `DELETE /api/v1/admin/courses/{id}/force-delete` → **200** |
+
+### Test 4.21: Bulk Select — Chọn tất cả
+
+| # | Hành động | Kết quả mong đợi |
+|---|-----------|-------------------|
+| 1 | Click checkbox header (chọn tất cả) | Tất cả rows được highlight xanh, floating bar xuất hiện |
+| 2 | Floating bar hiện | "Đã chọn N khóa học" + nút: Đăng, Nháp, Xóa, Bỏ chọn |
+| 3 | Click checkbox header lần nữa | Bỏ chọn tất cả, floating bar biến mất |
+
+### Test 4.22: Bulk Select — Chọn từng row
+
+| # | Hành động | Kết quả mong đợi |
+|---|-----------|-------------------|
+| 1 | Click checkbox row 1, row 3 | 2 rows highlight, floating bar: "Đã chọn 2 khóa học" |
+| 2 | Header checkbox | Hiện trạng thái indeterminate (—) |
+
+### Test 4.23: Bulk Toggle Status — Đăng
+
+| # | Hành động | Kết quả mong đợi |
+|---|-----------|-------------------|
+| 1 | Chọn 2 courses → Click "Đăng" trong floating bar | Toast: "Đã cập nhật 2 khóa học" |
+| 2 | Status badges | Cả 2 đổi thành "Đã đăng" |
+| 3 | Floating bar | Biến mất (selectedIds cleared) |
+
+### Test 4.24: Bulk Toggle Status — Nháp
+
+| # | Hành động | Kết quả mong đợi |
+|---|-----------|-------------------|
+| 1 | Chọn 2 courses → Click "Nháp" | Toast: "Đã cập nhật 2 khóa học" |
+| 2 | Status badges | Cả 2 đổi thành "Nháp" |
+
+### Test 4.25: Bulk Delete
+
+| # | Hành động | Kết quả mong đợi |
+|---|-----------|-------------------|
+| 1 | Chọn 3 courses → Click "Xóa" trong floating bar | Confirm dialog: "Bạn có chắc muốn xóa 3 khóa học đã chọn?" |
+| 2 | Click "Xóa tất cả" | Toast: "Đã xóa 3 khóa học", bảng refresh |
+| 3 | Network | `DELETE /api/v1/admin/courses/bulk-delete` với body `{ ids: [...] }` |
+| 4 | Thùng rác badge | Tăng lên 3 |
+
+### Test 4.26: Bulk Restore (Thùng rác)
+
+| # | Hành động | Kết quả mong đợi |
+|---|-----------|-------------------|
+| 1 | Tab Thùng rác → chọn tất cả → Click "Khôi phục" | Toast thành công, thùng rác trống |
+| 2 | Network | `POST /api/v1/admin/courses/bulk-restore` → **200** |
+
+### Test 4.27: Bulk Force Delete (Thùng rác)
+
+| # | Hành động | Kết quả mong đợi |
+|---|-----------|-------------------|
+| 1 | Tab Thùng rác → chọn 2 → Click "Xóa vĩnh viễn" | Confirm dialog với cảnh báo đỏ |
+| 2 | Click "Xóa vĩnh viễn tất cả" | Toast thành công |
+| 3 | Network | `DELETE /api/v1/admin/courses/bulk-force-delete` → **200** |
+
+### Test 4.28: Phân trang Courses
+
+| # | Hành động | Kết quả mong đợi |
+|---|-----------|-------------------|
+| 1 | Tạo > 15 courses | Phân trang xuất hiện: "1–15 / N khóa học" |
+| 2 | Click trang 2 | Bảng load dữ liệu trang 2, nút trang 2 highlight |
+| 3 | Network | `GET /api/v1/admin/courses?page=2` → **200** |
 
 ---
 
-## 📝 MODULE 5: LESSONS — Admin (LessonsManager)
+## 📝 MODULE 5: SECTIONS & LESSONS — Admin (SectionsLessonsManager)
 
-> Test trong trang `/admin/courses/{id}/edit` → Tab "Bài giảng".
+> Test trong trang `/admin/courses/{id}/edit` → Tab "Nội dung".
+> Hoặc truy cập trực tiếp từ shortcut icon sách trong danh sách.
 
-### Test 5.1: Danh sách bài giảng
-
-| # | Hành động | Kết quả mong đợi |
-|---|-----------|-------------------|
-| 1 | Mở edit course → Click tab "Bài giảng" | Bảng bài giảng (hoặc trống nếu chưa có) |
-| 2 | Network | `GET .../admin/courses/{id}/lessons` → **200** |
-
-### Test 5.2: Thêm bài giảng — Thành công
+### Test 5.1: Hiển thị trang nội dung — Trống
 
 | # | Hành động | Kết quả mong đợi |
 |---|-----------|-------------------|
-| 1 | Click "Thêm bài giảng" | Modal mở |
-| 2 | Title: `Giới thiệu khóa học`, Type: Video, Order: 0, Status: Published | — |
-| 3 | Submit | Toast thành công, bài xuất hiện trong bảng |
-| 4 | Network | `POST .../admin/courses/{id}/lessons` → **201** |
+| 1 | Mở edit course → Click tab "Nội dung" | Component hiện: header "0 chương · 0 bài giảng", 2 nút "Thêm bài giảng" + "Thêm chương" |
+| 2 | Network | `GET /api/v1/admin/courses/{id}/sections` + `GET /api/v1/admin/courses/{id}/lessons` → **200** |
+| 3 | Nếu không có nội dung | Empty state: "Chưa có nội dung. Hãy thêm chương hoặc bài giảng." |
 
-### Test 5.3: Thêm bài giảng — Thiếu title
-
-| # | Hành động | Kết quả mong đợi |
-|---|-----------|-------------------|
-| 1 | Submit modal mà không nhập title | Lỗi validation: "title là bắt buộc" |
-
-### Test 5.4: Toggle status bài giảng
+### Test 5.2: Thêm chương (Section) — Thành công ✅
 
 | # | Hành động | Kết quả mong đợi |
 |---|-----------|-------------------|
-| 1 | Click badge status trên row bài giảng | Status đổi (Draft ↔ Published) |
-| 2 | Network | `PATCH .../admin/lessons/{id}/toggle-status` → **200** |
+| 1 | Click "Thêm chương" | Modal mở: Tiêu đề*, Mô tả, Thứ tự, Trạng thái |
+| 2 | Nhập: `Chương 1: Giới thiệu`, Thứ tự: 0, Trạng thái: Đã đăng | — |
+| 3 | Submit | Toast "Tạo chương thành công", modal đóng |
+| 4 | Network | `POST /api/v1/admin/courses/{id}/sections` → **201** |
+| 5 | Giao diện | Card chương mới xuất hiện: số thứ tự, tên, badge trạng thái, "0 bài giảng" |
+| 6 | Header | Cập nhật "1 chương · 0 bài giảng" |
 
-### Test 5.5: Sửa bài giảng
-
-| # | Hành động | Kết quả mong đợi |
-|---|-----------|-------------------|
-| 1 | Click icon sửa | Modal load data cũ: title, type, content, order... |
-| 2 | Sửa title → Submit | Cập nhật thành công |
-
-### Test 5.6: Xóa bài giảng
+### Test 5.3: Thêm chương — Thiếu tiêu đề
 
 | # | Hành động | Kết quả mong đợi |
 |---|-----------|-------------------|
-| 1 | Click icon xóa → Confirm | Bài biến mất, toast thành công |
-| 2 | Network | `DELETE .../admin/lessons/{id}` → **200** |
+| 1 | Click "Thêm chương" → Submit không nhập gì | Lỗi: "Vui lòng nhập tiêu đề" (**client-side**) |
+| 2 | Network | **Không có request** |
+
+### Test 5.4: Sửa chương
+
+| # | Hành động | Kết quả mong đợi |
+|---|-----------|-------------------|
+| 1 | Click icon bút chì trên section header | Modal mở: form điền sẵn title, description, order, status |
+| 2 | Sửa tên → Submit | Toast "Cập nhật chương thành công" |
+| 3 | Network | `PUT /api/v1/admin/sections/{id}` → **200** |
+
+### Test 5.5: Toggle trạng thái chương
+
+| # | Hành động | Kết quả mong đợi |
+|---|-----------|-------------------|
+| 1 | Click icon toggle (⊖) trên section header | Badge đổi: "Nháp" ↔ "Đã đăng" |
+| 2 | Network | `PATCH /api/v1/admin/sections/{id}/toggle-status` → **200** |
+
+### Test 5.6: Xóa chương
+
+| # | Hành động | Kết quả mong đợi |
+|---|-----------|-------------------|
+| 1 | Click icon thùng rác trên section | Confirm dialog: "Xác nhận xóa chương" + cảnh báo "Các bài giảng sẽ chuyển thành Chưa phân chương" |
+| 2 | Click "Hủy" | Dialog đóng |
+| 3 | Click "Xóa" | Toast "Xóa chương thành công", section biến mất |
+| 4 | Network | `DELETE /api/v1/admin/sections/{id}` → **200** |
+| 5 | Bài giảng trong chương | Chuyển sang nhóm "Chưa phân chương" (viền cam, dashed border) |
+
+### Test 5.7: Sắp xếp chương (Reorder)
+
+| # | Hành động | Kết quả mong đợi |
+|---|-----------|-------------------|
+| 1 | Tạo 3 chương: Chương 1, Chương 2, Chương 3 | — |
+| 2 | Click mũi tên lên (▲) trên Chương 2 | Chương 2 đổi lên vị trí 1 |
+| 3 | Click mũi tên xuống (▼) trên Chương 2 (bây giờ ở vị trí 1) | Về lại vị trí 2 |
+| 4 | Network | `POST /api/v1/admin/sections/reorder` với body `{ orders: [...] }` |
+| 5 | Chương đầu tiên | Không có nút ▲ |
+| 6 | Chương cuối cùng | Không có nút ▼ |
+
+### Test 5.8: Expand/Collapse chương
+
+| # | Hành động | Kết quả mong đợi |
+|---|-----------|-------------------|
+| 1 | Click vào header chương (vùng tên/mũi tên) | Nội dung bài giảng toggle hiện/ẩn |
+| 2 | Mũi tên | Xoay 90° khi mở, 0° khi đóng |
+| 3 | Mặc định lần đầu load | Tất cả chương tự động mở rộng |
+
+### Test 5.9: Thêm bài giảng — Vào chương cụ thể ✅
+
+| # | Hành động | Kết quả mong đợi |
+|---|-----------|-------------------|
+| 1 | Click icon (+) trên header chương cụ thể | Modal mở, dropdown "Chương" đã chọn sẵn chương đó |
+| 2 | Nhập: Title: `Giới thiệu khóa học`, Type: Video, Order: 0, Status: Đã đăng | — |
+| 3 | Submit | Toast "Tạo bài giảng thành công" |
+| 4 | Network | `POST /api/v1/admin/courses/{id}/lessons` → **201**, body có `section_id` |
+| 5 | Bài giảng xuất hiện | Trong chương vừa chọn, hiện: STT, tên, badge type (Video), preview icon, thời lượng, status |
+
+### Test 5.10: Thêm bài giảng — Không gán chương
+
+| # | Hành động | Kết quả mong đợi |
+|---|-----------|-------------------|
+| 1 | Click nút "Thêm bài giảng" ở header (KHÔNG phải icon trên chương) | Modal mở, dropdown "Chương" = "— Chưa phân chương —" |
+| 2 | Submit | Bài giảng xuất hiện ở nhóm "Chưa phân chương" (viền cam) |
+
+### Test 5.11: Thêm bài giảng — Thiếu tiêu đề
+
+| # | Hành động | Kết quả mong đợi |
+|---|-----------|-------------------|
+| 1 | Mở modal → Submit không nhập title | Lỗi: "Vui lòng nhập tiêu đề" |
+| 2 | Network | **Không có request** |
+
+### Test 5.12: Thêm bài giảng — Các loại type
+
+| # | Hành động | Kết quả mong đợi |
+|---|-----------|-------------------|
+| 1 | Type: "Video" → Submit | Badge xanh dương "Video" |
+| 2 | Type: "Tài liệu" → Submit | Badge cam "Tài liệu" |
+| 3 | Type: "Văn bản" → Submit | Badge xám "Văn bản" |
+
+### Test 5.13: Thêm bài giảng — Checkbox "Cho xem thử"
+
+| # | Hành động | Kết quả mong đợi |
+|---|-----------|-------------------|
+| 1 | Tick "Cho xem thử (preview)" → Submit | Bài giảng hiện icon 👁️ |
+| 2 | Không tick → Submit | Không có icon 👁️ |
+
+### Test 5.14: Sửa bài giảng
+
+| # | Hành động | Kết quả mong đợi |
+|---|-----------|-------------------|
+| 1 | Click icon bút chì trên row bài giảng | Modal load data: section, title, type, content, order, duration, preview, status |
+| 2 | Sửa title → Submit | Toast "Cập nhật bài giảng thành công" |
+| 3 | Network | `PUT /api/v1/admin/lessons/{id}` → **200** |
+
+### Test 5.15: Sửa bài giảng — Chuyển chương
+
+| # | Hành động | Kết quả mong đợi |
+|---|-----------|-------------------|
+| 1 | Edit bài ở "Chương 1" → đổi dropdown thành "Chương 2" | — |
+| 2 | Submit → Reload | Bài biến mất khỏi Chương 1, xuất hiện ở Chương 2 |
+
+### Test 5.16: Toggle trạng thái bài giảng
+
+| # | Hành động | Kết quả mong đợi |
+|---|-----------|-------------------|
+| 1 | Click badge status (VD: "Nháp") trên row bài | Badge đổi sang "Đã đăng" (hoặc ngược lại) |
+| 2 | Network | `PATCH /api/v1/admin/lessons/{id}/toggle-status` → **200** |
+
+### Test 5.17: Xóa bài giảng
+
+| # | Hành động | Kết quả mong đợi |
+|---|-----------|-------------------|
+| 1 | Click icon thùng rác trên row bài | Confirm dialog: "Xác nhận xóa bài giảng" |
+| 2 | Click "Xóa" | Toast "Xóa bài giảng thành công", row biến mất |
+| 3 | Network | `DELETE /api/v1/admin/lessons/{id}` → **200** |
+
+### Test 5.18: Sắp xếp bài giảng (Reorder)
+
+| # | Hành động | Kết quả mong đợi |
+|---|-----------|-------------------|
+| 1 | Tạo 3 bài trong 1 chương | — |
+| 2 | Click ▲ trên bài 2 | Bài 2 lên vị trí 1 |
+| 3 | Click ▼ trên bài 1 (bây giờ ở vị trí 2) | Bài 1 xuống vị trí 3 |
+| 4 | Network | `POST /api/v1/admin/lessons/reorder` → **200** |
+| 5 | Bài đầu | Không có nút ▲ |
+| 6 | Bài cuối | Không có nút ▼ |
+
+### Test 5.19: Nhóm "Chưa phân chương"
+
+| # | Hành động | Kết quả mong đợi |
+|---|-----------|-------------------|
+| 1 | Tạo bài giảng không gán chương (section_id = null) | Nhóm "Chưa phân chương" xuất hiện: viền cam dashed |
+| 2 | Hiển thị | "N bài giảng chưa gán vào chương nào" |
+| 3 | Click để expand | Danh sách bài giảng orphan hiện ra |
+| 4 | Có thể sửa/xóa/toggle status | Tương tự bài giảng trong chương |
+
+### Test 5.20: Thời lượng bài giảng
+
+| # | Hành động | Kết quả mong đợi |
+|---|-----------|-------------------|
+| 1 | Tạo bài với duration: 300 | Hiện "5:00" (format mm:ss) |
+| 2 | Tạo bài với duration: 3661 | Hiện "1:01:01" (format h:mm:ss) |
+| 3 | Tạo bài không nhập duration | Hiện "—" |
 
 ---
 
@@ -566,7 +830,13 @@ npm run dev
 
 **Fix**: Thêm `z.string({ error: '...' })` cho tất cả auth form schemas.
 
-### 🟡 Vấn đề 4: LoginPage/RegisterPage dùng lucide icons
+### ✅ Vấn đề 4: Category không giữ giá trị khi edit course (ĐÃ FIX)
+
+**Vấn đề**: Dropdown category không hiển thị đúng khi edit course vì BE trả `categories` array (many-to-many), nhưng FE chỉ bind 1 `category_id`.
+
+**Fix**: FE lấy `c.categories?.[0]?.id` khi load, gửi `category_ids: [form.category_id]` khi submit.
+
+### 🟡 Vấn đề 5: LoginPage/RegisterPage dùng lucide icons
 
 **Chi tiết**: Import từ `lucide-vue-next` thay vì `@/icons`. Không ảnh hưởng chức năng.
 
@@ -578,12 +848,14 @@ npm run dev
 |--------|----------------|------------|
 | Auth Admin (Login) | 9 cases | ✅ Passed |
 | Auth Student (Register + Login) | 12 cases | ✅ Passed |
-| Categories Admin (CRUD) | 11 cases | ✅ Passed |
-| Courses Admin | 10 cases | ⬜ Chưa test |
-| Lessons Admin | 6 cases | ⬜ Chưa test |
+| Categories Admin (CRUD) | 10 cases | ✅ Passed |
+| Courses Admin (CRUD + Bulk + Trash + Upload) | 28 cases | ⬜ Chưa test |
+| Sections & Lessons Admin | 20 cases | ⬜ Chưa test |
 | Public Courses | 5 cases | ⬜ Chưa test |
 | My Courses | 2 cases | ⬜ Chưa test |
 | Learn Page | 6 cases | ⬜ Chưa test |
-| **Tổng** | **61 cases** | **32/61 passed** |
+| **Tổng** | **92 cases** | **31/92 passed** |
 
-> Cập nhật: 07/04/2026 — Module 1, 2, 3 đã test xong (32 cases, 0 failed, 10 bugs fixed).
+> Cập nhật: 08/04/2026 — Module 1, 2, 3 đã test xong (31 cases, 0 failed, 10 bugs fixed).
+> Module 4 đã mở rộng đáng kể: thêm Bulk actions, Trash/Restore, Thumbnail upload (28 cases).
+> Module 5 thay đổi hoàn toàn: từ LessonsManager → SectionsLessonsManager (Sections + Lessons hierarchy, 20 cases).

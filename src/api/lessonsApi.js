@@ -33,6 +33,18 @@ export const lessonsApi = {
   /** POST /admin/lessons/reorder */
   reorder: (orders) => http.post('/admin/lessons/reorder', { orders }),
 
+  /** DELETE /admin/lessons/bulk-delete */
+  bulkDelete: (ids) => http.delete('/admin/lessons/bulk-delete', { data: { ids } }),
+
+  /** POST /admin/lessons/bulk-restore */
+  bulkRestore: (ids) => http.post('/admin/lessons/bulk-restore', { ids }),
+
+  /** DELETE /admin/lessons/bulk-force-delete */
+  bulkForceDelete: (ids) => http.delete('/admin/lessons/bulk-force-delete', { data: { ids } }),
+
+  /** POST /admin/lessons/bulk-action */
+  bulkAction: (data) => http.post('/admin/lessons/bulk-action', data),
+
   // ── Client (auth:api) ───────────────────────────────────────
   /** GET /my-courses/{slug}/lessons */
   myLessons: (slug) => http.get(`/my-courses/${slug}/lessons`),
