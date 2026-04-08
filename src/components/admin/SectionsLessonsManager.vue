@@ -642,6 +642,7 @@
       ref="previewModalRef"
       :lesson="previewLesson"
       :loading="previewLoading"
+      @close="previewLesson = null"
     />
   </div>
 </template>

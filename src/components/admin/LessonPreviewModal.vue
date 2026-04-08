@@ -129,6 +129,9 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useAdminAuthStore } from '@/stores/adminAuth'
+
+const adminAuth = useAdminAuthStore()
 
 const props = defineProps({
   lesson: {
@@ -149,6 +152,10 @@ const videoPlayerRef = ref<HTMLVideoElement | null>(null)
 // --- Xử lý Hotkeys cho Video ---
 const handleKeydown = (e: KeyboardEvent) => {
   if (!isOpen.value || !videoPlayerRef.value || props.lesson?.type !== 'video') return
+
+  // Không can thiệp khi user đang gõ trong input/textarea/contenteditable
+  const target = e.target as HTMLElement
+  if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target.isContentEditable) return
 
   const video = videoPlayerRef.value
   const skipTime = 5 // 5 giây tiêu chuẩn
@@ -188,6 +195,12 @@ onUnmounted(() => {
 // -----------------------------
 
 const close = () => {
+  if (videoPlayerRef.value) {
+    videoPlayerRef.value.pause()
+    // Xóa src + gọi load() để browser hủy network connection và giải phóng RAM buffer
+    videoPlayerRef.value.removeAttribute('src')
+    videoPlayerRef.value.load()
+  }
   isOpen.value = false
   emit('close')
 }
@@ -210,8 +223,10 @@ const typeClass = computed(() => {
 // Lấy media URL từ quan hệ video hoặc document
 const mediaUrl = computed(() => {
   if (!props.lesson) return null
-  if (props.lesson.type === 'video' && props.lesson.video?.url) {
-    return normalizeUrl(props.lesson.video.url)
+  if (props.lesson.type === 'video' && props.lesson.video?.id) {
+    // Truyền token qua query param vì <video src> không gửi Authorization header
+    const token = adminAuth.token
+    return `/api/v1/media/${props.lesson.video.id}/stream${token ? `?token=${token}` : ''}`
   }
   if (props.lesson.type === 'document' && props.lesson.document?.url) {
     return normalizeUrl(props.lesson.document.url)
@@ -228,7 +243,7 @@ const isPdf = computed(() => {
 
 const isLocalhost = computed(() => {
   const hostname = window.location.hostname
-  return hostname === 'localhost' || hostname === '127.0.0.1' || hostname.endsWith('.test') || hostname.endsWith('.localhost') || hostname.endsWith('.test')
+  return hostname === 'localhost' || hostname === '127.0.0.1' || hostname.endsWith('.localhost') || hostname.endsWith('.test')
 })
 
 function normalizeUrl(url: string) {
