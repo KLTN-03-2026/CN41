@@ -110,6 +110,7 @@
                     <div
                       v-for="lesson in section.lessons"
                       :key="lesson.id"
+                      @click="handleLessonClick(lesson)"
                       class="flex items-center gap-3 p-2 rounded-lg transition-colors"
                       :class="(lesson.is_preview || lessonData.is_purchased) ? 'hover:bg-gray-50 cursor-pointer group/lesson' : 'opacity-[0.65] cursor-not-allowed'"
                     >
@@ -136,7 +137,7 @@
                       <span v-if="lesson.duration" class="text-[11px] text-gray-400 shrink-0 font-medium">
                         {{ formatSeconds(lesson.duration) }}
                       </span>
-                      <span v-if="lesson.is_preview && !lessonData.is_purchased" class="text-[10px] bg-blue-100/50 border border-blue-200 text-blue-600 px-2.5 py-0.5 rounded-full shrink-0 font-medium">Xem thử</span>
+                      <span v-if="lesson.is_preview && !lessonData.is_purchased" class="text-[10px] bg-blue-100/50 border border-blue-200 text-blue-600 px-2.5 py-0.5 rounded-full shrink-0 font-medium hover:bg-blue-100 transition-colors">Xem thử</span>
                     </div>
                   </div>
                 </details>
@@ -190,13 +191,33 @@
                 </router-link>
               </template>
               <template v-else>
-                <router-link
-                  to="/cart"
-                  class="block w-full text-center py-3 rounded-xl bg-blue-500 text-white font-medium hover:bg-blue-600 transition-colors"
-                  @click.prevent="addToCart"
-                >
-                  Thêm vào giỏ hàng
-                </router-link>
+                <template v-if="Number(course.price) === 0">
+                  <button
+                    @click="handleEnrollFree"
+                    :disabled="isEnrolling"
+                    class="block w-full text-center py-3 rounded-xl bg-orange-500 text-white font-medium hover:bg-orange-600 transition-colors disabled:opacity-75 disabled:cursor-not-allowed"
+                  >
+                    <span v-if="isEnrolling">Đang xử lý...</span>
+                    <span v-else>Đăng ký học miễn phí</span>
+                  </button>
+                </template>
+                <template v-else>
+                  <button
+                    @click="addToCart"
+                    class="block w-full text-center py-3 rounded-xl bg-blue-500 text-white font-medium hover:bg-blue-600 transition-colors"
+                  >
+                    Thêm vào giỏ hàng
+                  </button>
+                  <!-- Thêm nút học thử tại sidebar nếu có bài học thử -->
+                  <template v-if="hasPreview && Number(course.price) !== 0">
+                    <button
+                      @click="openPreview(null)"
+                      class="block w-full text-center py-3 mt-3 rounded-xl border border-orange-500 text-orange-500 font-medium hover:bg-orange-50 transition-colors"
+                    >
+                      Học thử miễn phí
+                    </button>
+                  </template>
+                </template>
               </template>
 
             <!-- Danh mục -->
@@ -229,19 +250,22 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { ref, watch, computed } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useToast } from 'vue-toastification'
 import { coursesApi } from '@/api/coursesApi'
 import { useCartStore } from '@/stores/cart'
+import { useStudentAuthStore } from '@/stores/studentAuth'
 import { formatCurrency } from '@/utils/formatCurrency'
 import { formatSeconds } from '@/utils/formatDuration'
 import CourseCard from '@/components/client/CourseCard.vue'
 import CourseFeaturesGrid, { type FeatureItem } from '@/components/client/CourseFeaturesGrid.vue'
 
 const route = useRoute()
+const router = useRouter()
 const toast = useToast()
 const cartStore = useCartStore()
+const studentAuthStore = useStudentAuthStore()
 
 interface Course {
   id: number
@@ -267,6 +291,12 @@ const lessonData    = ref<{ is_purchased: boolean; sections: any[] }>({
 
 const relatedCourses = ref<Course[]>([])
 const relatedLoading = ref(false)
+
+const hasPreview = computed(() => {
+  return lessonData.value.sections.some(section => 
+    section.lessons.some((lesson: any) => lesson.is_preview)
+  )
+})
 
 const courseFeatures: FeatureItem[] = [
   {
@@ -360,6 +390,11 @@ function levelClass(level: string) {
 }
 
 function addToCart() {
+  if (!studentAuthStore.isLoggedIn) {
+    router.push({ path: '/login', query: { redirect: '/cart' } })
+    return
+  }
+
   if (!course.value) return
   cartStore.addItem({
     id: course.value.id,
@@ -370,6 +405,41 @@ function addToCart() {
     sale_price: course.value.sale_price ? Number(course.value.sale_price) : null,
   })
   toast.success('Đã thêm vào giỏ hàng')
+  router.push('/cart')
+}
+
+const isEnrolling = ref(false)
+
+async function handleEnrollFree() {
+  if (!studentAuthStore.isLoggedIn) {
+    router.push({ path: '/login', query: { redirect: route.fullPath } })
+    return
+  }
+  
+  if (!course.value) return
+  
+  isEnrolling.value = true
+  try {
+    await coursesApi.enrollFree(course.value.slug)
+    toast.success('Đăng ký khóa học miễn phí thành công! Bắt đầu học nào.')
+    // Đánh dấu là đã mua để UI tự cập nhật -> "Vào học ngay"
+    lessonData.value.is_purchased = true
+  } catch (err: any) {
+    toast.error(err.response?.data?.message || 'Có lỗi xảy ra khi đăng ký.')
+  } finally {
+    isEnrolling.value = false
+  }
+}
+
+// ── Xử lý Học Thử ──────────────────────────────────────────────
+function handleLessonClick(lesson: any) {
+  if (lessonData.value.is_purchased || lesson.is_preview) {
+    router.push(`/courses/${course.value?.slug}/learn`)
+  }
+}
+
+function openPreview(lesson: any = null) {
+  router.push(`/courses/${course.value?.slug}/learn`)
 }
 </script>
 

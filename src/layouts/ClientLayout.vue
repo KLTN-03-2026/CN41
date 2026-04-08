@@ -1,22 +1,31 @@
 <template>
   <div class="min-h-screen flex flex-col bg-gray-50">
     <!-- Navbar -->
-    <nav class="bg-white border-b border-gray-200 sticky top-0 z-40 shadow-sm">
+    <nav class="bg-white border-b border-gray-200 sticky top-0 z-40 shadow-sm relative">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        <!-- Logo -->
-        <router-link to="/" class="flex items-center gap-2 font-bold text-xl text-gray-800">
-          <BookOpen class="w-7 h-7 text-primary-600" />
-          <span>E-Learning</span>
-        </router-link>
+        
+        <!-- Left Side: Menu toggle & Logo -->
+        <div class="flex items-center gap-3">
+          <button @click="toggleMobileMenu" class="md:hidden p-1 -ml-1 text-gray-600 hover:text-primary-600 focus:outline-none">
+            <Menu v-if="!isMobileMenuOpen" class="w-6 h-6" />
+            <X v-else class="w-6 h-6" />
+          </button>
+
+          <!-- Logo -->
+          <router-link to="/" class="flex items-center gap-2 font-bold text-xl text-gray-800">
+            <BookOpen class="w-7 h-7 text-primary-600" />
+            <span class="hidden sm:inline">E-Learning</span>
+          </router-link>
+        </div>
 
         <!-- Nav links (Desktop) -->
-        <div class="hidden md:flex items-center gap-8 text-sm font-medium text-gray-600">
+        <div class="hidden md:flex justify-center flex-1 mx-4 items-center gap-8 text-sm font-medium text-gray-600">
           <router-link to="/courses" class="hover:text-primary-600 transition-colors" active-class="text-primary-600">Khóa học</router-link>
           <router-link to="/posts" class="hover:text-primary-600 transition-colors" active-class="text-primary-600">Tin tức</router-link>
         </div>
 
         <!-- Right side -->
-        <div class="flex items-center gap-5">
+        <div class="flex items-center gap-3 sm:gap-5">
           <!-- Cart -->
           <router-link v-if="studentStore.isLoggedIn" to="/cart" class="relative p-2 text-gray-600 hover:text-primary-600 transition-colors">
             <ShoppingCart class="w-6 h-6" />
@@ -36,7 +45,7 @@
           <!-- User Dropdown Menu -->
           <template v-else>
             <div class="relative group">
-              <button class="flex items-center gap-2 focus:outline-none">
+              <button class="flex items-center gap-2 focus:outline-none block p-0">
                 <div class="w-9 h-9 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center font-bold text-sm border border-primary-200">
                   {{ studentStore.fullName?.charAt(0).toUpperCase() || 'U' }}
                 </div>
@@ -61,6 +70,20 @@
             </div>
           </template>
         </div>
+      </div>
+
+      <!-- Mobile Menu Dropdown Panel -->
+      <div v-show="isMobileMenuOpen" class="md:hidden absolute top-16 left-0 right-0 bg-white border-b border-gray-200 shadow-xl z-30 px-4 py-4 space-y-3">
+        <router-link @click="isMobileMenuOpen = false" to="/courses" class="block text-base font-medium text-gray-800 hover:text-primary-600 transition-colors">Khóa học</router-link>
+        <router-link @click="isMobileMenuOpen = false" to="/posts" class="block text-base font-medium text-gray-800 hover:text-primary-600 transition-colors">Tin tức</router-link>
+        
+        <template v-if="!studentStore.isLoggedIn">
+          <hr class="border-gray-100 my-3" />
+          <div class="sm:hidden flex flex-col gap-2">
+            <router-link @click="isMobileMenuOpen = false" to="/login" class="btn-secondary w-full justify-center h-10 flex items-center leading-none">Đăng nhập</router-link>
+            <router-link @click="isMobileMenuOpen = false" to="/register" class="btn-primary w-full justify-center h-10 flex items-center leading-none">Đăng ký</router-link>
+          </div>
+        </template>
       </div>
     </nav>
 
@@ -89,30 +112,39 @@
 </template>
 
 <script>
+import { ref } from 'vue'
 import { useStudentAuthStore } from '@/stores/studentAuth'
 import { useCartStore } from '@/stores/cart'
 import { useRouter } from 'vue-router'
-import { BookOpen, ShoppingCart, ChevronDown } from 'lucide-vue-next'
+import { BookOpen, ShoppingCart, ChevronDown, Menu, X } from 'lucide-vue-next'
 import { useToast } from 'vue-toastification'
 
 export default {
-  components: { BookOpen, ShoppingCart, ChevronDown },
+  components: { BookOpen, ShoppingCart, ChevronDown, Menu, X },
   setup() {
     const studentStore = useStudentAuthStore()
     const cartStore = useCartStore()
     const router = useRouter()
     const toast = useToast()
+    const isMobileMenuOpen = ref(false)
 
     const handleLogout = async () => {
       await studentStore.logout()
       toast.info('Đã đăng xuất khỏi tài khoản')
       router.push('/')
+      isMobileMenuOpen.value = false
+    }
+
+    const toggleMobileMenu = () => {
+      isMobileMenuOpen.value = !isMobileMenuOpen.value
     }
 
     return {
       studentStore,
       cartStore,
-      handleLogout
+      handleLogout,
+      isMobileMenuOpen,
+      toggleMobileMenu
     }
   }
 }

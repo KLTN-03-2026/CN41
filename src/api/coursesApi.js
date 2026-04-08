@@ -48,7 +48,14 @@ export const coursesApi = {
   /** GET /courses/{slug}/lessons */
   publicLessons: (slug) => http.get(`/courses/${slug}/lessons`),
 
+  /** GET /courses/{course_slug}/preview-lesson/{lesson_slug} */
+  publicPreviewLesson: (courseSlug, lessonSlug) =>
+    http.get(`/courses/${courseSlug}/preview-lesson/${lessonSlug}`),
+
   // ── Client (auth:api) ───────────────────────────────────────
   /** GET /my-courses?per_page= */
   myCourses: (params = {}) => http.get('/my-courses', { params }),
+
+  /** POST /courses/{slug}/enroll-free */
+  enrollFree: (slug) => http.post(`/courses/${slug}/enroll-free`),
 }

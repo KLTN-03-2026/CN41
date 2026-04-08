@@ -31,42 +31,42 @@
     <!-- Grid -->
     <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
       <div
-        v-for="item in courses"
-        :key="item.id"
+        v-for="course in courses"
+        :key="course.id"
         class="bg-white rounded-2xl overflow-hidden border border-gray-100 hover:shadow-md transition-shadow"
       >
         <div class="relative h-40 overflow-hidden">
           <img
-            v-if="item.course.thumbnail"
-            :src="item.course.thumbnail"
-            :alt="item.course.name"
+            v-if="course.thumbnail"
+            :src="course.thumbnail"
+            :alt="course.name"
             class="w-full h-full object-cover"
           />
           <div v-else class="w-full h-full bg-gradient-to-br from-blue-100 to-blue-200"></div>
         </div>
 
         <div class="p-4">
-          <h3 class="font-semibold text-gray-900 text-sm leading-snug line-clamp-2 mb-2">{{ item.course.name }}</h3>
+          <h3 class="font-semibold text-gray-900 text-sm leading-snug line-clamp-2 mb-2">{{ course.name }}</h3>
 
           <!-- Progress bar -->
           <div class="mb-3">
             <div class="flex justify-between text-xs text-gray-500 mb-1">
               <span>Tiến độ</span>
-              <span>{{ item.progress_percent ?? 0 }}%</span>
+              <span>{{ course.progress_percent ?? 0 }}%</span>
             </div>
             <div class="w-full bg-gray-100 rounded-full h-1.5">
               <div
                 class="bg-blue-500 h-1.5 rounded-full transition-all"
-                :style="{ width: (item.progress_percent ?? 0) + '%' }"
+                :style="{ width: (course.progress_percent ?? 0) + '%' }"
               ></div>
             </div>
           </div>
 
           <router-link
-            :to="`/courses/${item.course.slug}/learn`"
+            :to="`/courses/${course.slug}/learn`"
             class="block w-full text-center py-2 text-sm rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors font-medium"
           >
-            {{ (item.progress_percent ?? 0) > 0 ? 'Tiếp tục học' : 'Bắt đầu học' }}
+            {{ (course.progress_percent ?? 0) > 0 ? 'Tiếp tục học' : 'Bắt đầu học' }}
           </router-link>
         </div>
       </div>
@@ -98,13 +98,10 @@ const toast = useToast()
 
 interface MyCourse {
   id: number
+  name: string
+  slug: string
+  thumbnail?: string | null
   progress_percent?: number
-  course: {
-    id: number
-    name: string
-    slug: string
-    thumbnail?: string | null
-  }
 }
 
 const courses    = ref<MyCourse[]>([])
