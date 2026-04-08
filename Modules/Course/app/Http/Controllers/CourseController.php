@@ -298,26 +298,27 @@ class CourseController extends Controller
             $isPurchased = $course->students()->where('student_id', auth('api')->id())->exists();
         }
 
-        // Load lessons theo trạng thái mua
-        $lessonsQuery = $course->lessons()->where('status', 1);
-
-        if (!$isPurchased) {
-            $lessonsQuery->where('is_preview', true);
-        }
-
-        $lessons = $lessonsQuery->orderBy('order', 'asc')->get()->map(fn ($lesson) => [
-            'id'         => $lesson->id,
-            'title'      => $lesson->title,
-            'slug'       => $lesson->slug,
-            'type'       => $lesson->type,
-            'order'      => $lesson->order,
-            'is_preview' => $lesson->is_preview,
-            'duration'   => $lesson->duration,
+        // Load sections theo trạng thái mua
+        $sections = $course->sections()->where('status', 1)->with(['lessons' => function($q) {
+            $q->where('status', 1);
+        }])->get()->map(fn ($section) => [
+            'id'      => $section->id,
+            'title'   => $section->title,
+            'order'   => $section->order,
+            'lessons' => $section->lessons->map(fn ($lesson) => [
+                'id'         => $lesson->id,
+                'title'      => $lesson->title,
+                'slug'       => $lesson->slug,
+                'type'       => $lesson->type,
+                'order'      => $lesson->order,
+                'is_preview' => $lesson->is_preview,
+                'duration'   => $lesson->duration,
+            ])->values(),
         ])->values();
 
         return $this->success([
             'is_purchased' => $isPurchased,
-            'lessons'      => $lessons,
+            'sections'     => $sections,
         ], 'Lấy danh sách bài giảng thành công.');
     }
 
