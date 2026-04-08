@@ -1084,13 +1084,11 @@ async function fetchAll() {
     sectionsList.value = allSections
     orphanLessons.value = orphans
 
-    // Auto-expand tất cả sections lần đầu
-    if (expandedSections.size === 0) {
-      for (const s of allSections) {
-        expandedSections.add(s.id)
-      }
-      if (orphans.length) expandedSections.add('orphan')
-    }
+    // Mặc định không auto-expand các chương (để collapsed)
+    // Nhưng nếu có bài chưa phân chương thì có thể giữ nguyên tính năng để mở riêng phần này ra
+    // if (expandedSections.size === 0) {
+    //   if (orphans.length) expandedSections.add('orphan')
+    // }
   } catch {
     toast.error('Không thể tải nội dung khóa học')
   } finally {
