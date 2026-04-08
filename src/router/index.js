@@ -43,11 +43,7 @@ const router = createRouter({
           component: () => import('@/pages/client/MyCoursesPage.vue'),
           meta: { requiresAuth: true, guard: 'student' }
         },
-        {
-          path: 'courses/:slug/learn',
-          component: () => import('@/pages/client/LearnPage.vue'),
-          meta: { requiresAuth: true, guard: 'student' }
-        },
+        // LearnPage → đã chuyển ra ngoài ClientLayout (fullscreen)
         {
           path: 'cart',
           component: () => import('@/pages/client/CartPage.vue'),
@@ -68,6 +64,12 @@ const router = createRouter({
           meta: { requiresAuth: true, guard: 'student' }
         },
       ]
+    },
+
+    // ── LEARN PAGE (fullscreen, no layout) ───────────────────
+    {
+      path: '/courses/:slug/learn',
+      component: () => import('@/pages/client/LearnPage.vue'),
     },
 
     // ── AUTH CLIENT ────────────────────────────────────────
