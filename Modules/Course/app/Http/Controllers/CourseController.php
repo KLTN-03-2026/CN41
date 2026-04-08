@@ -7,6 +7,7 @@ use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Modules\Course\Http\Requests\StoreCourseRequest;
 use Modules\Course\Http\Requests\UpdateCourseRequest;
 use Modules\Course\Http\Requests\BulkDeleteCourseRequest;
@@ -167,7 +168,15 @@ class CourseController extends Controller
      */
     public function forceDelete(int $id): JsonResponse
     {
-        $this->repository->forceDeleteById($id);
+        $course = $this->repository->findTrashed($id);
+
+        // Xóa thumbnail trên storage nếu có
+        $this->deleteThumbnailFile($course->thumbnail ?? null);
+
+        // Detach categories pivot
+        $course->categories()->detach();
+
+        $course->forceDelete();
 
         return $this->success(null, 'Khóa học đã bị xoá vĩnh viễn.');
     }
@@ -210,7 +219,15 @@ class CourseController extends Controller
     public function bulkForceDelete(BulkForceDeleteCourseRequest $request): JsonResponse
     {
         $deleted = DB::transaction(function () use ($request) {
-            return $this->repository->forceDeleteMany($request->ids);
+            $courses = $this->repository->findManyTrashed($request->ids);
+
+            foreach ($courses as $course) {
+                $this->deleteThumbnailFile($course->thumbnail ?? null);
+                $course->categories()->detach();
+                $course->forceDelete();
+            }
+
+            return $courses->count();
         });
 
         return $this->success(
@@ -321,5 +338,25 @@ class CourseController extends Controller
         $courses->setCollection(CourseResource::collection($courses->getCollection())->collection);
 
         return $this->paginated($courses);
+    }
+
+    // ── Private Helpers ──
+
+    /**
+     * Xóa file thumbnail khỏi storage.
+     * Thumbnail URL dạng /storage/thumbnails/uuid.jpg → path = thumbnails/uuid.jpg
+     */
+    private function deleteThumbnailFile(?string $thumbnail): void
+    {
+        if (empty($thumbnail)) {
+            return;
+        }
+
+        // Chuyển URL /storage/thumbnails/xxx.jpg → thumbnails/xxx.jpg
+        $path = preg_replace('#^/storage/#', '', $thumbnail);
+
+        if ($path && Storage::disk('public')->exists($path)) {
+            Storage::disk('public')->delete($path);
+        }
     }
 }

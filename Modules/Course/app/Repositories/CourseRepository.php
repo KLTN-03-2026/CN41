@@ -174,4 +174,20 @@ class CourseRepository extends BaseRepository implements CourseRepositoryInterfa
             ->latest()
             ->paginate($perPage);
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function findTrashed(int $id): \Illuminate\Database\Eloquent\Model
+    {
+        return $this->model->newQuery()->withTrashed()->findOrFail($id);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function findManyTrashed(array $ids): \Illuminate\Database\Eloquent\Collection
+    {
+        return $this->model->newQuery()->withTrashed()->whereIn('id', $ids)->get();
+    }
 }

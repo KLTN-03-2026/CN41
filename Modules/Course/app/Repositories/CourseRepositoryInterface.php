@@ -60,4 +60,14 @@ interface CourseRepositoryInterface extends RepositoryInterface
      * Danh sách courses học viên đã enroll (phân trang).
      */
     public function getByStudent(int $studentId, int $perPage = 15): LengthAwarePaginator;
+
+    /**
+     * Tìm course đã soft-delete theo id.
+     */
+    public function findTrashed(int $id): Model;
+
+    /**
+     * Tìm nhiều courses đã soft-delete theo ids.
+     */
+    public function findManyTrashed(array $ids): \Illuminate\Database\Eloquent\Collection;
 }
