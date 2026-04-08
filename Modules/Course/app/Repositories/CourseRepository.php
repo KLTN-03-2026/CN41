@@ -178,7 +178,7 @@ class CourseRepository extends BaseRepository implements CourseRepositoryInterfa
         $perPage = max(1, min($perPage, static::MAX_PER_PAGE));
 
         return $this->model->newQuery()
-            ->whereHas('students', fn($q) => $q->where('student_id', $studentId))
+            ->whereHas('students', fn($q) => $q->where('students.id', $studentId))
             ->with(['teacher', 'categories'])
             ->latest()
             ->paginate($perPage);

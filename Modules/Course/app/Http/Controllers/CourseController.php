@@ -323,6 +323,32 @@ class CourseController extends Controller
     }
 
     /**
+     * Client: Đăng ký khóa học miễn phí.
+     */
+    public function enrollFree(string $slug): JsonResponse
+    {
+        $course = $this->repository->findBySlug($slug, true);
+        if (!$course) {
+            return $this->error('Khóa học không tồn tại.', 404);
+        }
+
+        if ($course->price > 0) {
+            return $this->error('Khóa học này không miễn phí.', 400);
+        }
+
+        $student = auth('api')->user();
+
+        if (!$course->students()->where('student_id', $student->id)->exists()) {
+            $course->students()->attach($student->id, ['enrolled_at' => now()]);
+            
+            // Cập nhật số lượng học viên (+1)
+            $this->repository->incrementStudentCount($course->id);
+        }
+
+        return $this->success(null, 'Đăng ký thành công! Bạn đã có thể vào học.');
+    }
+
+    /**
      * Client: Danh sách khóa học đã mua (auth:api).
      */
     public function myCourses(Request $request): JsonResponse
@@ -339,6 +365,41 @@ class CourseController extends Controller
         $courses->setCollection(CourseResource::collection($courses->getCollection())->collection);
 
         return $this->paginated($courses);
+    }
+
+    /**
+     * Public: Xem chi tiết bài học nếu là bài học thử (is_preview = 1).
+     */
+    public function publicPreviewLesson(string $courseSlug, string $lessonSlug): JsonResponse
+    {
+        $course = $this->repository->findBySlug($courseSlug, true);
+        if (!$course) {
+            return $this->error('Khóa học không tồn tại.', 404);
+        }
+
+        $lesson = \Modules\Lessons\Models\Lesson::where('course_id', $course->id)
+            ->where('slug', $lessonSlug)
+            ->where('status', 1)
+            ->with(['video', 'document'])
+            ->first();
+
+        if (!$lesson) {
+            return $this->error('Bài học không tồn tại.', 404);
+        }
+
+        if (!$lesson->is_preview) {
+            return $this->error('Đây không phải bài học thử.', 403);
+        }
+
+        return $this->success([
+            'id'           => $lesson->id,
+            'title'        => $lesson->title,
+            'type'         => $lesson->type,
+            'video_url'    => $lesson->video ? $lesson->video->url : null,
+            'document_url' => $lesson->document ? $lesson->document->url : null,
+            'content'      => $lesson->content,
+            'is_preview'   => $lesson->is_preview,
+        ], 'Lấy bài học thử thành công.');
     }
 
     // ── Private Helpers ──

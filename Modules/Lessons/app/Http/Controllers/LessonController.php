@@ -370,6 +370,45 @@ class LessonController extends Controller
     }
 
     /**
+     * Client: Lấy video/chi tiết bài học đã mua
+     */
+    public function myLessonDetail(Request $request, string $slug, string $lessonSlug): JsonResponse
+    {
+        $course = Course::where('slug', $slug)->where('status', 1)->first();
+
+        if (!$course) {
+            return $this->error('Khóa học không tồn tại.', 404);
+        }
+
+        // Kiểm tra student đã enroll
+        $enrolled = $course->students()->where('student_id', auth('api')->id())->exists();
+
+        if (!$enrolled) {
+            return $this->error('Bạn chưa mua khóa học này.', 403);
+        }
+
+        $lesson = Lesson::where('course_id', $course->id)
+            ->where('slug', $lessonSlug)
+            ->where('status', 1)
+            ->with(['video', 'document'])
+            ->first();
+
+        if (!$lesson) {
+            return $this->error('Bài học không tồn tại.', 404);
+        }
+
+        return $this->success([
+            'id'           => $lesson->id,
+            'title'        => $lesson->title,
+            'type'         => $lesson->type,
+            'video_url'    => $lesson->video ? $lesson->video->url : null,
+            'document_url' => $lesson->document ? $lesson->document->url : null,
+            'content'      => $lesson->content,
+            'course_name'  => $course->name,
+        ], 'Lấy chi tiết bài học thành công.');
+    }
+
+    /**
      * Client: Cập nhật tiến độ học bài giảng.
      */
     public function updateProgress(Request $request, int $id): JsonResponse
