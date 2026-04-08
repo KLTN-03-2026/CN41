@@ -106,6 +106,19 @@
               </div>
             </template>
           </div>
+
+          <!-- Các khóa học liên quan -->
+          <div v-if="relatedCourses.length" class="mt-8">
+            <h2 class="font-semibold text-gray-900 mb-4">Các khóa học cùng danh mục</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <CourseCard
+                v-for="relCourse in relatedCourses"
+                :key="relCourse.id"
+                :course="relCourse"
+                image-class="h-36"
+              />
+            </div>
+          </div>
         </div>
 
         <!-- Sidebar -->
@@ -150,17 +163,25 @@
                 </router-link>
               </template>
 
-              <!-- Danh mục -->
+            <!-- Danh mục -->
               <div v-if="course.categories?.length" class="mt-4 pt-4 border-t border-gray-100">
                 <p class="text-xs text-gray-500 mb-2">Danh mục</p>
-                <div class="flex flex-wrap gap-1">
-                  <span
+                <div class="flex flex-wrap gap-2">
+                  <div
                     v-for="cat in course.categories"
                     :key="cat.id"
-                    class="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full"
+                    class="flex flex-wrap items-center gap-1 text-xs"
                   >
-                    {{ cat.name }}
-                  </span>
+                    <template v-if="cat.ancestors && cat.ancestors.length">
+                      <template v-for="ancestor in cat.ancestors" :key="ancestor.id">
+                        <span class="bg-gray-50 text-gray-500 px-2 py-0.5 rounded-full border border-gray-100">{{ ancestor.name }}</span>
+                        <span class="text-gray-300">›</span>
+                      </template>
+                    </template>
+                    <span class="bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full font-medium border border-blue-100">
+                      {{ cat.name }}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -172,13 +193,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useToast } from 'vue-toastification'
 import { coursesApi } from '@/api/coursesApi'
 import { useCartStore } from '@/stores/cart'
 import { formatCurrency } from '@/utils/formatCurrency'
 import { formatSeconds } from '@/utils/formatDuration'
+import CourseCard from '@/components/client/CourseCard.vue'
 
 const route = useRoute()
 const toast = useToast()
@@ -195,7 +217,7 @@ interface Course {
   level: string
   total_students: number
   teacher?: { id: number; name: string } | null
-  categories?: { id: number; name: string }[]
+  categories?: { id: number; name: string; ancestors?: { id: number; name: string }[] }[]
 }
 
 const course        = ref<Course | null>(null)
@@ -206,8 +228,17 @@ const lessonData    = ref<{ is_purchased: boolean; lessons: any[] }>({
   lessons: [],
 })
 
-onMounted(async () => {
-  const slug = route.params.slug as string
+const relatedCourses = ref<Course[]>([])
+const relatedLoading = ref(false)
+
+watch(() => route.params.slug, async (newSlug) => {
+  if (!newSlug) return
+  
+  loading.value = true
+  lessonsLoading.value = true
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+  
+  const slug = newSlug as string
   try {
     const [courseRes, lessonsRes] = await Promise.allSettled([
       coursesApi.publicShow(slug),
@@ -216,6 +247,25 @@ onMounted(async () => {
 
     if (courseRes.status === 'fulfilled') {
       course.value = courseRes.value.data.data
+      
+      // Fetch related courses using the root category if possible
+      if (course.value?.categories?.length) {
+        relatedLoading.value = true
+        try {
+          // Lấy category con tiên quyết
+          const cat = course.value.categories[0]
+          // Sử dụng ancestor cao nhất (root) nếu có, không thì dùng chính nó
+          const rootCatId = (cat.ancestors && cat.ancestors.length) ? cat.ancestors[0].id : cat.id
+          
+          const relatedRes = await coursesApi.publicIndex({ category_id: rootCatId, per_page: 5 })
+          const filtered = relatedRes.data.data.filter((c: Course) => c.id !== course.value?.id)
+          relatedCourses.value = filtered.slice(0, 4)
+        } catch {
+          // ignore
+        } finally {
+          relatedLoading.value = false
+        }
+      }
     }
     if (lessonsRes.status === 'fulfilled') {
       lessonData.value = lessonsRes.value.data.data
@@ -226,7 +276,7 @@ onMounted(async () => {
     loading.value = false
     lessonsLoading.value = false
   }
-})
+}, { immediate: true })
 
 function levelLabel(level: string) {
   return { beginner: 'Cơ bản', intermediate: 'Trung cấp', advanced: 'Nâng cao' }[level] || level
@@ -252,3 +302,12 @@ function addToCart() {
   toast.success('Đã thêm vào giỏ hàng')
 }
 </script>
+
+<style scoped>
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+</style>

@@ -728,7 +728,7 @@ npm run dev
 | 4 | Network | `GET /api/v1/courses` → **200** |
 | 5 | Chỉ thấy | Courses có `status=1` (Published) |
 
-### Test 6.2: Search + Filter
+### Test 6.2: Search + Filter ✅
 
 | # | Hành động | Kết quả mong đợi |
 |---|-----------|-------------------|
@@ -736,7 +736,7 @@ npm run dev
 | 2 | Chọn level | Chỉ hiện courses level đó |
 | 3 | Chọn category | Chỉ hiện courses category đó |
 
-### Test 6.3: Chi tiết khóa học
+### Test 6.3: Chi tiết khóa học ✅
 
 | # | Hành động | Kết quả mong đợi |
 |---|-----------|-------------------|
@@ -744,6 +744,7 @@ npm run dev
 | 2 | Layout 2 cột | Main: breadcrumb + title + mô tả + lessons. Sidebar: thumbnail + giá + CTA |
 | 3 | Danh sách bài giảng | Bài preview: icon "Xem thử". Bài khác: icon khóa 🔒 |
 | 4 | Network | `GET /api/v1/courses/{slug}` + `GET /api/v1/courses/{slug}/lessons` |
+| 5 | Khóa học liên quan | Hiển thị các khóa học cùng danh mục, click vào thì reload dữ liệu |
 
 ### Test 6.4: Nút CTA — Chưa login
 
