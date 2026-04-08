@@ -37,16 +37,16 @@
           <div v-else class="h-full">
             <!-- VIDEO TYPE -->
             <div v-if="lesson.type === 'video'" class="w-full flex justify-center">
-              <div v-if="mediaUrl" class="w-full aspect-video bg-black rounded-xl overflow-hidden shadow-lg border border-gray-200 dark:border-gray-800">
-                <video
-                  ref="videoPlayer"
-                  controls
-                  class="w-full h-full"
+              <div v-if="mediaUrl" class="w-full aspect-video bg-black rounded-xl overflow-hidden shadow-lg border border-gray-200 dark:border-gray-800 relative video-container">
+                <video-player
                   :src="mediaUrl"
-                  playsinline
-                >
-                  Trình duyệt không hỗ trợ xem video.
-                </video>
+                  controls
+                  :playback-rates="[0.5, 0.75, 1, 1.25, 1.5, 2]"
+                  :volume="0.8"
+                  :user-actions="{ hotkeys: true }"
+                  class="video-js vjs-big-play-centered vjs-theme-city"
+                  style="width: 100%; height: 100%"
+                />
               </div>
               <div v-else class="flex flex-col items-center justify-center py-20 text-gray-400">
                 <svg class="w-16 h-16 mb-4 opacity-20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -127,6 +127,9 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { VideoPlayer } from '@videojs-player/vue'
+import 'video.js/dist/video-js.css'
+import '@videojs/themes/dist/city/index.css' // Tùy chọn theme đẹp hơn
 
 const props = defineProps({
   lesson: {
