@@ -2879,9 +2879,265 @@ Module xử lý upload file (video, document, image) cho Admin. Hỗ trợ 2 flo
 
 ---
 
-## 📚 Module: Lessons
+## 📚 Module: Lessons (Sections + Lessons)
 
-Module quản lý bài giảng (Admin CRUD + Client progress tracking).
+Module quản lý cấu trúc khóa học theo 2 cấp: **Chương (Section)** → **Bài giảng (Lesson)**.
+
+> **Admin Prefix:** `/api/admin`
+> **Client Prefix:** `/api/v1`
+> **Controllers:** `SectionController`, `LessonController`
+> **Soft Delete:** ✅ Cả Section và Lesson
+
+---
+
+## 📂 Module: Sections (Chương)
+
+---
+
+### 🛠️ Admin Endpoints — Sections
+
+---
+
+### S1. Danh sách chương của khóa học
+
+| Thuộc tính     | Giá trị                                      |
+|----------------|----------------------------------------------|
+| **Method**     | `GET`                                        |
+| **URL**        | `/api/admin/courses/{course_id}/sections`    |
+| **Auth**       | ✅ Bearer Token (guard: admin)                |
+| **Controller** | `SectionController@index`                    |
+
+#### 📥 Query Parameters
+
+| Param      | Type    | Default | Mô tả                                |
+|------------|---------|---------|--------------------------------------|
+| `status`   | integer | —      | Filter: `0` (draft), `1` (published) |
+| `per_page` | integer | 15      | Số bản ghi mỗi trang                 |
+
+#### 📤 Response — `200 OK` (Paginated)
+
+```json
+{
+  "success": true,
+  "message": "Lấy danh sách chương thành công.",
+  "data": [
+    {
+      "id": 1,
+      "course_id": 1,
+      "title": "Chương 1: Giới thiệu",
+      "description": "Tổng quan khóa học",
+      "order": 0,
+      "status": 1
+    }
+  ],
+  "pagination": { ... }
+}
+```
+
+---
+
+### S2. Tạo chương mới
+
+| Thuộc tính     | Giá trị                                      |
+|----------------|----------------------------------------------|
+| **Method**     | `POST`                                       |
+| **URL**        | `/api/admin/courses/{course_id}/sections`    |
+| **Auth**       | ✅ Bearer Token (guard: admin)                |
+| **Request**    | `StoreSectionRequest`                        |
+| **Controller** | `SectionController@store`                    |
+
+#### 📥 Request Body
+
+| Field         | Type    | Required | Rules                    |
+|---------------|---------|----------|--------------------------|
+| `title`       | string  | ✅       | required, string, max:255 |
+| `description` | string  | ❌       | nullable, string         |
+| `order`       | integer | ❌       | nullable, integer, min:0 |
+| `status`      | integer | ❌       | nullable, in:0,1         |
+
+#### 📤 Response — `201 Created`
+
+```json
+{
+  "success": true,
+  "message": "Tạo chương thành công.",
+  "data": { ... }
+}
+```
+
+---
+
+### S3. Chi tiết chương (kèm danh sách bài giảng)
+
+| Thuộc tính     | Giá trị                          |
+|----------------|----------------------------------|
+| **Method**     | `GET`                            |
+| **URL**        | `/api/admin/sections/{id}`       |
+| **Auth**       | ✅ Bearer Token (guard: admin)    |
+| **Controller** | `SectionController@show`         |
+
+#### 📤 Response — `200 OK`
+
+```json
+{
+  "success": true,
+  "message": "Lấy chi tiết chương thành công.",
+  "data": {
+    "id": 1,
+    "course_id": 1,
+    "title": "Chương 1: Giới thiệu",
+    "description": "...",
+    "order": 0,
+    "status": 1,
+    "lessons": [ ... ]
+  }
+}
+```
+
+---
+
+### S4. Cập nhật chương
+
+| Thuộc tính     | Giá trị                          |
+|----------------|----------------------------------|
+| **Method**     | `PUT/PATCH`                      |
+| **URL**        | `/api/admin/sections/{id}`       |
+| **Auth**       | ✅ Bearer Token (guard: admin)    |
+| **Request**    | `UpdateSectionRequest`           |
+| **Controller** | `SectionController@update`       |
+
+---
+
+### S5. Xóa chương (soft delete)
+
+| Thuộc tính     | Giá trị                          |
+|----------------|----------------------------------|
+| **Method**     | `DELETE`                         |
+| **URL**        | `/api/admin/sections/{id}`       |
+| **Auth**       | ✅ Bearer Token (guard: admin)    |
+| **Controller** | `SectionController@destroy`      |
+
+> **Side effect:** Lessons trong chương sẽ có `section_id = null` (SET NULL, không bị xóa).
+
+---
+
+### S6. Toggle trạng thái chương
+
+| Thuộc tính     | Giá trị                                      |
+|----------------|----------------------------------------------|
+| **Method**     | `PATCH`                                      |
+| **URL**        | `/api/admin/sections/{id}/toggle-status`     |
+| **Auth**       | ✅ Bearer Token (guard: admin)                |
+| **Controller** | `SectionController@toggleStatus`             |
+
+---
+
+### S7. Danh sách chương đã xóa (thùng rác)
+
+| Thuộc tính     | Giá trị                              |
+|----------------|--------------------------------------|
+| **Method**     | `GET`                                |
+| **URL**        | `/api/admin/sections/trashed`        |
+| **Auth**       | ✅ Bearer Token (guard: admin)        |
+| **Controller** | `SectionController@trashed`          |
+
+---
+
+### S8. Khôi phục chương
+
+| Thuộc tính     | Giá trị                                  |
+|----------------|------------------------------------------|
+| **Method**     | `POST`                                   |
+| **URL**        | `/api/admin/sections/{id}/restore`       |
+| **Auth**       | ✅ Bearer Token (guard: admin)            |
+| **Controller** | `SectionController@restore`              |
+
+---
+
+### S9. Xóa vĩnh viễn chương
+
+| Thuộc tính     | Giá trị                                      |
+|----------------|----------------------------------------------|
+| **Method**     | `DELETE`                                     |
+| **URL**        | `/api/admin/sections/{id}/force-delete`      |
+| **Auth**       | ✅ Bearer Token (guard: admin)                |
+| **Controller** | `SectionController@forceDelete`              |
+
+---
+
+### S10. Sắp xếp thứ tự chương (reorder)
+
+| Thuộc tính     | Giá trị                              |
+|----------------|--------------------------------------|
+| **Method**     | `POST`                               |
+| **URL**        | `/api/admin/sections/reorder`        |
+| **Auth**       | ✅ Bearer Token (guard: admin)        |
+| **Controller** | `SectionController@reorder`          |
+
+#### 📥 Request Body
+
+```json
+{
+  "orders": [
+    { "id": 1, "order": 0 },
+    { "id": 2, "order": 1 }
+  ]
+}
+```
+
+> **Constraint:** Tất cả sections phải thuộc cùng 1 course — nếu không → 422.
+
+---
+
+### 🌐 Public Endpoint — Sections
+
+---
+
+### S11. Curriculum khóa học (sections + lessons)
+
+| Thuộc tính     | Giá trị                                    |
+|----------------|--------------------------------------------|
+| **Method**     | `GET`                                      |
+| **URL**        | `/api/v1/courses/{slug}/curriculum`        |
+| **Auth**       | ❌ Không cần (Public)                       |
+| **Controller** | `SectionController@curriculum`             |
+
+#### 📤 Response — `200 OK`
+
+```json
+{
+  "success": true,
+  "message": "Lấy curriculum thành công.",
+  "data": {
+    "course_id": 1,
+    "sections": [
+      {
+        "id": 1,
+        "title": "Chương 1: Giới thiệu",
+        "description": "Tổng quan",
+        "order": 0,
+        "lessons": [
+          {
+            "id": 1,
+            "title": "Bài 1.1 — Giới thiệu",
+            "slug": "bai-1-1-gioi-thieu",
+            "type": "video",
+            "order": 0,
+            "is_preview": true,
+            "duration": 300
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+> Không trả `content`, `video_id`, `document_id`. Chỉ sections + lessons `status=1`.
+
+---
+
+## 📖 Module: Lessons (Bài giảng)
 
 > **Admin Prefix:** `/api/admin`
 > **Client Prefix:** `/api/v1`
@@ -2950,17 +3206,20 @@ Module quản lý bài giảng (Admin CRUD + Client progress tracking).
 
 #### 📥 Request Body
 
-| Field        | Type    | Required | Rules                                     |
-|--------------|---------|----------|-------------------------------------------|
-| `title`      | string  | ✅       | required, string, max:255                 |
-| `type`       | string  | ✅       | required, in:video,document,text          |
-| `content`    | string  | ❌       | nullable, string                          |
-| `video_id`   | integer | ❌       | nullable, exists:media_files,id           |
-| `document_id`| integer | ❌       | nullable, exists:media_files,id           |
-| `order`      | integer | ❌       | nullable, integer, min:0                  |
-| `is_preview` | boolean | ❌       | nullable, boolean (default: false)        |
-| `duration`   | integer | ❌       | nullable, integer, min:0                  |
-| `status`     | integer | ❌       | nullable, in:0,1 (default: 0)             |
+| Field         | Type    | Required | Rules                                     |
+|---------------|---------|----------|-------------------------------------------|
+| `section_id`  | integer | ❌       | nullable, exists:sections,id              |
+| `title`       | string  | ✅       | required, string, max:255                 |
+| `type`        | string  | ✅       | required, in:video,document,text          |
+| `content`     | string  | ❌       | nullable, string                          |
+| `video_id`    | integer | ❌       | nullable, exists:media,id                 |
+| `document_id` | integer | ❌       | nullable, exists:media,id                 |
+| `order`       | integer | ❌       | nullable, integer, min:0                  |
+| `is_preview`  | boolean | ❌       | nullable, boolean (default: false)        |
+| `duration`    | integer | ❌       | nullable, integer, min:0                  |
+| `status`      | integer | ❌       | nullable, in:0,1 (default: 0)             |
+
+> **Lưu ý:** Nếu truyền `section_id`, section đó phải thuộc đúng `course_id` trong URL — nếu không → 422.
 
 #### 📤 Response — `201 Created`
 
@@ -3177,46 +3436,151 @@ Module quản lý bài giảng (Admin CRUD + Client progress tracking).
 
 ---
 
-### 🌐 Public Endpoint (from CourseController)
+### 11. Cập nhật trạng thái nhiều bài giảng (Bulk Action)
 
----
+| Thuộc tính     | Giá trị                               |
+|----------------|---------------------------------------|
+| **Method**     | `POST`                                |
+| **URL**        | `/api/v1/admin/lessons/bulk-action`   |
+| **Auth**       | ✅ Bearer Token (guard: admin)         |
+| **Controller** | `LessonController@bulkAction`         |
+| **Request**    | `BulkActionLessonsRequest`            |
 
-### 11. Danh sách bài giảng công khai (lock nếu chưa mua)
+#### 📥 Request Body
 
-| Thuộc tính     | Giá trị                                          |
-|----------------|--------------------------------------------------|
-| **Method**     | `GET`                                            |
-| **URL**        | `/api/v1/courses/{slug}/lessons`                 |
-| **Auth**       | ❌ Optional (nếu có token sẽ check `isPurchased`) |
-| **Controller** | `CourseController@publicLessons`                 |
+```json
+{
+  "ids": [1, 2, 3],
+  "action": "activate"
+}
+```
 
-#### Logic:
-- Đã mua (`isPurchased=true`): trả **tất cả** lessons `status=1`
-- Chưa mua (`isPurchased=false`): chỉ trả lessons `status=1` **AND** `is_preview=true`
-- Không trả `content`, `video_id`, `document_id`
+| Field    | Type   | Required | Rules                            |
+|----------|--------|----------|----------------------------------|
+| `ids`    | array  | ✅       | required, array, exists:lessons,id|
+| `action` | string | ✅       | required, in:activate,deactivate |
 
 #### 📤 Response — `200 OK`
 
 ```json
 {
   "success": true,
-  "message": "Lấy danh sách bài giảng thành công.",
-  "data": {
-    "is_purchased": false,
-    "lessons": [
-      {
-        "id": 1,
-        "title": "Giới thiệu khóa học",
-        "slug": "gioi-thieu-khoa-hoc",
-        "type": "video",
-        "order": 0,
-        "is_preview": true,
-        "duration": 300
-      }
-    ]
-  }
+  "message": "Cập nhật trạng thái thành công.",
+  "data": null
 }
 ```
+
+---
+
+### 12. Xóa nhiều bài giảng (Bulk Delete - Soft Delete)
+
+| Thuộc tính     | Giá trị                               |
+|----------------|---------------------------------------|
+| **Method**     | `DELETE`                              |
+| **URL**        | `/api/v1/admin/lessons/bulk-delete`   |
+| **Auth**       | ✅ Bearer Token (guard: admin)         |
+| **Controller** | `LessonController@bulkDelete`         |
+| **Request**    | `BulkDeleteLessonsRequest`            |
+
+#### 📥 Request Body
+
+```json
+{
+  "ids": [1, 2, 3]
+}
+```
+
+#### 📤 Response — `200 OK`
+
+```json
+{
+  "success": true,
+  "message": "Xóa bài giảng thành công.",
+  "data": null
+}
+```
+
+> **Side effect:** Tự động decrement `total_lessons` trên Course cho các bài giảng được xóa.
+
+---
+
+### 13. Khôi phục nhiều bài giảng (Bulk Restore)
+
+| Thuộc tính     | Giá trị                               |
+|----------------|---------------------------------------|
+| **Method**     | `POST`                                |
+| **URL**        | `/api/v1/admin/lessons/bulk-restore`  |
+| **Auth**       | ✅ Bearer Token (guard: admin)         |
+| **Controller** | `LessonController@bulkRestore`        |
+| **Request**    | `BulkRestoreLessonsRequest`           |
+
+#### 📥 Request Body
+
+```json
+{
+  "ids": [1, 2, 3]
+}
+```
+
+#### 📤 Response — `200 OK`
+
+```json
+{
+  "success": true,
+  "message": "Khôi phục bài giảng thành công.",
+  "data": null
+}
+```
+
+> **Side effect:** Tự động increment `total_lessons` trên Course tương ứng.
+
+---
+
+### 14. Xóa vĩnh viễn nhiều bài giảng (Bulk Force Delete)
+
+| Thuộc tính     | Giá trị                                 |
+|----------------|-----------------------------------------|
+| **Method**     | `DELETE`                                |
+| **URL**        | `/api/v1/admin/lessons/bulk-force-delete` |
+| **Auth**       | ✅ Bearer Token (guard: admin)           |
+| **Controller** | `LessonController@bulkForceDelete`      |
+| **Request**    | `BulkForceDeleteLessonsRequest`         |
+
+#### 📥 Request Body
+
+```json
+{
+  "ids": [1, 2, 3]
+}
+```
+
+#### 📤 Response — `200 OK`
+
+```json
+{
+  "success": true,
+  "message": "Xóa vĩnh viễn bài giảng thành công.",
+  "data": null
+}
+```
+
+---
+
+### 🌐 Public Endpoint
+
+> **Lưu ý:** Endpoint curriculum đã chuyển sang `SectionController@curriculum` — xem **S11** ở phần Sections phía trên.
+
+---
+
+### 11. ~~Danh sách bài giảng công khai~~ → Thay bằng Curriculum (S11)
+
+Endpoint `/api/v1/courses/{slug}/lessons` (CourseController@publicLessons) vẫn còn hoạt động nhưng **deprecated** — FE nên dùng endpoint curriculum mới:
+
+```
+GET /api/v1/courses/{slug}/curriculum  →  SectionController@curriculum
+```
+
+Endpoint mới trả cấu trúc đầy đủ theo section thay vì flat list.
 
 ---
 
@@ -3240,36 +3604,36 @@ Module quản lý bài giảng (Admin CRUD + Client progress tracking).
 {
   "success": true,
   "message": "Lấy danh sách bài giảng thành công.",
-  "data": [
-    {
-      "id": 1,
-      "title": "Giới thiệu khóa học",
-      "slug": "gioi-thieu-khoa-hoc",
-      "type": "video",
-      "order": 0,
-      "is_preview": true,
-      "duration": 300,
-      "status": 1,
-      "progress": {
-        "is_completed": true,
-        "watched_seconds": 280,
-        "completed_at": "2026-04-07T12:00:00.000000Z"
+  "data": {
+    "sections": [
+      {
+        "id": 1,
+        "title": "Chương 1: Giới thiệu",
+        "order": 0,
+        "lessons": [
+          {
+            "id": 1,
+            "title": "Bài 1.1 — Giới thiệu",
+            "slug": "bai-1-1-gioi-thieu",
+            "type": "video",
+            "order": 0,
+            "is_preview": true,
+            "duration": 300,
+            "progress": {
+              "is_completed": true,
+              "watched_seconds": 300,
+              "completed_at": "2026-04-08T10:00:00.000000Z"
+            }
+          }
+        ]
       }
-    },
-    {
-      "id": 2,
-      "title": "Bài 1: Cài đặt môi trường",
-      "slug": "bai-1-cai-dat-moi-truong",
-      "type": "video",
-      "order": 1,
-      "is_preview": false,
-      "duration": 600,
-      "status": 1,
-      "progress": null
-    }
-  ]
+    ],
+    "orphan_lessons": []
+  }
 }
 ```
+
+> `orphan_lessons`: bài giảng chưa được gán vào chương nào (`section_id = null`).
 
 #### ❌ Response — `403 Forbidden`
 
@@ -3351,18 +3715,27 @@ Module quản lý bài giảng (Admin CRUD + Client progress tracking).
     "total_lessons": 10,
     "completed_lessons": 3,
     "percent": 30,
-    "lessons": [
+    "sections": [
       {
         "id": 1,
-        "title": "Giới thiệu khóa học",
-        "is_completed": true,
-        "watched_seconds": 280
-      },
-      {
-        "id": 2,
-        "title": "Bài 1: Cài đặt môi trường",
-        "is_completed": false,
-        "watched_seconds": 120
+        "title": "Chương 1: Giới thiệu",
+        "order": 0,
+        "total": 3,
+        "completed": 2,
+        "lessons": [
+          {
+            "id": 1,
+            "title": "Bài 1.1 — Giới thiệu",
+            "is_completed": true,
+            "watched_seconds": 300
+          },
+          {
+            "id": 2,
+            "title": "Bài 1.2 — Cài đặt",
+            "is_completed": false,
+            "watched_seconds": 120
+          }
+        ]
       }
     ]
   }
@@ -3401,6 +3774,7 @@ Module quản lý bài giảng (Admin CRUD + Client progress tracking).
 - **Teachers:** Soft delete + bulk actions. Public API chỉ trả về teachers active (`status=1`). `publicShow` dùng slug, bao gồm danh sách courses của giảng viên đó.
 - **Courses:** Soft delete + bulk actions. 3 migrations (courses, categories_courses pivot, students_course). Admin CRUD đầy đủ. Public API chỉ trả published. Hỗ trợ filter theo search, category, level, teacher, status. `publicLessons()` trả lessons lock/unlock theo trạng thái mua.
 - **Upload (Media Service):** Hỗ trợ 2 flow: Local (dev, getID3 extract metadata) và S3 Presigned URL (production, FE gửi metadata). File lưu tên UUID, không expose `path`. `reference_count` kiểm tra trước khi xóa. Artisan `media:prune-orphans` dọn file rác hàng ngày 3:00 sáng.
-- **Lessons:** 2 migrations (lessons, lesson_progress). Admin CRUD 10 endpoints (CRUD + toggle-status + trashed + restore + force-delete + reorder). Public 1 endpoint (lock logic). Client 3 endpoints (myLessons, updateProgress, courseProgress). Soft delete có side-effect increment/decrement `total_lessons` trên Course.
-- **Total endpoints:** 81 (11 Auth + 15 Users + 19 Categories + 16 Courses + 6 Upload + 14 Lessons)
+- **Sections:** Bảng mới `sections` tạo cấp trung gian Course → Section → Lesson. Admin CRUD đầy đủ (11 endpoints: CRUD + toggle + trashed + restore + force-delete + reorder). Public 1 endpoint `curriculum` trả cấu trúc đầy đủ theo chương. Xóa section → lessons không bị xóa (SET NULL).
+- **Lessons:** 4 migrations (sections, lessons, lesson_progress, add_section_id). Bảng lessons có thêm `section_id nullable`. Admin CRUD 10 endpoints. Public curriculum chuyển sang SectionController. Client 3 endpoints (myLessons group theo section, updateProgress, courseProgress group theo section). Soft delete có side-effect increment/decrement `total_lessons` trên Course.
+- **Total endpoints:** 92 (11 Auth + 15 Users + 19 Categories + 16 Courses + 6 Upload + 14 Lessons + 11 Sections)
 
