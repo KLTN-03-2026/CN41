@@ -489,7 +489,7 @@ async function submitForm() {
     slug: form.value.slug,
     description: form.value.description || null,
     teacher_id: form.value.teacher_id,
-    category_id: form.value.category_id,
+    category_ids: form.value.category_id ? [form.value.category_id] : [],
     level: form.value.level,
     status: form.value.status,
     price: form.value.price,
