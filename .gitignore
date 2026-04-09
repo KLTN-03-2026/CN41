@@ -10,6 +10,9 @@
 !e-learning-backend/
 !e-learning-frontend/
 !.gitignore
+!CLAUDE.md
+!.claude/
+!AGENTS.md
 !README.md
 !LICENSE
 !GIT_WORKFLOW.md
