@@ -48,6 +48,11 @@ const router = createRouter({
           component: () => import('@/pages/client/MyCoursesPage.vue'),
           meta: { requiresAuth: true, guard: 'student' }
         },
+        {
+          path: 'my-orders',
+          component: () => import('@/pages/client/MyOrdersPage.vue'),
+          meta: { requiresAuth: true, guard: 'student' }
+        },
         // LearnPage → đã chuyển ra ngoài ClientLayout (fullscreen)
         {
           path: 'cart',

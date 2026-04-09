@@ -216,6 +216,7 @@
 import { ref, computed, onMounted, markRaw, type Component } from 'vue'
 import { UserGroupIcon, BoxCubeIcon, BoxIcon, BarChartIcon, ChevronRightIcon } from '@/icons'
 import { formatCurrency } from '@/utils/formatCurrency'
+import { ordersApi } from '@/api/ordersApi'
 
 const SKELETON_HEIGHTS = [55, 72, 48, 85, 63, 90, 78, 42, 68, 80, 58, 45]
 
@@ -323,27 +324,53 @@ const statusLabel = (status: string) =>
 
 onMounted(async () => {
   try {
-    // TODO: thay bằng dashboardApi khi BE sẵn sàng
-    await new Promise((r) => setTimeout(r, 600))
-    statValues.value = { students: 1240, courses: 38, orders: 526, revenue: 85600000 }
-    revenueData.value = MONTHS.map((month, i) => ({
-      month,
-      value: [4200000, 5800000, 3900000, 7100000, 6500000, 9200000, 8400000, 11000000, 7800000, 9600000, 12000000, 8500000][i],
-    }))
-    topCourses.value = [
-      { id: 1, title: 'Lập trình Python cơ bản', enrolled: 312, revenue: 15600000 },
-      { id: 2, title: 'Thiết kế UI/UX với Figma', enrolled: 248, revenue: 12400000 },
-      { id: 3, title: 'React.js từ A đến Z', enrolled: 196, revenue: 9800000 },
-      { id: 4, title: 'Laravel API Development', enrolled: 154, revenue: 7700000 },
-      { id: 5, title: 'Vue 3 & Pinia thực chiến', enrolled: 128, revenue: 6400000 },
-    ]
-    recentOrders.value = [
-      { id: 1, student_name: 'Nguyễn Văn A', course_title: 'Lập trình Python cơ bản', amount: 499000, status: 'paid' },
-      { id: 2, student_name: 'Trần Thị B', course_title: 'Thiết kế UI/UX với Figma', amount: 599000, status: 'paid' },
-      { id: 3, student_name: 'Lê Minh C', course_title: 'React.js từ A đến Z', amount: 699000, status: 'pending' },
-      { id: 4, student_name: 'Phạm Thu D', course_title: 'Laravel API Development', amount: 799000, status: 'failed' },
-      { id: 5, student_name: 'Hoàng Anh E', course_title: 'Vue 3 & Pinia thực chiến', amount: 499000, status: 'paid' },
-    ]
+    // Fetch revenue stats từ API
+    const [revenueRes, ordersRes] = await Promise.allSettled([
+      ordersApi.revenueStats({ period: 'monthly', from: `${currentYear}-01-01`, to: `${currentYear}-12-31` }),
+      ordersApi.adminList({ per_page: 5 }),
+    ])
+
+    // Revenue stats
+    if (revenueRes.status === 'fulfilled') {
+      const data = revenueRes.value.data.data
+      statValues.value.revenue = data.total_revenue || 0
+      statValues.value.orders  = data.total_orders || 0
+
+      // Map monthly data vào chart
+      if (data.data?.length) {
+        const monthMap = new Map<number, number>()
+        data.data.forEach((item: any) => {
+          monthMap.set(item.month, Number(item.total_revenue))
+        })
+        revenueData.value = MONTHS.map((month, i) => ({
+          month,
+          value: monthMap.get(i + 1) || 0,
+        }))
+      }
+    }
+
+    // Recent orders
+    if (ordersRes.status === 'fulfilled') {
+      const ordersData = ordersRes.value.data.data || []
+      recentOrders.value = ordersData.map((o: any) => ({
+        id: o.id,
+        student_name: o.student?.name || '—',
+        course_title: o.items?.[0]?.course?.name || '—',
+        amount: Number(o.total_amount),
+        status: o.status,
+      }))
+    }
+
+    // Fallback: fetch counts nếu chưa có API riêng
+    if (!statValues.value.students) {
+      statValues.value.students = 0
+    }
+    if (!statValues.value.courses) {
+      statValues.value.courses = 0
+    }
+  } catch {
+    // Fallback mock data nếu API chưa sẵn sàng
+    statValues.value = { students: 0, courses: 0, orders: 0, revenue: 0 }
   } finally {
     loading.value = false
   }

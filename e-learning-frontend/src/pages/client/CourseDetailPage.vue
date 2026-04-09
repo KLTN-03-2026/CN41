@@ -396,6 +396,14 @@ function addToCart() {
   }
 
   if (!course.value) return
+
+  // Kiểm tra đã sở hữu khóa học chưa
+  if (lessonData.value.is_purchased) {
+    toast.info('Bạn đã sở hữu khóa học này!')
+    router.push(`/courses/${course.value.slug}/learn`)
+    return
+  }
+
   cartStore.addItem({
     id: course.value.id,
     name: course.value.name,
