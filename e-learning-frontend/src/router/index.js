@@ -114,7 +114,11 @@ router.beforeEach((to, from, next) => {
   // Route chỉ dành cho guest (login page)
   if (to.meta.requiresGuest) {
     if (to.meta.guard === 'admin' && adminToken) return next('/admin/dashboard')
-    if (to.meta.guard === 'student' && studentToken) return next('/')
+    // Trang /login client: redirect nếu đã login (student hoặc admin)
+    if (to.meta.guard === 'student') {
+      if (studentToken) return next('/')
+      if (adminToken) return next('/admin/dashboard')
+    }
   }
 
   next()

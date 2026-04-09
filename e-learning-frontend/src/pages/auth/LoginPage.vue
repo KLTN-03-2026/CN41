@@ -103,6 +103,7 @@ import { toTypedSchema } from '@vee-validate/zod'
 import { useToast } from 'vue-toastification'
 import { BookOpen, Mail, Lock, Eye, EyeOff, AlertCircle } from 'lucide-vue-next'
 import { useStudentAuthStore } from '@/stores/studentAuth'
+import { useAdminAuthStore } from '@/stores/adminAuth'
 
 export default {
   components: { Form, Field, BookOpen, Mail, Lock, Eye, EyeOff, AlertCircle },
@@ -111,6 +112,7 @@ export default {
     const route  = useRoute()
     const toast  = useToast()
     const studentStore = useStudentAuthStore()
+    const adminStore   = useAdminAuthStore()
 
     const showPassword = ref(false)
     const apiError     = ref('')
@@ -124,16 +126,28 @@ export default {
 
     const onSubmit = async (values) => {
       apiError.value = ''
-      const result = await studentStore.login(values.email, values.password)
 
-      if (result.success) {
+      // Thử login student trước
+      const studentResult = await studentStore.login(values.email, values.password)
+
+      if (studentResult.success) {
         toast.success('Đăng nhập thành công!')
-        // Redirect về trang trước nếu có, không thì về home
         const redirect = route.query.redirect || '/'
         router.push(redirect)
-      } else {
-        apiError.value = result.message || 'Email hoặc mật khẩu không chính xác.'
+        return
       }
+
+      // Nếu student login thất bại (401) → thử login admin/teacher
+      const adminResult = await adminStore.login(values.email, values.password)
+
+      if (adminResult.success) {
+        toast.success('Đăng nhập thành công!')
+        router.push('/admin/dashboard')
+        return
+      }
+
+      // Cả hai đều thất bại
+      apiError.value = 'Email hoặc mật khẩu không chính xác.'
     }
 
     return { schema, onSubmit, showPassword, apiError }
