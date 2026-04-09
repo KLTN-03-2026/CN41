@@ -12,6 +12,7 @@
 !.gitignore
 !README.md
 !LICENSE
+!GIT_WORKFLOW.md
 
 # ---------- Thư mục/file không cần push ----------
 # Template tham khảo
