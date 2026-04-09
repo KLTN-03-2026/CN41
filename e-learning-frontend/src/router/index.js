@@ -24,7 +24,12 @@ const router = createRouter({
         { path: 'courses/create', component: () => import('@/pages/admin/CourseFormPage.vue') },
         { path: 'courses/:id/edit', component: () => import('@/pages/admin/CourseFormPage.vue') },
         { path: 'categories', component: () => import('@/pages/admin/CategoriesPage.vue') },
-
+        { path: 'users', component: () => import('@/pages/admin/UsersPage.vue') },
+        { path: 'teachers', component: () => import('@/pages/admin/TeachersPage.vue') },
+        { path: 'students', component: () => import('@/pages/admin/StudentsPage.vue') },
+        { path: 'orders', component: () => import('@/pages/admin/OrdersPage.vue') },
+        { path: 'posts', component: () => import('@/pages/admin/PostsPage.vue') },
+        { path: 'coupons', component: () => import('@/pages/admin/CouponsPage.vue') },
       ]
     },
 
