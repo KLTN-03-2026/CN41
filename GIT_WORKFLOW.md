@@ -154,8 +154,8 @@ git commit -m "ui(checkout): thêm trang thanh toán và xác nhận đơn hàng
 git checkout main
 git merge feature/payment-vnpay
 
-# Bước 4: Push lên GitHub
-git push origin main
+# Bước 4: Push lên cả 3 repo
+git push-all
 
 # Bước 5: Xóa branch đã dùng xong
 git branch -d feature/payment-vnpay
@@ -270,32 +270,40 @@ php artisan optimize:clear
 
 ---
 
-## 8. Sync code từ repo riêng về CN41
+## 8. Push code lên cả 3 repo
 
-Khi repo BE hoặc FE riêng có commit mới cần đưa vào CN41:
+Dự án dùng **monorepo local** với 3 remote:
+
+| Remote | Repo | Nội dung |
+|--------|------|---------|
+| `origin` | KLTN-03-2026/CN41 | Toàn bộ monorepo (repo nhóm) |
+| `backend-origin` | ahryxx0602/e-learning-backend | Chỉ code BE (subtree split) |
+| `frontend-origin` | ahryxx0602/e-learning-frontend | Chỉ code FE (subtree split) |
+
+### Setup alias (chỉ cần làm 1 lần)
 
 ```bash
-cd ~/DATN/e-learning
-
-# Fetch code mới từ repo riêng
-git fetch backend-origin    # hoặc frontend-origin
-
-# Sync backend
-git rm -r --cached e-learning-backend/
-rm -rf e-learning-backend/
-git read-tree --prefix=e-learning-backend/ -u backend-origin/main
-git commit -m "chore: sync latest backend changes from standalone repo"
-
-# Sync frontend (nếu cần)
-git rm -r --cached e-learning-frontend/
-rm -rf e-learning-frontend/
-git read-tree --prefix=e-learning-frontend/ -u frontend-origin/main
-git commit -m "chore: sync latest frontend changes from standalone repo"
-
-git push origin main
+git config alias.push-all '!git push origin main && git push backend-origin $(git subtree split --prefix=e-learning-backend main):main --force && git push frontend-origin $(git subtree split --prefix=e-learning-frontend main):main --force'
 ```
 
-> **Lưu ý:** Thao tác này thay thế hoàn toàn thư mục — chỉ dùng khi muốn đồng bộ toàn bộ từ repo riêng. Nếu chỉ sửa vài file thì commit thẳng vào CN41.
+### Push hàng ngày
+
+Sau khi commit xong, chạy **1 lệnh duy nhất**:
+
+```bash
+git push-all
+```
+
+Lệnh này sẽ tự động:
+1. Push toàn bộ monorepo lên `origin` (CN41)
+2. Tách và push chỉ `e-learning-backend/` lên `backend-origin`
+3. Tách và push chỉ `e-learning-frontend/` lên `frontend-origin`
+
+> **Lưu ý:** `git push-all` dùng `--force` cho BE/FE solo repo — bình thường vì đây là repo cá nhân, chỉ mình bạn dùng.
+
+### Branch `history` trên BE/FE solo
+
+Mỗi repo solo có branch `history` chứa lịch sử commit từ tháng 3/2026 — dùng để chứng minh quá trình làm việc cho KLTN. **Không merge, không xóa branch này.**
 
 ---
 
@@ -362,7 +370,8 @@ git show <commit-hash>:<đường-dẫn-file>
 ### Push / Pull
 
 ```bash
-git push origin main                    # push lên GitHub
+git push-all                            # push lên cả 3 repo (origin + BE + FE)
+git push origin main                    # push chỉ lên repo nhóm CN41
 git pull origin main                    # kéo code mới về
 git push origin <branch>               # push branch lên GitHub
 ```
