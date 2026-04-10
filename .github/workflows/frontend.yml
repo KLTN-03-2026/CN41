@@ -10,7 +10,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    # Chỉ định đường dẫn tới thư mục Frontend
     defaults:
       run:
         working-directory: ./e-learning-frontend
@@ -23,39 +22,6 @@ jobs:
       with:
         node-version: '20'
         cache: 'npm'
-        # Khai báo chính xác vị trí file lock để GitHub lưu cache
-        cache-dependency-path: ./e-learning-frontend/package-lock.json
-
-    - name: Install Dependencies
-      run: npm install
-
-    - name: Build Project
-      run: npm run buildname: Vue.js CI
-
-on:
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-
-    # Chỉ định đường dẫn tới thư mục Frontend
-    defaults:
-      run:
-        working-directory: ./e-learning-frontend
-
-    steps:
-    - uses: actions/checkout@v4
-
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20'
-        cache: 'npm'
-        # Khai báo chính xác vị trí file lock để GitHub lưu cache
         cache-dependency-path: ./e-learning-frontend/package-lock.json
 
     - name: Install Dependencies
