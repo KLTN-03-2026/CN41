@@ -73,8 +73,8 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  (e: 'update:show', value: boolean): void
-  (e: 'submit'): void
+  'update:show': [value: boolean]
+  'submit': []
 }>()
 
 function closeModal() {
