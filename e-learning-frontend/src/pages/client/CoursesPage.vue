@@ -78,6 +78,8 @@ import { ref, reactive, onMounted } from 'vue'
 import { courseService } from '@/services/course.service'
 import { categoryService } from '@/services/category.service'
 import CourseCard from '@/components/client/CourseCard.vue'
+import { usePagination } from '@/composables/usePagination'
+import { useDebounceSearch } from '@/composables/useDebounceSearch'
 
 interface Course {
   id: number
@@ -93,18 +95,11 @@ interface Course {
 
 const courses    = ref<Course[]>([])
 const categories = ref<{ id: number; name: string; depth?: number }[]>([])
-const pagination = ref<any>(null)
 const loading    = ref(true)
 
 const filters = reactive({ search: '', level: '', category_id: '' })
 
-let debounceTimer: ReturnType<typeof setTimeout> | null = null
-function debouncedFetch() {
-  if (debounceTimer) clearTimeout(debounceTimer)
-  debounceTimer = setTimeout(() => fetchPage(1), 400)
-}
-
-async function fetchPage(page = 1) {
+async function loadPage(page = 1) {
   loading.value = true
   try {
     const params: Record<string, any> = { page, per_page: 12 }
@@ -114,10 +109,17 @@ async function fetchPage(page = 1) {
 
     const res = await courseService.publicIndex(params)
     courses.value = res.data.data
-    pagination.value = res.data.pagination
+    updatePagination(res.data.pagination)
   } finally {
     loading.value = false
   }
+}
+
+const { pagination, setPage, updatePagination } = usePagination(loadPage)
+const { debounce: debouncedFetch } = useDebounceSearch(() => setPage(1))
+
+function fetchPage(page: number) {
+  setPage(page)
 }
 
 async function fetchCategories() {
@@ -128,10 +130,9 @@ async function fetchCategories() {
 }
 
 onMounted(() => {
-  fetchPage()
+  loadPage()
   fetchCategories()
 })
-
 </script>
 
 <style scoped>

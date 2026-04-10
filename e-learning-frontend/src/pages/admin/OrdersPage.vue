@@ -4,7 +4,7 @@
     <div class="flex items-center justify-between mb-6">
       <h1 class="text-2xl font-bold text-gray-900">Quản lý đơn hàng</h1>
       <div class="flex items-center gap-2 text-sm text-gray-500">
-        <span class="font-medium text-gray-800">{{ pagination.total }}</span> đơn hàng
+        <span class="font-medium text-gray-800">{{ activePagination?.total ?? 0 }}</span> đơn hàng
       </div>
     </div>
 
@@ -25,7 +25,7 @@
         <!-- Status -->
         <select
           v-model="filters.status"
-          @change="fetchOrders()"
+          @change="activeSetPage(1)"
           class="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
         >
           <option value="">Tất cả trạng thái</option>
@@ -39,13 +39,13 @@
         <!-- Date range -->
         <input
           v-model="filters.from"
-          @change="fetchOrders()"
+          @change="activeSetPage(1)"
           type="date"
           class="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
         />
         <input
           v-model="filters.to"
-          @change="fetchOrders()"
+          @change="activeSetPage(1)"
           type="date"
           class="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
         />
@@ -139,7 +139,7 @@
                     </svg>
                   </button>
                   <button
-                    @click="handleDelete(order.id)"
+                    @click="deleteOrder.confirm(order)"
                     class="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                     title="Xoá"
                   >
@@ -155,17 +155,17 @@
       </div>
 
       <!-- Pagination -->
-      <div v-if="pagination.last_page > 1" class="flex justify-between items-center px-4 py-3 border-t border-gray-100">
+      <div v-if="activePagination && activePagination.last_page > 1" class="flex justify-between items-center px-4 py-3 border-t border-gray-100">
         <span class="text-xs text-gray-500">
-          Hiển thị {{ pagination.from }}–{{ pagination.to }} / {{ pagination.total }}
+          Hiển thị {{ activePagination.from }}–{{ activePagination.to }} / {{ activePagination.total }}
         </span>
         <div class="flex gap-1">
           <button
-            v-for="page in pagination.last_page"
+            v-for="page in activePagination.last_page"
             :key="page"
-            @click="fetchOrders(page)"
+            @click="activeSetPage(page)"
             class="w-8 h-8 rounded-lg text-xs font-medium transition-colors"
-            :class="page === pagination.current_page
+            :class="page === activePagination.current_page
               ? 'bg-blue-500 text-white'
               : 'text-gray-600 hover:bg-gray-100'"
           >
@@ -175,12 +175,28 @@
       </div>
     </div>
 
+    <!-- Confirm Delete Modal -->
+    <ConfirmModal
+      :show="deleteOrder.isOpen.value"
+      title="Xác nhận xoá"
+      :loading="deleteOrder.loading.value"
+      confirm-text="Xoá"
+      loading-text="Đang xoá..."
+      @cancel="deleteOrder.cancel()"
+      @confirm="deleteOrder.execute()"
+    >
+      <p>
+        Bạn có chắc muốn xoá đơn hàng
+        <strong class="text-gray-800 dark:text-white/90">{{ deleteOrder.target.value?.order_code }}</strong>?
+      </p>
+    </ConfirmModal>
+
     <!-- Detail Modal -->
     <OrderDetailModal
       :show="showDetail"
       :order-id="selectedOrderId"
       @close="showDetail = false"
-      @updated="fetchOrders(pagination.current_page)"
+      @updated="loadPage(activeCurrentPage)"
     />
   </div>
 </template>
@@ -192,19 +208,15 @@ import { orderService } from '@/services/order.service'
 import { formatCurrency } from '@/utils/formatCurrency'
 import OrderStatusBadge from '@/components/common/OrderStatusBadge.vue'
 import OrderDetailModal from '@/components/admin/OrderDetailModal.vue'
+import ConfirmModal from '@/components/common/ConfirmModal.vue'
+import { usePagination } from '@/composables/usePagination'
+import { useDebounceSearch } from '@/composables/useDebounceSearch'
+import { useDeleteConfirm } from '@/composables/useDeleteConfirm'
 
 const toast = useToast()
 
 const loading = ref(true)
 const orders = ref<any[]>([])
-const pagination = reactive({
-  current_page: 1,
-  last_page: 1,
-  per_page: 15,
-  total: 0,
-  from: 0,
-  to: 0,
-})
 
 const filters = reactive({
   search: '',
@@ -216,27 +228,13 @@ const filters = reactive({
 const showDetail = ref(false)
 const selectedOrderId = ref<number | null>(null)
 
-let debounceTimer: ReturnType<typeof setTimeout>
-
 function formatDate(iso: string) {
   if (!iso) return ''
   return new Date(iso).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
 }
 
-function debouncedFetch() {
-  clearTimeout(debounceTimer)
-  debounceTimer = setTimeout(() => fetchOrders(), 400)
-}
-
-function resetFilters() {
-  filters.search = ''
-  filters.status = ''
-  filters.from = ''
-  filters.to = ''
-  fetchOrders()
-}
-
-async function fetchOrders(page = 1) {
+// ── Fetch with usePagination ──────────────────────────────────
+async function loadPage(page = 1) {
   loading.value = true
   try {
     const params: any = { page, per_page: 15 }
@@ -247,7 +245,7 @@ async function fetchOrders(page = 1) {
 
     const res = await orderService.adminList(params)
     orders.value = res.data.data
-    Object.assign(pagination, res.data.pagination)
+    activeUpdatePagination(res.data.pagination)
   } catch {
     toast.error('Không thể tải danh sách đơn hàng.')
   } finally {
@@ -255,22 +253,37 @@ async function fetchOrders(page = 1) {
   }
 }
 
+const {
+  pagination: activePagination,
+  currentPage: activeCurrentPage,
+  setPage: activeSetPage,
+  updatePagination: activeUpdatePagination,
+} = usePagination(loadPage, 15)
+
+// ── Debounce search ───────────────────────────────────────────
+const { debounce: debouncedFetch } = useDebounceSearch(() => activeSetPage(1))
+
+// ── Delete confirmation ───────────────────────────────────────
+const deleteOrder = useDeleteConfirm({
+  async onConfirm(order: any) {
+    await orderService.adminDelete(order.id)
+    toast.success('Đơn hàng đã được xoá.')
+    loadPage(activeCurrentPage.value)
+  },
+})
+
+function resetFilters() {
+  filters.search = ''
+  filters.status = ''
+  filters.from = ''
+  filters.to = ''
+  activeSetPage(1)
+}
+
 function openDetail(id: number) {
   selectedOrderId.value = id
   showDetail.value = true
 }
 
-async function handleDelete(id: number) {
-  if (!confirm('Bạn có chắc muốn xoá đơn hàng này?')) return
-
-  try {
-    await orderService.adminDelete(id)
-    toast.success('Đơn hàng đã được xoá.')
-    fetchOrders(pagination.current_page)
-  } catch {
-    toast.error('Không thể xoá đơn hàng.')
-  }
-}
-
-onMounted(() => fetchOrders())
+onMounted(() => loadPage())
 </script>

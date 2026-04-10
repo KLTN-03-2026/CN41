@@ -145,97 +145,22 @@
             <tr v-else-if="!allCategories.length">
               <td colspan="5" class="text-center py-10 text-gray-400 text-sm">Chưa có danh mục nào</td>
             </tr>
-            <template v-for="(cat, idx) in visibleCategories" :key="cat.id">
-              <tr
-                class="hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
-                :class="[
-                  cat.depth === 0 && idx > 0 ? 'border-t-2 !border-gray-200 dark:!border-gray-600' : '',
-                  selectedIds.has(cat.id) ? 'bg-blue-50 dark:bg-blue-500/5' : ''
-                ]"
-              >
-                <td class="w-10 px-4 py-2.5">
-                  <input
-                    type="checkbox"
-                    :checked="selectedIds.has(cat.id)"
-                    @change="toggleSelect(cat.id)"
-                    class="w-4 h-4 rounded border-gray-300 text-blue-500 focus:ring-blue-500"
-                  />
-                </td>
-                <td class="px-6 py-2.5">
-                  <div class="flex items-center" :style="{ paddingLeft: cat.depth * 24 + 'px' }">
-                    <button
-                      v-if="hasChildren(cat.id)"
-                      @click="toggleExpand(cat.id)"
-                      class="mr-1.5 p-0.5 rounded hover:bg-gray-100 dark:hover:bg-white/10 transition-colors text-gray-400 dark:text-gray-500"
-                    >
-                      <svg
-                        class="w-4 h-4 transition-transform duration-200"
-                        :class="expandedIds.has(cat.id) ? 'rotate-90' : ''"
-                        fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"
-                      >
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
-                      </svg>
-                    </button>
-                    <span v-else class="mr-1.5 w-5 inline-block"></span>
-
-                    <span v-if="cat.depth > 0" class="text-gray-300 dark:text-gray-600 mr-1.5 font-mono text-xs select-none">
-                      {{ isLastChild(cat, idx) ? '└─' : '├─' }}
-                    </span>
-
-                    <span :class="cat.depth === 0 ? 'text-blue-500' : 'text-gray-400 dark:text-gray-500'" class="mr-2 flex-shrink-0">
-                      <svg v-if="cat.depth === 0" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
-                      </svg>
-                      <svg v-else class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
-                      </svg>
-                    </span>
-
-                    <span class="font-medium" :class="cat.depth === 0 ? 'text-gray-800 dark:text-white/90' : 'text-gray-600 dark:text-gray-300'">
-                      <span v-if="isSearching" v-html="highlightName(cat.name)"></span>
-                      <template v-else>{{ cat.name }}</template>
-                    </span>
-                    <span
-                      v-if="hasChildren(cat.id) && cat.depth === 0"
-                      class="ml-2 px-1.5 py-0.5 text-[10px] rounded-full bg-blue-50 text-blue-500 dark:bg-blue-500/10 dark:text-blue-400 font-medium"
-                    >
-                      {{ getChildCount(cat.id) }}
-                    </span>
-                  </div>
-                </td>
-                <td class="px-6 py-2.5 text-gray-500 dark:text-gray-400 font-mono text-xs">{{ cat.slug }}</td>
-                <td class="px-6 py-2.5">
-                  <span
-                    :class="cat.status === 1
-                      ? 'bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-400'
-                      : 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400'"
-                    class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
-                  >
-                    {{ cat.status === 1 ? 'Hoạt động' : 'Ẩn' }}
-                  </span>
-                </td>
-                <td class="px-6 py-2.5 text-right">
-                  <div class="flex items-center justify-end gap-2">
-                    <button
-                      @click="openEdit(cat)"
-                      class="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg dark:hover:bg-blue-500/10 transition-colors"
-                      title="Chỉnh sửa"
-                    >
-                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                      </svg>
-                    </button>
-                    <button
-                      @click="confirmDelete(cat)"
-                      class="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg dark:hover:bg-red-500/10 transition-colors"
-                      title="Xóa"
-                    >
-                      <TrashIcon class="w-4 h-4" />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            </template>
+            <CategoryTreeNode
+              v-for="(cat, idx) in visibleCategories"
+              :key="cat.id"
+              :cat="cat"
+              :is-first="idx === 0"
+              :is-selected="selectedIds.has(cat.id)"
+              :is-expanded="expandedIds.has(cat.id)"
+              :is-last-child="isLastChild(cat, idx)"
+              :has-children="hasChildren(cat.id)"
+              :child-count="getChildCount(cat.id)"
+              :search-query="searchQuery"
+              @toggle-select="toggleSelect"
+              @toggle-expand="toggleExpand"
+              @edit="openEdit"
+              @delete="softDelete.confirm"
+            />
           </tbody>
         </table>
       </div>
@@ -338,7 +263,7 @@
                     </svg>
                   </button>
                   <button
-                    @click="confirmForceDeleteCategory(cat)"
+                    @click="forceDelete.confirm(cat)"
                     class="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg dark:hover:bg-red-500/10 transition-colors"
                     title="Xóa vĩnh viễn"
                   >
@@ -379,179 +304,56 @@
 
     <!-- ═══════ MODALS ═══════ -->
 
-    <!-- Modal Create/Edit -->
-    <Teleport to="body">
-      <div
-        v-if="showModal"
-        class="fixed inset-0 z-[100000] flex items-center justify-center bg-black/50 px-4"
-        @click.self="closeModal"
-      >
-        <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-md p-6">
-          <h3 class="text-base font-semibold text-gray-800 dark:text-white/90 mb-5">
-            {{ editingId ? 'Chỉnh sửa danh mục' : 'Thêm danh mục mới' }}
-          </h3>
-
-          <form @submit.prevent="submitForm" class="space-y-4">
-            <div>
-              <label class="label-form">Tên danh mục <span class="text-red-500">*</span></label>
-              <input
-                v-model="form.name"
-                type="text"
-                class="input-field"
-                :class="{ 'input-error': formErrors.name }"
-                placeholder="Lập trình"
-                @input="autoSlug"
-              />
-              <p v-if="formErrors.name" class="error-msg">{{ formErrors.name }}</p>
-            </div>
-
-            <div>
-              <label class="label-form">Slug <span class="text-red-500">*</span></label>
-              <input
-                v-model="form.slug"
-                type="text"
-                class="input-field font-mono text-sm"
-                :class="{ 'input-error': formErrors.slug }"
-                placeholder="lap-trinh"
-              />
-              <p v-if="formErrors.slug" class="error-msg">{{ formErrors.slug }}</p>
-            </div>
-
-            <div>
-              <label class="label-form">Danh mục cha</label>
-              <select v-model="form.parent_id" class="input-field">
-                <option :value="null">— Không có (danh mục gốc) —</option>
-                <option
-                  v-for="item in flatTree"
-                  :key="item.id"
-                  :value="item.id"
-                  :disabled="item.id === editingId"
-                >
-                  {{ '—'.repeat(item.depth) }} {{ item.name }}
-                </option>
-              </select>
-            </div>
-
-            <div>
-              <label class="label-form">Mô tả</label>
-              <textarea
-                v-model="form.description"
-                rows="2"
-                class="input-field resize-none"
-                placeholder="Mô tả ngắn..."
-              />
-            </div>
-
-            <div>
-              <label class="label-form">Trạng thái</label>
-              <select v-model="form.status" class="input-field">
-                <option :value="1">Hoạt động</option>
-                <option :value="0">Ẩn</option>
-              </select>
-            </div>
-
-            <p v-if="submitError" class="text-sm text-red-500">{{ submitError }}</p>
-
-            <div class="flex justify-end gap-3 pt-2">
-              <button
-                type="button"
-                @click="closeModal"
-                class="px-4 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/5"
-              >
-                Hủy
-              </button>
-              <button
-                type="submit"
-                :disabled="submitting"
-                class="px-4 py-2 text-sm rounded-lg bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50 flex items-center gap-2"
-              >
-                <svg v-if="submitting" class="animate-spin w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
-                </svg>
-                {{ editingId ? 'Cập nhật' : 'Tạo mới' }}
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </Teleport>
+    <!-- Category Form Modal (extracted component) -->
+    <CategoryForm
+      :show="showModal"
+      :editing-id="editingId"
+      :form="form"
+      :errors="formErrors"
+      :submit-error="submitError"
+      :submitting="submitting"
+      :flat-tree="flatTree"
+      @close="closeModal"
+      @submit="submitForm"
+      @update:form="form = $event"
+      @auto-slug="autoSlug"
+    />
 
     <!-- Confirm Soft Delete -->
-    <Teleport to="body">
-      <div
-        v-if="deleteTarget"
-        class="fixed inset-0 z-[100000] flex items-center justify-center bg-black/50 px-4"
-        @click.self="deleteTarget = null"
-      >
-        <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-sm p-6">
-          <h3 class="text-base font-semibold text-gray-800 dark:text-white/90 mb-2">Xác nhận xóa</h3>
-          <p class="text-sm text-gray-500 dark:text-gray-400 mb-5">
-            Bạn có chắc muốn xóa danh mục
-            <strong class="text-gray-800 dark:text-white/90">{{ deleteTarget.name }}</strong>?
-            Các danh mục con cũng sẽ bị xóa.
-            <span class="block mt-1 text-xs text-gray-400">Danh mục sẽ được chuyển vào thùng rác.</span>
-          </p>
-          <div class="flex justify-end gap-3">
-            <button
-              @click="deleteTarget = null"
-              class="px-4 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400"
-            >
-              Hủy
-            </button>
-            <button
-              @click="doDelete"
-              :disabled="deleting"
-              class="px-4 py-2 text-sm rounded-lg bg-red-500 text-white hover:bg-red-600 disabled:opacity-50"
-            >
-              {{ deleting ? 'Đang xóa...' : 'Xóa' }}
-            </button>
-          </div>
-        </div>
-      </div>
-    </Teleport>
+    <ConfirmModal
+      :show="softDelete.isOpen.value"
+      title="Xác nhận xóa"
+      :loading="softDelete.loading.value"
+      confirm-text="Xóa"
+      loading-text="Đang xóa..."
+      @cancel="softDelete.cancel()"
+      @confirm="softDelete.execute()"
+    >
+      <p>
+        Bạn có chắc muốn xóa danh mục
+        <strong class="text-gray-800 dark:text-white/90">{{ softDelete.target.value?.name }}</strong>?
+        Các danh mục con cũng sẽ bị xóa.
+        <span class="block mt-1 text-xs text-gray-400">Danh mục sẽ được chuyển vào thùng rác.</span>
+      </p>
+    </ConfirmModal>
 
-    <!-- Confirm Force Delete Category -->
-    <Teleport to="body">
-      <div
-        v-if="forceDeleteTarget"
-        class="fixed inset-0 z-[100000] flex items-center justify-center bg-black/50 px-4"
-        @click.self="forceDeleteTarget = null"
-      >
-        <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-sm p-6">
-          <div class="flex items-center gap-3 mb-4">
-            <div class="w-10 h-10 rounded-full bg-red-100 dark:bg-red-500/10 flex items-center justify-center flex-shrink-0">
-              <svg class="w-5 h-5 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
-              </svg>
-            </div>
-            <div>
-              <h3 class="text-base font-semibold text-gray-800 dark:text-white/90">Xóa vĩnh viễn</h3>
-              <p class="text-xs text-red-500">Hành động này không thể hoàn tác!</p>
-            </div>
-          </div>
-          <p class="text-sm text-gray-500 dark:text-gray-400 mb-5">
-            Bạn có chắc muốn xóa vĩnh viễn danh mục
-            <strong class="text-gray-800 dark:text-white/90">{{ forceDeleteTarget.name }}</strong>?
-          </p>
-          <div class="flex justify-end gap-3">
-            <button
-              @click="forceDeleteTarget = null"
-              class="px-4 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400"
-            >
-              Hủy
-            </button>
-            <button
-              @click="doForceDeleteCategory"
-              :disabled="forceDeleting"
-              class="px-4 py-2 text-sm rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
-            >
-              {{ forceDeleting ? 'Đang xóa...' : 'Xóa vĩnh viễn' }}
-            </button>
-          </div>
-        </div>
-      </div>
-    </Teleport>
+    <!-- Confirm Force Delete -->
+    <ConfirmModal
+      :show="forceDelete.isOpen.value"
+      title="Xóa vĩnh viễn"
+      subtitle="Hành động này không thể hoàn tác!"
+      icon="warning"
+      :loading="forceDelete.loading.value"
+      confirm-text="Xóa vĩnh viễn"
+      loading-text="Đang xóa..."
+      @cancel="forceDelete.cancel()"
+      @confirm="forceDelete.execute()"
+    >
+      <p>
+        Bạn có chắc muốn xóa vĩnh viễn danh mục
+        <strong class="text-gray-800 dark:text-white/90">{{ forceDelete.target.value?.name }}</strong>?
+      </p>
+    </ConfirmModal>
 
     <!-- ═══════ REUSABLE BULK ACTIONS COMPONENT ═══════ -->
     <BulkActions
@@ -567,7 +369,7 @@
       @delete="doBulkDelete"
       @restore="doBulkRestoreCategories"
       @force-delete="doBulkForceDeleteCategories"
-      @clear="isTrashed ? trashedSelectedIds.clear() : selectedIds.clear()"
+      @clear="isTrashed ? clearTrashedSelection() : clearSelection()"
     />
   </div>
 </template>
@@ -577,7 +379,14 @@ import { ref, computed, onMounted, reactive } from 'vue'
 import { useToast } from 'vue-toastification'
 import { PlusIcon, TrashIcon } from '@/icons'
 import BulkActions from '@/components/admin/BulkActions.vue'
+import ConfirmModal from '@/components/common/ConfirmModal.vue'
+import CategoryTreeNode from '@/components/admin/CategoryTreeNode.vue'
+import CategoryForm from '@/components/admin/CategoryForm.vue'
 import { categoryService } from '@/services/category.service'
+import { useDebounceSearch } from '@/composables/useDebounceSearch'
+import { useDeleteConfirm } from '@/composables/useDeleteConfirm'
+import { useBulkSelect } from '@/composables/useBulkSelect'
+import { useFormErrors } from '@/composables/useFormErrors'
 
 const toast = useToast()
 
@@ -651,8 +460,7 @@ const matchCount = computed(() => {
 const showModal   = ref(false)
 const editingId   = ref<number | null>(null)
 const submitting  = ref(false)
-const submitError = ref('')
-const formErrors  = ref<Record<string, string>>({})
+const { errors: formErrors, submitError, clearErrors, handleApiError } = useFormErrors()
 
 const defaultForm = () => ({
   name: '',
@@ -663,16 +471,17 @@ const defaultForm = () => ({
 })
 const form = ref(defaultForm())
 
-const deleteTarget = ref<Category | null>(null)
-const deleting     = ref(false)
-
 // ── Bulk selection (active) ───────────────────────────────────
-const selectedIds = reactive(new Set<number>())
+const {
+  selectedIds,
+  isAllSelected,
+  isIndeterminate,
+  toggleSelectAll,
+  toggleSelect,
+  clear: clearSelection,
+} = useBulkSelect({ items: () => visibleCategories.value })
 const bulkDeleting = ref(false)
 const bulkUpdating = ref(false)
-
-const isAllSelected = computed(() => visibleCategories.value.length > 0 && visibleCategories.value.every(c => selectedIds.has(c.id)))
-const isIndeterminate = computed(() => selectedIds.size > 0 && !isAllSelected.value)
 
 // ── Trashed state ─────────────────────────────────────────────
 const trashedCategories  = ref<Category[]>([])
@@ -681,18 +490,43 @@ const trashedLoading     = ref(false)
 const trashedCount       = ref(0)
 const trashedSearchQuery = ref('')
 const restoringId        = ref<number | null>(null)
-const forceDeleteTarget  = ref<Category | null>(null)
-const forceDeleting      = ref(false)
 
 // ── Bulk selection (trashed) ──────────────────────────────────
-const trashedSelectedIds = reactive(new Set<number>())
+const {
+  selectedIds: trashedSelectedIds,
+  isAllSelected: isTrashedAllSelected,
+  isIndeterminate: isTrashedIndeterminate,
+  toggleSelectAll: toggleTrashedSelectAll,
+  toggleSelect: toggleTrashedSelect,
+  clear: clearTrashedSelection,
+} = useBulkSelect({ items: () => trashedCategories.value })
 const bulkRestoring      = ref(false)
 const bulkForceDeleting  = ref(false)
 
 const bulkActionsRef = ref<InstanceType<typeof BulkActions> | null>(null)
 
-const isTrashedAllSelected = computed(() => trashedCategories.value.length > 0 && trashedCategories.value.every(c => trashedSelectedIds.has(c.id)))
-const isTrashedIndeterminate = computed(() => trashedSelectedIds.size > 0 && !isTrashedAllSelected.value)
+// ── Debounce search (via composable) ──────────────────────────
+const { debounce: debouncedFetchTrashed } = useDebounceSearch(() => fetchTrashedCategories())
+
+// ── Delete confirmations (via composable) ─────────────────────
+const softDelete = useDeleteConfirm({
+  async onConfirm(cat: Category) {
+    await categoryService.destroy(cat.id)
+    toast.success('Xóa danh mục thành công')
+    fetchCategories()
+    fetchFlatTree()
+    fetchTrashedCount()
+  },
+})
+
+const forceDelete = useDeleteConfirm({
+  async onConfirm(cat: Category) {
+    await categoryService.forceDelete(cat.id)
+    toast.success('Đã xóa vĩnh viễn danh mục')
+    fetchTrashedCategories()
+    fetchTrashedCount()
+  },
+})
 
 // ── Tab switching ─────────────────────────────────────────────
 function switchTab(trashed: boolean) {
@@ -703,39 +537,7 @@ function switchTab(trashed: boolean) {
   }
 }
 
-// ── Active: Select toggles ────────────────────────────────────
-function toggleSelectAll() {
-  if (isAllSelected.value) {
-    visibleCategories.value.forEach(c => selectedIds.delete(c.id))
-  } else {
-    visibleCategories.value.forEach(c => selectedIds.add(c.id))
-  }
-}
-
-function toggleSelect(id: number) {
-  if (selectedIds.has(id)) selectedIds.delete(id)
-  else selectedIds.add(id)
-}
-
-// ── Trashed: Select toggles ──────────────────────────────────
-function toggleTrashedSelectAll() {
-  if (isTrashedAllSelected.value) {
-    trashedCategories.value.forEach(c => trashedSelectedIds.delete(c.id))
-  } else {
-    trashedCategories.value.forEach(c => trashedSelectedIds.add(c.id))
-  }
-}
-
-function toggleTrashedSelect(id: number) {
-  if (trashedSelectedIds.has(id)) trashedSelectedIds.delete(id)
-  else trashedSelectedIds.add(id)
-}
-
-let trashedDebounceTimer: ReturnType<typeof setTimeout> | null = null
-function debouncedFetchTrashed() {
-  if (trashedDebounceTimer) clearTimeout(trashedDebounceTimer)
-  trashedDebounceTimer = setTimeout(() => fetchTrashedCategories(), 400)
-}
+// Select toggles are now provided by useBulkSelect composable
 
 // ── Computed: danh mục hiển thị (lọc theo expand state + search) ──
 const visibleCategories = computed(() => {
@@ -792,14 +594,6 @@ function isLastChild(cat: Category, visibleIdx: number): boolean {
   const next = visibleCategories.value[visibleIdx + 1]
   if (!next) return true
   return next.depth <= cat.depth
-}
-
-// Highlight text match trong tên danh mục
-function highlightName(name: string): string {
-  const q = searchQuery.value.trim()
-  if (!q) return name
-  const regex = new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi')
-  return name.replace(regex, '<mark class="bg-yellow-200 dark:bg-yellow-500/30 rounded px-0.5">$1</mark>')
 }
 
 function formatDate(dateStr: string | null | undefined): string {
@@ -940,8 +734,7 @@ function autoSlug() {
 function openCreate() {
   editingId.value = null
   form.value = defaultForm()
-  formErrors.value = {}
-  submitError.value = ''
+  clearErrors()
   showModal.value = true
 }
 
@@ -954,8 +747,7 @@ function openEdit(cat: Category) {
     status: cat.status,
     parent_id: cat.parent_id ?? null,
   }
-  formErrors.value = {}
-  submitError.value = ''
+  clearErrors()
   showModal.value = true
 }
 
@@ -964,8 +756,7 @@ function closeModal() {
 }
 
 async function submitForm() {
-  formErrors.value = {}
-  submitError.value = ''
+  clearErrors()
   submitting.value = true
 
   const payload = {
@@ -988,37 +779,9 @@ async function submitForm() {
     fetchCategories()
     fetchFlatTree()
   } catch (err: any) {
-    const data = err.response?.data
-    if (err.response?.status === 422 && data?.errors) {
-      for (const [key, msgs] of Object.entries(data.errors as Record<string, string[]>)) {
-        formErrors.value[key] = msgs[0]
-      }
-    } else {
-      submitError.value = data?.message || 'Có lỗi xảy ra, vui lòng thử lại'
-    }
+    handleApiError(err)
   } finally {
     submitting.value = false
-  }
-}
-
-function confirmDelete(cat: Category) {
-  deleteTarget.value = cat
-}
-
-async function doDelete() {
-  if (!deleteTarget.value) return
-  deleting.value = true
-  try {
-    await categoryService.destroy(deleteTarget.value.id)
-    toast.success('Xóa danh mục thành công')
-    deleteTarget.value = null
-    fetchCategories()
-    fetchFlatTree()
-    fetchTrashedCount()
-  } catch (err: any) {
-    toast.error(err.response?.data?.message || 'Xóa thất bại')
-  } finally {
-    deleting.value = false
   }
 }
 
@@ -1039,27 +802,6 @@ async function doRestoreCategory(cat: Category) {
   }
 }
 
-// ── Trashed: Force delete ─────────────────────────────────────
-function confirmForceDeleteCategory(cat: Category) {
-  forceDeleteTarget.value = cat
-}
-
-async function doForceDeleteCategory() {
-  if (!forceDeleteTarget.value) return
-  forceDeleting.value = true
-  try {
-    await categoryService.forceDelete(forceDeleteTarget.value.id)
-    toast.success('Đã xóa vĩnh viễn danh mục')
-    forceDeleteTarget.value = null
-    fetchTrashedCategories()
-    fetchTrashedCount()
-  } catch (err: any) {
-    toast.error(err.response?.data?.message || 'Xóa vĩnh viễn thất bại')
-  } finally {
-    forceDeleting.value = false
-  }
-}
-
 // ── Active: Bulk delete ───────────────────────────────────────
 async function doBulkDelete() {
   bulkDeleting.value = true
@@ -1067,7 +809,7 @@ async function doBulkDelete() {
     const ids = [...selectedIds]
     await Promise.all(ids.map(id => categoryService.destroy(id)))
     toast.success(`Đã xóa ${ids.length} danh mục`)
-    selectedIds.clear()
+    clearSelection()
     bulkActionsRef.value?.closeModal()
     fetchCategories()
     fetchFlatTree()
@@ -1086,7 +828,7 @@ async function bulkToggleStatus(status: number) {
     const ids = [...selectedIds]
     await Promise.all(ids.map(id => categoryService.update(id, { status })))
     toast.success(`Đã cập nhật ${ids.length} danh mục`)
-    selectedIds.clear()
+    clearSelection()
     bulkActionsRef.value?.closeModal()
     fetchCategories()
     fetchFlatTree()
@@ -1104,7 +846,7 @@ async function doBulkRestoreCategories() {
     const ids = [...trashedSelectedIds]
     await Promise.all(ids.map(id => categoryService.restore(id)))
     toast.success(`Đã khôi phục ${ids.length} danh mục`)
-    trashedSelectedIds.clear()
+    clearTrashedSelection()
     bulkActionsRef.value?.closeModal()
     fetchTrashedCategories()
     fetchTrashedCount()
@@ -1124,7 +866,7 @@ async function doBulkForceDeleteCategories() {
     const ids = [...trashedSelectedIds]
     await Promise.all(ids.map(id => categoryService.forceDelete(id)))
     toast.success(`Đã xóa vĩnh viễn ${ids.length} danh mục`)
-    trashedSelectedIds.clear()
+    clearTrashedSelection()
     bulkActionsRef.value?.closeModal()
     fetchTrashedCategories()
     fetchTrashedCount()
@@ -1135,23 +877,3 @@ async function doBulkForceDeleteCategories() {
   }
 }
 </script>
-
-<style scoped>
-.label-form {
-  @apply block text-sm font-medium text-gray-700 dark:text-gray-400 mb-1;
-}
-.input-field {
-  @apply w-full h-10 px-3 rounded-lg border border-gray-300 bg-transparent text-sm text-gray-800
-         dark:border-gray-700 dark:text-white/90 dark:bg-gray-900
-         focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400;
-}
-textarea.input-field {
-  @apply h-auto py-2;
-}
-.input-error {
-  @apply border-red-400 focus:ring-red-400/20;
-}
-.error-msg {
-  @apply text-xs text-red-500 mt-1;
-}
-</style>

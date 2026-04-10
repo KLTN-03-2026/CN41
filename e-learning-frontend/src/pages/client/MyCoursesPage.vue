@@ -93,6 +93,7 @@
 import { ref, onMounted } from 'vue'
 import { useToast } from 'vue-toastification'
 import { courseService } from '@/services/course.service'
+import { usePagination } from '@/composables/usePagination'
 
 const toast = useToast()
 
@@ -104,16 +105,15 @@ interface MyCourse {
   progress_percent?: number
 }
 
-const courses    = ref<MyCourse[]>([])
-const pagination = ref<any>(null)
-const loading    = ref(true)
+const courses = ref<MyCourse[]>([])
+const loading = ref(true)
 
-async function fetchPage(page = 1) {
+async function loadPage(page = 1) {
   loading.value = true
   try {
     const res = await courseService.myCourses({ page, per_page: 12 })
     courses.value = res.data.data
-    pagination.value = res.data.pagination
+    updatePagination(res.data.pagination)
   } catch {
     toast.error('Không thể tải khóa học')
   } finally {
@@ -121,7 +121,13 @@ async function fetchPage(page = 1) {
   }
 }
 
-onMounted(() => fetchPage())
+const { pagination, setPage, updatePagination } = usePagination(loadPage)
+
+function fetchPage(page: number) {
+  setPage(page)
+}
+
+onMounted(() => loadPage())
 </script>
 
 <style scoped>

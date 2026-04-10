@@ -57,12 +57,12 @@
         class="input-field w-64"
         @input="debouncedFetch"
       />
-      <select v-model="filters.status" class="input-field w-40" @change="fetchPage(1)">
+      <select v-model="filters.status" class="input-field w-40" @change="activeSetPage(1)">
         <option value="">Tất cả trạng thái</option>
         <option value="1">Đã đăng</option>
         <option value="0">Nháp</option>
       </select>
-      <select v-model="filters.level" class="input-field w-40" @change="fetchPage(1)">
+      <select v-model="filters.level" class="input-field w-40" @change="activeSetPage(1)">
         <option value="">Tất cả trình độ</option>
         <option value="beginner">Cơ bản</option>
         <option value="intermediate">Trung cấp</option>
@@ -202,7 +202,7 @@
                     </svg>
                   </router-link>
                   <button
-                    @click="confirmDelete(course)"
+                    @click="softDelete.confirm(course)"
                     class="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg dark:hover:bg-red-500/10 transition-colors"
                     title="Xóa"
                   >
@@ -217,18 +217,18 @@
 
       <!-- Pagination -->
       <div
-        v-if="pagination && pagination.last_page > 1"
+        v-if="activePagination && activePagination.last_page > 1"
         class="flex items-center justify-between px-6 py-3 border-t border-gray-100 dark:border-gray-700"
       >
         <p class="text-xs text-gray-500 dark:text-gray-400">
-          {{ pagination.from }}–{{ pagination.to }} / {{ pagination.total }} khóa học
+          {{ activePagination.from }}–{{ activePagination.to }} / {{ activePagination.total }} khóa học
         </p>
         <div class="flex gap-1">
           <button
-            v-for="p in pagination.last_page"
+            v-for="p in activePagination.last_page"
             :key="p"
-            @click="fetchPage(p)"
-            :class="p === pagination.current_page
+            @click="activeSetPage(p)"
+            :class="p === activePagination.current_page
               ? 'bg-blue-500 text-white border-blue-500'
               : 'bg-white text-gray-600 dark:bg-white/5 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/10'"
             class="w-8 h-8 rounded-lg text-sm border border-gray-200 dark:border-gray-700 transition-colors"
@@ -346,7 +346,7 @@
                     </svg>
                   </button>
                   <button
-                    @click="confirmForceDelete(course)"
+                    @click="forceDelete.confirm(course)"
                     class="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg dark:hover:bg-red-500/10 transition-colors"
                     title="Xóa vĩnh viễn"
                   >
@@ -373,7 +373,7 @@
           <button
             v-for="p in trashedPagination.last_page"
             :key="p"
-            @click="fetchTrashedPage(p)"
+            @click="trashedSetPage(p)"
             :class="p === trashedPagination.current_page
               ? 'bg-red-500 text-white border-red-500'
               : 'bg-white text-gray-600 dark:bg-white/5 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/10'"
@@ -385,82 +385,42 @@
       </div>
     </div>
 
-    <!-- ═══════ MODALS ═══════ -->
+    <!-- ═══════ CONFIRM MODALS (via composable) ═══════ -->
 
     <!-- Confirm Soft Delete -->
-    <Teleport to="body">
-      <div
-        v-if="deleteTarget"
-        class="fixed inset-0 z-[100000] flex items-center justify-center bg-black/50 px-4"
-        @click.self="deleteTarget = null"
-      >
-        <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-sm p-6">
-          <h3 class="text-base font-semibold text-gray-800 dark:text-white/90 mb-2">Xác nhận xóa</h3>
-          <p class="text-sm text-gray-500 dark:text-gray-400 mb-5">
-            Bạn có chắc muốn xóa khóa học
-            <strong class="text-gray-800 dark:text-white/90">{{ deleteTarget.name }}</strong>?
-            <span class="block mt-1 text-xs text-gray-400">Khóa học sẽ được chuyển vào thùng rác.</span>
-          </p>
-          <div class="flex justify-end gap-3">
-            <button
-              @click="deleteTarget = null"
-              class="px-4 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400"
-            >
-              Hủy
-            </button>
-            <button
-              @click="doDelete"
-              :disabled="deleting"
-              class="px-4 py-2 text-sm rounded-lg bg-red-500 text-white hover:bg-red-600 disabled:opacity-50"
-            >
-              {{ deleting ? 'Đang xóa...' : 'Xóa' }}
-            </button>
-          </div>
-        </div>
-      </div>
-    </Teleport>
+    <ConfirmModal
+      :show="softDelete.isOpen.value"
+      title="Xác nhận xóa"
+      :loading="softDelete.loading.value"
+      confirm-text="Xóa"
+      loading-text="Đang xóa..."
+      @cancel="softDelete.cancel()"
+      @confirm="softDelete.execute()"
+    >
+      <p>
+        Bạn có chắc muốn xóa khóa học
+        <strong class="text-gray-800 dark:text-white/90">{{ softDelete.target.value?.name }}</strong>?
+        <span class="block mt-1 text-xs text-gray-400">Khóa học sẽ được chuyển vào thùng rác.</span>
+      </p>
+    </ConfirmModal>
 
     <!-- Confirm Force Delete -->
-    <Teleport to="body">
-      <div
-        v-if="forceDeleteTarget"
-        class="fixed inset-0 z-[100000] flex items-center justify-center bg-black/50 px-4"
-        @click.self="forceDeleteTarget = null"
-      >
-        <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-sm p-6">
-          <div class="flex items-center gap-3 mb-4">
-            <div class="w-10 h-10 rounded-full bg-red-100 dark:bg-red-500/10 flex items-center justify-center flex-shrink-0">
-              <svg class="w-5 h-5 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
-              </svg>
-            </div>
-            <div>
-              <h3 class="text-base font-semibold text-gray-800 dark:text-white/90">Xóa vĩnh viễn</h3>
-              <p class="text-xs text-red-500">Hành động này không thể hoàn tác!</p>
-            </div>
-          </div>
-          <p class="text-sm text-gray-500 dark:text-gray-400 mb-5">
-            Bạn có chắc muốn xóa vĩnh viễn khóa học
-            <strong class="text-gray-800 dark:text-white/90">{{ forceDeleteTarget.name }}</strong>?
-          </p>
-          <div class="flex justify-end gap-3">
-            <button
-              @click="forceDeleteTarget = null"
-              class="px-4 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400"
-            >
-              Hủy
-            </button>
-            <button
-              @click="doForceDelete"
-              :disabled="forceDeleting"
-              class="px-4 py-2 text-sm rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
-            >
-              {{ forceDeleting ? 'Đang xóa...' : 'Xóa vĩnh viễn' }}
-            </button>
-          </div>
-        </div>
-      </div>
-    </Teleport>
+    <ConfirmModal
+      :show="forceDelete.isOpen.value"
+      title="Xóa vĩnh viễn"
+      subtitle="Hành động này không thể hoàn tác!"
+      icon="warning"
+      :loading="forceDelete.loading.value"
+      confirm-text="Xóa vĩnh viễn"
+      loading-text="Đang xóa..."
+      @cancel="forceDelete.cancel()"
+      @confirm="forceDelete.execute()"
+    >
+      <p>
+        Bạn có chắc muốn xóa vĩnh viễn khóa học
+        <strong class="text-gray-800 dark:text-white/90">{{ forceDelete.target.value?.name }}</strong>?
+      </p>
+    </ConfirmModal>
 
     <!-- ═══════ REUSABLE BULK ACTIONS COMPONENT ═══════ -->
     <BulkActions
@@ -474,7 +434,7 @@
       @delete="doBulkDelete"
       @restore="doBulkRestore"
       @force-delete="doBulkForceDelete"
-      @clear="isTrashed ? trashedSelectedIds.clear() : selectedIds.clear()"
+      @clear="isTrashed ? clearTrashedSelection() : clearSelection()"
     />
   </div>
 </template>
@@ -484,8 +444,13 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { useToast } from 'vue-toastification'
 import { PlusIcon, TrashIcon, BoxCubeIcon } from '@/icons'
 import BulkActions from '@/components/admin/BulkActions.vue'
+import ConfirmModal from '@/components/common/ConfirmModal.vue'
 import { courseService } from '@/services/course.service'
 import { formatCurrency } from '@/utils/formatCurrency'
+import { usePagination } from '@/composables/usePagination'
+import { useDebounceSearch } from '@/composables/useDebounceSearch'
+import { useDeleteConfirm } from '@/composables/useDeleteConfirm'
+import { useBulkSelect } from '@/composables/useBulkSelect'
 
 const toast = useToast()
 
@@ -507,99 +472,49 @@ interface Course {
 const isTrashed = ref(false)
 
 // ── Active state ──────────────────────────────────────────────
-const courses     = ref<Course[]>([])
-const pagination  = ref<any>(null)
-const loading     = ref(true)
-const currentPage = ref(1)
-const togglingId  = ref<number | null>(null)
-const deleteTarget = ref<Course | null>(null)
-const deleting    = ref(false)
+const courses    = ref<Course[]>([])
+const loading    = ref(true)
+const togglingId = ref<number | null>(null)
 
 // ── Bulk selection (active) ───────────────────────────────────
-const selectedIds = reactive(new Set<number>())
+const {
+  selectedIds,
+  isAllSelected,
+  isIndeterminate,
+  toggleSelectAll,
+  toggleSelect,
+  clear: clearSelection,
+} = useBulkSelect({ items: () => courses.value })
 const bulkDeleting = ref(false)
 const bulkUpdating = ref(false)
 
-const isAllSelected = computed(() => courses.value.length > 0 && courses.value.every(c => selectedIds.has(c.id)))
-const isIndeterminate = computed(() => selectedIds.size > 0 && !isAllSelected.value)
-
 // ── Trashed state ─────────────────────────────────────────────
-const trashedCourses    = ref<Course[]>([])
-const trashedPagination = ref<any>(null)
-const trashedLoading    = ref(false)
-const trashedPage       = ref(1)
-const trashedCount      = ref(0)
-const restoringId       = ref<number | null>(null)
-const forceDeleteTarget = ref<Course | null>(null)
-const forceDeleting     = ref(false)
+const trashedCourses = ref<Course[]>([])
+const trashedLoading = ref(false)
+const trashedCount   = ref(0)
+const restoringId    = ref<number | null>(null)
 
 // ── Bulk selection (trashed) ──────────────────────────────────
-const trashedSelectedIds = reactive(new Set<number>())
+const {
+  selectedIds: trashedSelectedIds,
+  isAllSelected: isTrashedAllSelected,
+  isIndeterminate: isTrashedIndeterminate,
+  toggleSelectAll: toggleTrashedSelectAll,
+  toggleSelect: toggleTrashedSelect,
+  clear: clearTrashedSelection,
+} = useBulkSelect({ items: () => trashedCourses.value })
 const bulkForceDeleting = ref(false)
 const bulkRestoring     = ref(false)
 
 const bulkActionsRef = ref<InstanceType<typeof BulkActions> | null>(null)
 
-const isTrashedAllSelected = computed(() => trashedCourses.value.length > 0 && trashedCourses.value.every(c => trashedSelectedIds.has(c.id)))
-const isTrashedIndeterminate = computed(() => trashedSelectedIds.size > 0 && !isTrashedAllSelected.value)
-
 // ── Filters ───────────────────────────────────────────────────
 const filters = reactive({ search: '', status: '', level: '' })
 const trashedFilters = reactive({ search: '' })
 
-let debounceTimer: ReturnType<typeof setTimeout> | null = null
-function debouncedFetch() {
-  if (debounceTimer) clearTimeout(debounceTimer)
-  debounceTimer = setTimeout(() => fetchPage(1), 400)
-}
-
-let trashedDebounceTimer: ReturnType<typeof setTimeout> | null = null
-function debouncedFetchTrashed() {
-  if (trashedDebounceTimer) clearTimeout(trashedDebounceTimer)
-  trashedDebounceTimer = setTimeout(() => fetchTrashedPage(1), 400)
-}
-
-// ── Tab switching ─────────────────────────────────────────────
-function switchTab(trashed: boolean) {
-  if (isTrashed.value === trashed) return
-  isTrashed.value = trashed
-  if (trashed) {
-    fetchTrashedPage(1)
-  }
-}
-
-// ── Active: Select toggles ────────────────────────────────────
-function toggleSelectAll() {
-  if (isAllSelected.value) {
-    courses.value.forEach(c => selectedIds.delete(c.id))
-  } else {
-    courses.value.forEach(c => selectedIds.add(c.id))
-  }
-}
-
-function toggleSelect(id: number) {
-  if (selectedIds.has(id)) selectedIds.delete(id)
-  else selectedIds.add(id)
-}
-
-// ── Trashed: Select toggles ──────────────────────────────────
-function toggleTrashedSelectAll() {
-  if (isTrashedAllSelected.value) {
-    trashedCourses.value.forEach(c => trashedSelectedIds.delete(c.id))
-  } else {
-    trashedCourses.value.forEach(c => trashedSelectedIds.add(c.id))
-  }
-}
-
-function toggleTrashedSelect(id: number) {
-  if (trashedSelectedIds.has(id)) trashedSelectedIds.delete(id)
-  else trashedSelectedIds.add(id)
-}
-
-// ── Active: Fetch ─────────────────────────────────────────────
-async function fetchPage(page = 1) {
+// ── Active: Fetch (with usePagination) ────────────────────────
+async function loadActivePage(page = 1) {
   loading.value = true
-  currentPage.value = page
   try {
     const params: Record<string, any> = { page, per_page: 15 }
     if (filters.search) params.search = filters.search
@@ -608,7 +523,7 @@ async function fetchPage(page = 1) {
 
     const res = await courseService.index(params)
     courses.value = res.data.data
-    pagination.value = res.data.pagination
+    activeUpdatePagination(res.data.pagination)
   } catch {
     toast.error('Không thể tải khóa học')
   } finally {
@@ -616,17 +531,23 @@ async function fetchPage(page = 1) {
   }
 }
 
-// ── Trashed: Fetch ────────────────────────────────────────────
-async function fetchTrashedPage(page = 1) {
+const {
+  pagination: activePagination,
+  currentPage: activeCurrentPage,
+  setPage: activeSetPage,
+  updatePagination: activeUpdatePagination,
+} = usePagination(loadActivePage, 15)
+
+// ── Trashed: Fetch (with usePagination) ───────────────────────
+async function loadTrashedPage(page = 1) {
   trashedLoading.value = true
-  trashedPage.value = page
   try {
     const params: Record<string, any> = { page, per_page: 15 }
     if (trashedFilters.search) params.search = trashedFilters.search
 
     const res = await courseService.trashed(params)
     trashedCourses.value = res.data.data
-    trashedPagination.value = res.data.pagination
+    trashedUpdatePagination(res.data.pagination)
     trashedCount.value = res.data.pagination?.total || res.data.data?.length || 0
   } catch {
     toast.error('Không thể tải thùng rác')
@@ -634,6 +555,47 @@ async function fetchTrashedPage(page = 1) {
     trashedLoading.value = false
   }
 }
+
+const {
+  pagination: trashedPagination,
+  currentPage: trashedCurrentPage,
+  setPage: trashedSetPage,
+  updatePagination: trashedUpdatePagination,
+} = usePagination(loadTrashedPage, 15)
+
+// ── Debounce search (via composable) ──────────────────────────
+const { debounce: debouncedFetch } = useDebounceSearch(() => activeSetPage(1))
+const { debounce: debouncedFetchTrashed } = useDebounceSearch(() => trashedSetPage(1))
+
+// ── Delete confirmations (via composable) ─────────────────────
+const softDelete = useDeleteConfirm({
+  async onConfirm(course: Course) {
+    await courseService.destroy(course.id)
+    toast.success('Xóa khóa học thành công')
+    loadActivePage(activeCurrentPage.value)
+    fetchTrashedCount()
+  },
+})
+
+const forceDelete = useDeleteConfirm({
+  async onConfirm(course: Course) {
+    await courseService.forceDelete(course.id)
+    toast.success('Đã xóa vĩnh viễn khóa học')
+    loadTrashedPage(trashedCurrentPage.value)
+    fetchTrashedCount()
+  },
+})
+
+// ── Tab switching ─────────────────────────────────────────────
+function switchTab(trashed: boolean) {
+  if (isTrashed.value === trashed) return
+  isTrashed.value = trashed
+  if (trashed) {
+    loadTrashedPage(1)
+  }
+}
+
+// Select toggles are now provided by useBulkSelect composable
 
 // Lấy count thùng rác (gọi lúc mount để hiển thị badge)
 async function fetchTrashedCount() {
@@ -646,7 +608,7 @@ async function fetchTrashedCount() {
 }
 
 onMounted(() => {
-  fetchPage()
+  loadActivePage()
   fetchTrashedCount()
 })
 
@@ -675,36 +637,15 @@ async function toggleStatus(course: Course) {
   }
 }
 
-// ── Active: Delete (soft) ─────────────────────────────────────
-function confirmDelete(course: Course) {
-  deleteTarget.value = course
-}
-
-async function doDelete() {
-  if (!deleteTarget.value) return
-  deleting.value = true
-  try {
-    await courseService.destroy(deleteTarget.value.id)
-    toast.success('Xóa khóa học thành công')
-    deleteTarget.value = null
-    fetchPage(currentPage.value)
-    fetchTrashedCount()
-  } catch (err: any) {
-    toast.error(err.response?.data?.message || 'Xóa thất bại')
-  } finally {
-    deleting.value = false
-  }
-}
-
 // ── Active: Bulk delete ───────────────────────────────────────
 async function doBulkDelete() {
   bulkDeleting.value = true
   try {
     await courseService.bulkDelete([...selectedIds])
     toast.success(`Đã xóa ${selectedIds.size} khóa học`)
-    selectedIds.clear()
+    clearSelection()
     bulkActionsRef.value?.closeModal()
-    fetchPage(currentPage.value)
+    loadActivePage(activeCurrentPage.value)
     fetchTrashedCount()
   } catch (err: any) {
     toast.error(err.response?.data?.message || 'Xóa nhiều thất bại')
@@ -720,9 +661,9 @@ async function bulkToggleStatus(status: number) {
     const ids = [...selectedIds]
     await Promise.all(ids.map(id => courseService.update(id, { status })))
     toast.success(`Đã cập nhật ${ids.length} khóa học`)
-    selectedIds.clear()
+    clearSelection()
     bulkActionsRef.value?.closeModal()
-    fetchPage(currentPage.value)
+    loadActivePage(activeCurrentPage.value)
   } catch {
     toast.error('Cập nhật trạng thái thất bại')
   } finally {
@@ -736,35 +677,14 @@ async function doRestore(course: Course) {
   try {
     await courseService.restore(course.id)
     toast.success(`Đã khôi phục "${course.name}"`)
-    fetchTrashedPage(trashedPage.value)
+    loadTrashedPage(trashedCurrentPage.value)
     fetchTrashedCount()
     // Refresh active list nếu cần
-    fetchPage(currentPage.value)
+    loadActivePage(activeCurrentPage.value)
   } catch (err: any) {
     toast.error(err.response?.data?.message || 'Khôi phục thất bại')
   } finally {
     restoringId.value = null
-  }
-}
-
-// ── Trashed: Force delete ─────────────────────────────────────
-function confirmForceDelete(course: Course) {
-  forceDeleteTarget.value = course
-}
-
-async function doForceDelete() {
-  if (!forceDeleteTarget.value) return
-  forceDeleting.value = true
-  try {
-    await courseService.forceDelete(forceDeleteTarget.value.id)
-    toast.success('Đã xóa vĩnh viễn khóa học')
-    forceDeleteTarget.value = null
-    fetchTrashedPage(trashedPage.value)
-    fetchTrashedCount()
-  } catch (err: any) {
-    toast.error(err.response?.data?.message || 'Xóa vĩnh viễn thất bại')
-  } finally {
-    forceDeleting.value = false
   }
 }
 
@@ -774,11 +694,11 @@ async function doBulkRestore() {
   try {
     await courseService.bulkRestore([...trashedSelectedIds])
     toast.success(`Đã khôi phục ${trashedSelectedIds.size} khóa học`)
-    trashedSelectedIds.clear()
+    clearTrashedSelection()
     bulkActionsRef.value?.closeModal()
-    fetchTrashedPage(trashedPage.value)
+    loadTrashedPage(trashedCurrentPage.value)
     fetchTrashedCount()
-    fetchPage(currentPage.value)
+    loadActivePage(activeCurrentPage.value)
   } catch (err: any) {
     toast.error(err.response?.data?.message || 'Khôi phục nhiều thất bại')
   } finally {
@@ -792,9 +712,9 @@ async function doBulkForceDelete() {
   try {
     await courseService.bulkForceDelete([...trashedSelectedIds])
     toast.success(`Đã xóa vĩnh viễn ${trashedSelectedIds.size} khóa học`)
-    trashedSelectedIds.clear()
+    clearTrashedSelection()
     bulkActionsRef.value?.closeModal()
-    fetchTrashedPage(trashedPage.value)
+    loadTrashedPage(trashedCurrentPage.value)
     fetchTrashedCount()
   } catch (err: any) {
     toast.error(err.response?.data?.message || 'Xóa vĩnh viễn nhiều thất bại')
