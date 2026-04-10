@@ -1,17 +1,21 @@
 <template>
   <div class="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-12">
     <div class="w-full max-w-md">
+
       <!-- Logo -->
       <div class="text-center mb-8">
         <div class="inline-flex items-center gap-2 text-primary-600">
           <BookOpen class="w-8 h-8" />
           <span class="text-2xl font-bold text-gray-800">E-Learning</span>
         </div>
-        <h2 class="mt-4 text-2xl font-bold text-gray-800">Tạo tài khoản</h2>
-        <p class="mt-1 text-sm text-gray-500">Đăng ký để bắt đầu học tập ngay hôm nay</p>
+        <template v-if="!registered">
+          <h2 class="mt-4 text-2xl font-bold text-gray-800">Tạo tài khoản</h2>
+          <p class="mt-1 text-sm text-gray-500">Đăng ký để bắt đầu học tập ngay hôm nay</p>
+        </template>
       </div>
 
-      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+      <!-- ── FORM ĐĂNG KÝ ── -->
+      <div v-if="!registered" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
         <!-- Alert Error -->
         <div v-if="apiError" class="mb-5 p-4 bg-red-50 text-red-600 rounded-lg text-sm flex items-start gap-2">
           <AlertCircle class="w-5 h-5 shrink-0 mt-0.5" />
@@ -127,41 +131,103 @@
           <router-link to="/login" class="text-primary-600 font-medium hover:underline">Đăng nhập</router-link>
         </p>
       </div>
+
+      <!-- ── THÔNG BÁO CHECK MAIL ── -->
+      <div v-else class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center">
+        <!-- Icon animated -->
+        <div class="relative w-24 h-24 mx-auto mb-6">
+          <div class="w-24 h-24 bg-primary-50 rounded-full flex items-center justify-center">
+            <Mail class="w-12 h-12 text-primary-500" />
+          </div>
+          <!-- Badge check -->
+          <div class="absolute -bottom-1 -right-1 w-8 h-8 bg-green-500 rounded-full flex items-center justify-center border-2 border-white">
+            <CheckCircle2 class="w-4 h-4 text-white" />
+          </div>
+        </div>
+
+        <h2 class="text-2xl font-bold text-gray-800 mb-2">Kiểm tra hộp thư!</h2>
+        <p class="text-gray-500 mb-1">Chúng tôi đã gửi email xác thực đến</p>
+        <p class="font-semibold text-gray-800 mb-6">{{ registeredEmail }}</p>
+
+        <!-- Hướng dẫn -->
+        <div class="bg-blue-50 rounded-xl p-4 text-left mb-6 space-y-2">
+          <p class="text-sm font-medium text-blue-800 mb-2">Làm theo các bước sau:</p>
+          <div class="flex items-start gap-2 text-sm text-blue-700">
+            <span class="w-5 h-5 bg-blue-200 rounded-full flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">1</span>
+            <span>Mở email từ <strong>E-Learning</strong> trong hộp thư đến</span>
+          </div>
+          <div class="flex items-start gap-2 text-sm text-blue-700">
+            <span class="w-5 h-5 bg-blue-200 rounded-full flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">2</span>
+            <span>Nhấn nút <strong>"Xác thực email"</strong> trong email</span>
+          </div>
+          <div class="flex items-start gap-2 text-sm text-blue-700">
+            <span class="w-5 h-5 bg-blue-200 rounded-full flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">3</span>
+            <span>Quay lại đây và <strong>đăng nhập</strong> để bắt đầu học</span>
+          </div>
+        </div>
+
+        <!-- Chú ý spam -->
+        <p class="text-xs text-gray-400 mb-6">
+          Không thấy email? Hãy kiểm tra thư mục <strong>Spam</strong> hoặc <strong>Junk Mail</strong>.
+        </p>
+
+        <router-link
+          to="/login"
+          class="btn-primary w-full flex justify-center items-center py-2.5 h-[42px] mb-3"
+        >
+          Đăng nhập
+        </router-link>
+
+        <router-link
+          to="/"
+          class="w-full flex justify-center items-center text-sm text-gray-500 hover:text-gray-700"
+        >
+          Về trang chủ
+        </router-link>
+      </div>
+
     </div>
   </div>
 </template>
 
 <script>
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
 import { Form, Field } from 'vee-validate'
 import * as z from 'zod'
 import { toTypedSchema } from '@vee-validate/zod'
-import { useToast } from 'vue-toastification'
-import { BookOpen, User, Mail, Lock, Eye, EyeOff, AlertCircle } from 'lucide-vue-next'
+import { BookOpen, User, Mail, Lock, Eye, EyeOff, AlertCircle, CheckCircle2 } from 'lucide-vue-next'
 import { useStudentAuthStore } from '@/stores/studentAuth.store'
 
 export default {
-  components: { Form, Field, BookOpen, User, Mail, Lock, Eye, EyeOff, AlertCircle },
+  components: { Form, Field, BookOpen, User, Mail, Lock, Eye, EyeOff, AlertCircle, CheckCircle2 },
   setup() {
-    const router = useRouter()
-    const toast = useToast()
     const studentStore = useStudentAuthStore()
 
-    const showPassword = ref(false)
-    const showConfirm  = ref(false)
-    const apiError     = ref('')
+    const showPassword    = ref(false)
+    const showConfirm     = ref(false)
+    const apiError        = ref('')
+    const registered      = ref(false)
+    const registeredEmail = ref('')
 
     const schema = toTypedSchema(
       z.object({
-        // min(1) bắt empty → hiện 'required', min(2) bắt quá ngắn → hiện 'min length'
-        name: z.string().trim().min(1, 'Vui lòng nhập họ tên').min(2, 'Họ tên tối thiểu 2 ký tự'),
-        email: z.string().min(1, 'Vui lòng nhập email').email('Email không đúng định dạng'),
-        password: z.string().min(1, 'Vui lòng nhập mật khẩu').min(8, 'Mật khẩu tối thiểu 8 ký tự'),
-        password_confirmation: z.string().min(1, 'Vui lòng xác nhận mật khẩu'),
+        name: z
+          .string({ required_error: 'Vui lòng nhập họ tên' })
+          .trim()
+          .min(1, 'Vui lòng nhập họ tên')
+          .min(2, 'Họ tên tối thiểu 2 ký tự'),
+        email: z
+          .string({ required_error: 'Vui lòng nhập email' })
+          .min(1, 'Vui lòng nhập email')
+          .email('Email không đúng định dạng'),
+        password: z
+          .string({ required_error: 'Vui lòng nhập mật khẩu' })
+          .min(1, 'Vui lòng nhập mật khẩu')
+          .min(8, 'Mật khẩu tối thiểu 8 ký tự'),
+        password_confirmation: z
+          .string({ required_error: 'Vui lòng xác nhận mật khẩu' })
+          .min(1, 'Vui lòng xác nhận mật khẩu'),
       }).superRefine((data, ctx) => {
-        // Bỏ điều kiện `data.password &&` — khi password trống nhưng confirm có giá trị
-        // vẫn phải báo lỗi "không khớp" thay vì không hiện gì
         if (data.password_confirmation && data.password !== data.password_confirmation) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
@@ -177,10 +243,10 @@ export default {
       const result = await studentStore.register(values)
 
       if (result.success) {
-        toast.success('Đăng ký thành công! Chào mừng bạn.')
-        router.push('/')
+        // Hiện màn hình "check mail" thay vì redirect
+        registeredEmail.value = values.email
+        registered.value = true
       } else {
-        // Hiển thị lỗi validation từ server nếu có
         if (result.errors) {
           const firstError = Object.values(result.errors)[0]
           apiError.value = Array.isArray(firstError) ? firstError[0] : firstError
@@ -190,7 +256,7 @@ export default {
       }
     }
 
-    return { schema, onSubmit, showPassword, showConfirm, apiError }
+    return { schema, onSubmit, showPassword, showConfirm, apiError, registered, registeredEmail }
   }
 }
 </script>

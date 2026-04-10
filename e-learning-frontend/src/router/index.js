@@ -18,9 +18,9 @@ const router = createRouter({
       component: AdminLayout,
       meta: { requiresAuth: true, guard: 'admin' },
       children: [
-        { path: '',          redirect: '/admin/dashboard' },
+        { path: '', redirect: '/admin/dashboard' },
         { path: 'dashboard', component: () => import('@/views/admin/DashboardPage.vue') },
-        { path: 'courses',   component: () => import('@/views/admin/CoursesPage.vue') },
+        { path: 'courses', component: () => import('@/views/admin/CoursesPage.vue') },
         { path: 'courses/create', component: () => import('@/views/admin/CourseFormPage.vue') },
         { path: 'courses/:id/edit', component: () => import('@/views/admin/CourseFormPage.vue') },
         { path: 'categories', component: () => import('@/views/admin/CategoriesPage.vue') },
@@ -38,10 +38,10 @@ const router = createRouter({
       path: '/',
       component: ClientLayout,
       children: [
-        { path: '',           component: () => import('@/views/client/HomePage.vue') },
-        { path: 'courses',    component: () => import('@/views/client/CoursesPage.vue') },
+        { path: '', component: () => import('@/views/client/HomePage.vue') },
+        { path: 'courses', component: () => import('@/views/client/CoursesPage.vue') },
         { path: 'courses/:slug', component: () => import('@/views/client/CourseDetailPage.vue') },
-        { path: 'posts',      component: () => import('@/views/client/PostsPage.vue') },
+        { path: 'posts', component: () => import('@/views/client/PostsPage.vue') },
         // Cần auth
         {
           path: 'my-courses',
@@ -84,18 +84,23 @@ const router = createRouter({
 
     // ── AUTH CLIENT ────────────────────────────────────────
     {
-       path: '/login',
-       component: () => import('@/views/auth/LoginPage.vue'),
-       meta: { requiresGuest: true, guard: 'student' }
+      path: '/login',
+      component: () => import('@/views/auth/LoginPage.vue'),
+      meta: { requiresGuest: true, guard: 'student' }
     },
     {
-       path: '/register',
-       component: () => import('@/views/auth/RegisterPage.vue'),
-       meta: { requiresGuest: true, guard: 'student' }
+      path: '/register',
+      component: () => import('@/views/auth/RegisterPage.vue'),
+      meta: { requiresGuest: true, guard: 'student' }
+    },
     {
       path: '/verify-email',
       component: () => import('@/views/auth/VerifyEmailPage.vue'),
       meta: { requiresAuth: true, guard: 'student' }
+    },
+    {
+      path: '/verify-email/result',
+      component: () => import('@/views/auth/VerifyEmailResultPage.vue'),
     },
     {
       path: '/forgot-password',
@@ -121,7 +126,7 @@ function getToken(key) {
 // ── Navigation Guard ───────────────────────────────────────
 router.beforeEach(async (to, from, next) => {
   NProgress.start()
-  const adminToken   = getToken('adminToken')
+  const adminToken = getToken('adminToken')
   const studentToken = getToken('studentToken')
 
   // Global Initialization cho Student (để lấy email_verified_at)
@@ -132,11 +137,11 @@ router.beforeEach(async (to, from, next) => {
       await studentStore.fetchMe()
     }
 
-    // Email verification guard
-    if (to.meta.requiresAuth && to.meta.guard === 'student' && to.path !== '/verify-email') {
-      if (studentStore.student && !studentStore.student.email_verified_at) {
-        return next('/verify-email') // Require verification
-      }
+    // Email verification guard — chặn mọi trang nếu chưa verify (kể cả trang chủ)
+    const unverified = studentStore.student && !studentStore.student.email_verified_at
+    const allowedWhenUnverified = ['/verify-email', '/verify-email/result', '/login', '/register']
+    if (unverified && !allowedWhenUnverified.includes(to.path)) {
+      return next('/verify-email')
     }
   }
 
@@ -162,7 +167,7 @@ router.beforeEach(async (to, from, next) => {
   // Route chỉ dành cho guest (login, register, forgot-password...)
   if (to.meta.requiresGuest) {
     if (to.meta.guard === 'admin' && adminToken) return next('/admin/dashboard')
-    
+
     if (to.meta.guard === 'student') {
       if (studentToken) return next('/')
       if (adminToken) return next('/admin/dashboard')
