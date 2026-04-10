@@ -6,13 +6,20 @@ const http = axios.create({
   timeout: 15000,
 })
 
+/**
+ * Lấy token từ localStorage (remember) hoặc sessionStorage (session-only).
+ */
+function getToken(key) {
+  return localStorage.getItem(key) || sessionStorage.getItem(key)
+}
+
 // Request interceptor — tự gắn token
 http.interceptors.request.use((config) => {
   if (config.url?.startsWith('/admin')) {
-    const token = localStorage.getItem('adminToken')
+    const token = getToken('adminToken')
     if (token) config.headers.Authorization = `Bearer ${token}`
   } else {
-    const token = localStorage.getItem('studentToken')
+    const token = getToken('studentToken')
     if (token) config.headers.Authorization = `Bearer ${token}`
   }
   return config
@@ -38,6 +45,7 @@ http.interceptors.response.use(
         adminStore.token = null
         adminStore.user = null
         localStorage.removeItem('adminToken')
+        sessionStorage.removeItem('adminToken')
         window.location.href = '/admin/login'
       } else {
         const { useStudentAuthStore } = await import('@/stores/studentAuth.store')
@@ -45,6 +53,7 @@ http.interceptors.response.use(
         studentStore.token = null
         studentStore.student = null
         localStorage.removeItem('studentToken')
+        sessionStorage.removeItem('studentToken')
         window.location.href = '/login'
       }
     }
