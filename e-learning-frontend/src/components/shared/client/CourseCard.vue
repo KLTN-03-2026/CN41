@@ -59,7 +59,7 @@ interface Course {
   teacher?: { id: number; name: string } | null
 }
 
-const props = withDefaults(defineProps<{
+withDefaults(defineProps<{
   course: Course;
   imageClass?: string;
   titleClass?: string;

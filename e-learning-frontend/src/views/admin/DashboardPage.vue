@@ -332,14 +332,14 @@ onMounted(async () => {
 
     // Revenue stats
     if (revenueRes.status === 'fulfilled') {
-      const data = revenueRes.value.data.data
+      const data = revenueRes.value.data.data as { total_revenue: number; total_orders: number; data: { month: number; total_revenue: string | number }[] }
       statValues.value.revenue = data.total_revenue || 0
       statValues.value.orders  = data.total_orders || 0
 
       // Map monthly data vào chart
       if (data.data?.length) {
         const monthMap = new Map<number, number>()
-        data.data.forEach((item: any) => {
+        data.data.forEach((item) => {
           monthMap.set(item.month, Number(item.total_revenue))
         })
         revenueData.value = MONTHS.map((month, i) => ({
@@ -351,8 +351,8 @@ onMounted(async () => {
 
     // Recent orders
     if (ordersRes.status === 'fulfilled') {
-      const ordersData = ordersRes.value.data.data || []
-      recentOrders.value = ordersData.map((o: any) => ({
+      const ordersData = (ordersRes.value.data.data || []) as import('@/types/order.types').Order[]
+      recentOrders.value = ordersData.map((o) => ({
         id: o.id,
         student_name: o.student?.name || '—',
         course_title: o.items?.[0]?.course?.name || '—',

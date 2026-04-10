@@ -108,10 +108,12 @@ import { formatCurrency } from '@/utils/formatCurrency'
 import OrderStatusBadge from '@/components/common/OrderStatusBadge.vue'
 import { usePagination } from '@/composables/usePagination'
 
+import type { Order } from '@/types/order.types'
+
 const toast = useToast()
 
 const loading = ref(true)
-const orders = ref<any[]>([])
+const orders = ref<Order[]>([])
 
 function formatDate(iso: string) {
   if (!iso) return ''
@@ -145,8 +147,9 @@ async function handleRetry(orderCode: string) {
     if (payment_url) {
       window.location.href = payment_url
     }
-  } catch (err: any) {
-    toast.error(err.response?.data?.message || 'Không thể tạo liên kết thanh toán mới.')
+  } catch (err: unknown) {
+    const axiosError = err as { response?: { data?: { message?: string } } }
+    toast.error(axiosError.response?.data?.message || 'Không thể tạo liên kết thanh toán mới.')
   }
 }
 

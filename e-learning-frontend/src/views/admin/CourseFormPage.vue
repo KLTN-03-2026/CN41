@@ -199,7 +199,7 @@ async function submitForm() {
   if (Object.keys(formErrors.value).length > 0) return
 
   submitting.value = true
-  const payload: Record<string, any> = {
+  const payload: Record<string, string | number | number[] | null> = {
     name: form.value.name,
     slug: form.value.slug,
     description: form.value.description || null,
@@ -217,11 +217,11 @@ async function submitForm() {
       await courseService.update(courseId.value!, payload)
       toast.success('Cập nhật khóa học thành công')
     } else {
-      const res = await courseService.store(payload)
+      await courseService.store(payload)
       toast.success('Tạo khóa học thành công')
       router.push('/admin/courses')
     }
-  } catch (err: any) {
+  } catch (err: unknown) {
     handleApiError(err)
   } finally {
     submitting.value = false

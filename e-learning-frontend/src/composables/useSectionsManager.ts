@@ -32,12 +32,12 @@ export function useSectionsManager(courseId: number) {
         lessonService.index(courseId, { per_page: 100 }),
       ])
 
-      const allSections: AdminSection[] = ((sectionsRes.data as any).data || []).map((s: any) => ({
+      const allSections: AdminSection[] = ((sectionsRes.data as { data: AdminSection[] }).data || []).map((s) => ({
         ...s,
         lessons: [],
       }))
 
-      const allLessons: AdminLesson[] = (lessonsRes.data as any).data || []
+      const allLessons: AdminLesson[] = (lessonsRes.data as { data: AdminLesson[] }).data || []
 
       const sectionMap = new Map<number, AdminSection>()
       for (const s of allSections) {
@@ -60,7 +60,8 @@ export function useSectionsManager(courseId: number) {
 
       sectionsList.value = allSections
       orphanLessons.value = orphans
-    } catch {
+    } catch (err) {
+      console.error('Failed to fetch course content', err)
       toast.error('Không thể tải nội dung khóa học')
     } finally {
       loading.value = false
@@ -168,7 +169,7 @@ export function useSectionsManager(courseId: number) {
       }
       showSectionModal.value = false
       fetchAll()
-    } catch (err: any) {
+    } catch (err: unknown) {
       handleSectionError(err)
     } finally {
       sSubmitting.value = false

@@ -155,9 +155,9 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  'update:show': [value: boolean]
-  'update:form': [value: any]
-  'submit': [data: any]
+  (e: 'update:show', value: boolean): void
+  (e: 'update:form', value: typeof props.form): void
+  (e: 'submit', data: typeof props.form): void
 }>()
 
 const toast = useToast()
@@ -222,7 +222,7 @@ async function uploadLessonFile(file: File) {
   
   lUploading.value = true
   try {
-    const onProgress = (progressEvent: any) => {
+    const onProgress = (progressEvent: { total?: number, loaded: number }) => {
       if (progressEvent.total) {
         lUploadProgress.value = Math.round((progressEvent.loaded / progressEvent.total) * 100)
       }
@@ -242,12 +242,16 @@ async function uploadLessonFile(file: File) {
       if (parsed.origin !== window.location.origin) {
         url = parsed.pathname
       }
-    } catch {}
+    } catch (err) {
+      console.error('Failed to parse URL', err)
+    }
     
     localForm.value.content = url
     toast.success('Tải lên thành công')
-  } catch (err: any) {
-    lUploadError.value = err.response?.data?.message || 'Tải lên thất bại'
+    toast.success('Tải lên thành công')
+  } catch (err: unknown) {
+    const axiosError = err as { response?: { data?: { message?: string } } }
+    lUploadError.value = axiosError.response?.data?.message || 'Tải lên thất bại'
   } finally {
     lUploading.value = false
     setTimeout(() => { lUploadProgress.value = 0 }, 1000)

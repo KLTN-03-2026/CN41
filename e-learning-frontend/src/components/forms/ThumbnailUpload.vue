@@ -72,7 +72,7 @@ import { ref } from 'vue'
 import { useToast } from 'vue-toastification'
 import { uploadService } from '@/services/upload.service'
 
-const props = defineProps<{
+defineProps<{
   /** URL ảnh hiện tại (2-way binding) */
   modelValue: string
 }>()
@@ -129,7 +129,7 @@ async function uploadThumbnail(file: File) {
   emit('update:modelValue', blobPreview.value)
 
   try {
-    const res = await uploadService.image(file, 'thumbnails', (progressEvent: any) => {
+    const res = await uploadService.image(file, 'thumbnails', (progressEvent: { total?: number; loaded: number }) => {
       if (progressEvent.total) {
         uploadProgress.value = Math.round((progressEvent.loaded / progressEvent.total) * 100)
       }
@@ -159,13 +159,14 @@ async function uploadThumbnail(file: File) {
 
     // Reset progress sau 1 giây
     setTimeout(() => { uploadProgress.value = 0 }, 1000)
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const axiosError = err as { response?: { data?: { message?: string } } }
     // Rollback preview nếu upload thất bại
     URL.revokeObjectURL(blobPreview.value)
     blobPreview.value = ''
     emit('update:modelValue', '')
     uploadProgress.value = 0
-    const msg = err.response?.data?.message || 'Upload ảnh thất bại'
+    const msg = axiosError.response?.data?.message || 'Upload ảnh thất bại'
     uploadError.value = msg
   }
 }

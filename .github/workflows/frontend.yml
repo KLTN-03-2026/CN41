@@ -23,7 +23,10 @@ jobs:
         node-version: '20'
 
     - name: Install Dependencies
-      run: npm install
+      run: npm ci
+
+    - name: Run Lint Check
+      run: npm run lint
 
     - name: Build Project
       run: npm run build

@@ -181,10 +181,11 @@
 </template>
 
 <script setup lang="ts">
+import type { AdminCourseForm } from '@/types/course.types'
 import ThumbnailUpload from '@/components/forms/ThumbnailUpload.vue'
 
 const props = defineProps<{
-  form: Record<string, any>
+  form: AdminCourseForm
   errors: Record<string, string>
   teachers: { id: number; name: string }[]
   flatCategories: { id: number; name: string; depth: number }[]
@@ -195,10 +196,10 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  'update:form': [val: Record<string, any>]
-  'update:slugUnlocked': [val: boolean]
-  'auto-slug': []
-  'submit': []
+  (e: 'update:form', val: AdminCourseForm): void
+  (e: 'update:slugUnlocked', val: boolean): void
+  (e: 'auto-slug'): void
+  (e: 'submit'): void
 }>()
 
 function getVal(e: Event) {

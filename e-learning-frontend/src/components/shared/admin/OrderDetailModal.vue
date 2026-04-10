@@ -169,6 +169,8 @@ import { orderService } from '@/services/order.service'
 import { formatCurrency } from '@/utils/formatCurrency'
 import OrderStatusBadge from '@/components/common/OrderStatusBadge.vue'
 
+import type { Order } from '@/types/order.types'
+
 const props = defineProps<{
   show: boolean
   orderId: number | null
@@ -181,7 +183,7 @@ const emit = defineEmits<{
 
 const toast = useToast()
 const loading = ref(false)
-const order = ref<any>(null)
+const order = ref<Order | null>(null)
 const newStatus = ref('')
 const updating = ref(false)
 
@@ -215,8 +217,9 @@ async function handleUpdateStatus() {
     toast.success('Cập nhật trạng thái thành công.')
     order.value.status = newStatus.value
     emit('updated')
-  } catch (err: any) {
-    toast.error(err.response?.data?.message || 'Có lỗi xảy ra.')
+  } catch (err: unknown) {
+    const axiosError = err as { response?: { data?: { message?: string } } }
+    toast.error(axiosError.response?.data?.message || 'Có lỗi xảy ra.')
   } finally {
     updating.value = false
   }
