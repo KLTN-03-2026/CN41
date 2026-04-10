@@ -63,8 +63,17 @@
             <p class="error-msg" v-if="errors.password">{{ errors.password }}</p>
           </div>
 
-          <!-- Quên mật khẩu -->
-          <div class="flex justify-end mb-6">
+          <!-- Ghi nhớ đăng nhập + Quên mật khẩu -->
+          <div class="flex items-center justify-between mb-6">
+            <label for="keepLoggedIn" class="flex items-center text-sm text-gray-600 cursor-pointer select-none">
+              <input
+                v-model="keepLoggedIn"
+                type="checkbox"
+                id="keepLoggedIn"
+                class="w-4 h-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500 mr-2"
+              />
+              Ghi nhớ đăng nhập
+            </label>
             <router-link to="/forgot-password" class="text-sm text-primary-600 hover:underline">
               Quên mật khẩu?
             </router-link>
@@ -113,6 +122,7 @@ export default {
     const studentStore = useStudentAuthStore()
 
     const showPassword = ref(false)
+    const keepLoggedIn = ref(false)
     const apiError     = ref('')
 
     const schema = toTypedSchema(
@@ -127,7 +137,7 @@ export default {
 
       // Chỉ gọi student API — không fallback sang admin
       // (fallback gây 2 request / lần submit → đốt throttle:5,1 rất nhanh → 429)
-      const result = await studentStore.login(values.email, values.password)
+      const result = await studentStore.login(values.email, values.password, keepLoggedIn.value)
 
       if (result.success) {
         toast.success('Đăng nhập thành công!')
@@ -140,7 +150,7 @@ export default {
       apiError.value = result.message || 'Email hoặc mật khẩu không chính xác.'
     }
 
-    return { schema, onSubmit, showPassword, apiError }
+    return { schema, onSubmit, showPassword, keepLoggedIn, apiError }
   }
 }
 </script>

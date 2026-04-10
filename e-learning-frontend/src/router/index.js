@@ -92,6 +92,20 @@ const router = createRouter({
        path: '/register',
        component: () => import('@/views/auth/RegisterPage.vue'),
        meta: { requiresGuest: true, guard: 'student' }
+    {
+      path: '/verify-email',
+      component: () => import('@/views/auth/VerifyEmailPage.vue'),
+      meta: { requiresAuth: true, guard: 'student' }
+    },
+    {
+      path: '/forgot-password',
+      component: () => import('@/views/auth/ForgotPasswordPage.vue'),
+      meta: { requiresGuest: true, guard: 'student' }
+    },
+    {
+      path: '/reset-password',
+      component: () => import('@/views/auth/ResetPasswordPage.vue'),
+      meta: { requiresGuest: true, guard: 'student' }
     },
 
     // ── ERROR PAGES ────────────────────────────────────────
@@ -100,11 +114,40 @@ const router = createRouter({
   ]
 })
 
+function getToken(key) {
+  return localStorage.getItem(key) || sessionStorage.getItem(key)
+}
+
 // ── Navigation Guard ───────────────────────────────────────
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
   NProgress.start()
-  const adminToken   = localStorage.getItem('adminToken')
-  const studentToken = localStorage.getItem('studentToken')
+  const adminToken   = getToken('adminToken')
+  const studentToken = getToken('studentToken')
+
+  // Global Initialization cho Student (để lấy email_verified_at)
+  if (studentToken && to.meta.guard !== 'admin') {
+    const { useStudentAuthStore } = await import('@/stores/studentAuth.store')
+    const studentStore = useStudentAuthStore()
+    if (!studentStore.student) {
+      await studentStore.fetchMe()
+    }
+
+    // Email verification guard
+    if (to.meta.requiresAuth && to.meta.guard === 'student' && to.path !== '/verify-email') {
+      if (studentStore.student && !studentStore.student.email_verified_at) {
+        return next('/verify-email') // Require verification
+      }
+    }
+  }
+
+  // Global Initialization cho Admin
+  if (adminToken && to.meta.guard === 'admin') {
+    const { useAdminAuthStore } = await import('@/stores/adminAuth.store')
+    const adminStore = useAdminAuthStore()
+    if (!adminStore.user) {
+      await adminStore.fetchMe()
+    }
+  }
 
   // Route cần auth
   if (to.meta.requiresAuth) {
@@ -116,10 +159,10 @@ router.beforeEach((to, from, next) => {
     }
   }
 
-  // Route chỉ dành cho guest (login page)
+  // Route chỉ dành cho guest (login, register, forgot-password...)
   if (to.meta.requiresGuest) {
     if (to.meta.guard === 'admin' && adminToken) return next('/admin/dashboard')
-    // Trang /login client: redirect nếu đã login (student hoặc admin)
+    
     if (to.meta.guard === 'student') {
       if (studentToken) return next('/')
       if (adminToken) return next('/admin/dashboard')

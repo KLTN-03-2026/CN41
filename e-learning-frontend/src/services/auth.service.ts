@@ -32,4 +32,7 @@ export const authService = {
 
   resetPassword: (data: Record<string, unknown>): Promise<AxiosResponse<ApiResponse<null>>> =>
     http.post('/auth/reset-password', data),
+
+  studentResendVerification: (data: { email: string }): Promise<AxiosResponse<ApiResponse<null>>> =>
+    http.post('/auth/resend-verification', data),
 }

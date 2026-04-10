@@ -9,9 +9,17 @@ interface ActionResult {
   errors?: Record<string, string[]>
 }
 
+/**
+ * Lấy token từ localStorage (remember) hoặc sessionStorage (session-only).
+ */
+function getStoredToken(): string | null {
+  return localStorage.getItem(STORAGE_KEYS.ADMIN_TOKEN)
+    || sessionStorage.getItem(STORAGE_KEYS.ADMIN_TOKEN)
+}
+
 export const useAdminAuthStore = defineStore('adminAuth', {
   state: () => ({
-    token: localStorage.getItem(STORAGE_KEYS.ADMIN_TOKEN) as string | null,
+    token: getStoredToken() as string | null,
     user: null as AdminUser | null,
     loading: false,
   }),
@@ -22,7 +30,7 @@ export const useAdminAuthStore = defineStore('adminAuth', {
   },
 
   actions: {
-    async login(email: string, password: string): Promise<ActionResult> {
+    async login(email: string, password: string, remember = false): Promise<ActionResult> {
       this.loading = true
       try {
         const res = await authService.adminLogin(email, password)
@@ -31,7 +39,14 @@ export const useAdminAuthStore = defineStore('adminAuth', {
         }
         this.token = res.data.data.token
         this.user = res.data.data.user ?? null
-        localStorage.setItem(STORAGE_KEYS.ADMIN_TOKEN, this.token)
+
+        // Lưu token theo lựa chọn "Ghi nhớ đăng nhập"
+        if (remember) {
+          localStorage.setItem(STORAGE_KEYS.ADMIN_TOKEN, this.token)
+        } else {
+          sessionStorage.setItem(STORAGE_KEYS.ADMIN_TOKEN, this.token)
+        }
+
         return { success: true }
       } catch (err: unknown) {
         const e = err as { response?: { data?: { message?: string; errors?: Record<string, string[]> } } }
@@ -62,7 +77,9 @@ export const useAdminAuthStore = defineStore('adminAuth', {
       } catch {}
       this.token = null
       this.user = null
+      // Xóa ở cả 2 storage
       localStorage.removeItem(STORAGE_KEYS.ADMIN_TOKEN)
+      sessionStorage.removeItem(STORAGE_KEYS.ADMIN_TOKEN)
       return { success: true }
     },
   },
