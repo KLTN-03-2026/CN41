@@ -154,12 +154,15 @@ export default {
 
     const schema = toTypedSchema(
       z.object({
-        name: z.string({ error: 'Vui lòng nhập họ tên' }).min(2, 'Họ tên tối thiểu 2 ký tự'),
-        email: z.string({ error: 'Vui lòng nhập email' }).min(1, 'Vui lòng nhập email').email('Email không đúng định dạng'),
-        password: z.string({ error: 'Vui lòng nhập mật khẩu' }).min(8, 'Mật khẩu tối thiểu 8 ký tự'),
-        password_confirmation: z.string({ error: 'Vui lòng xác nhận mật khẩu' }).min(1, 'Vui lòng xác nhận mật khẩu'),
+        // min(1) bắt empty → hiện 'required', min(2) bắt quá ngắn → hiện 'min length'
+        name: z.string().trim().min(1, 'Vui lòng nhập họ tên').min(2, 'Họ tên tối thiểu 2 ký tự'),
+        email: z.string().min(1, 'Vui lòng nhập email').email('Email không đúng định dạng'),
+        password: z.string().min(1, 'Vui lòng nhập mật khẩu').min(8, 'Mật khẩu tối thiểu 8 ký tự'),
+        password_confirmation: z.string().min(1, 'Vui lòng xác nhận mật khẩu'),
       }).superRefine((data, ctx) => {
-        if (data.password && data.password_confirmation && data.password !== data.password_confirmation) {
+        // Bỏ điều kiện `data.password &&` — khi password trống nhưng confirm có giá trị
+        // vẫn phải báo lỗi "không khớp" thay vì không hiện gì
+        if (data.password_confirmation && data.password !== data.password_confirmation) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
             message: 'Mật khẩu xác nhận không khớp',

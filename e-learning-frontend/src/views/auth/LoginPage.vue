@@ -103,7 +103,6 @@ import { toTypedSchema } from '@vee-validate/zod'
 import { useToast } from 'vue-toastification'
 import { BookOpen, Mail, Lock, Eye, EyeOff, AlertCircle } from 'lucide-vue-next'
 import { useStudentAuthStore } from '@/stores/studentAuth.store'
-import { useAdminAuthStore } from '@/stores/adminAuth.store'
 
 export default {
   components: { Form, Field, BookOpen, Mail, Lock, Eye, EyeOff, AlertCircle },
@@ -112,42 +111,33 @@ export default {
     const route  = useRoute()
     const toast  = useToast()
     const studentStore = useStudentAuthStore()
-    const adminStore   = useAdminAuthStore()
 
     const showPassword = ref(false)
     const apiError     = ref('')
 
     const schema = toTypedSchema(
       z.object({
-        email:    z.string({ error: 'Vui lòng nhập email' }).min(1, 'Vui lòng nhập email').email('Email không đúng định dạng'),
-        password: z.string({ error: 'Vui lòng nhập mật khẩu' }).min(1, 'Vui lòng nhập mật khẩu').min(6, 'Mật khẩu phải có ít nhất 6 ký tự'),
+        email:    z.string().min(1, 'Vui lòng nhập email').email('Email không đúng định dạng'),
+        password: z.string().min(1, 'Vui lòng nhập mật khẩu').min(6, 'Mật khẩu phải có ít nhất 6 ký tự'),
       })
     )
 
     const onSubmit = async (values) => {
       apiError.value = ''
 
-      // Thử login student trước
-      const studentResult = await studentStore.login(values.email, values.password)
+      // Chỉ gọi student API — không fallback sang admin
+      // (fallback gây 2 request / lần submit → đốt throttle:5,1 rất nhanh → 429)
+      const result = await studentStore.login(values.email, values.password)
 
-      if (studentResult.success) {
+      if (result.success) {
         toast.success('Đăng nhập thành công!')
         const redirect = route.query.redirect || '/'
         router.push(redirect)
         return
       }
 
-      // Nếu student login thất bại (401) → thử login admin/teacher
-      const adminResult = await adminStore.login(values.email, values.password)
-
-      if (adminResult.success) {
-        toast.success('Đăng nhập thành công!')
-        router.push('/admin/dashboard')
-        return
-      }
-
-      // Cả hai đều thất bại
-      apiError.value = 'Email hoặc mật khẩu không chính xác.'
+      // Hiện message từ server (401, 403 email_not_verified, v.v.)
+      apiError.value = result.message || 'Email hoặc mật khẩu không chính xác.'
     }
 
     return { schema, onSubmit, showPassword, apiError }
