@@ -63,12 +63,12 @@
         <div>
           <label class="label-form">Giảng viên <span class="text-red-500">*</span></label>
           <select
-            :value="form.teacher_id"
-            @change="updateFieldNum('teacher_id', $event)"
+            :value="form.teacher_id !== null ? form.teacher_id : ''"
+            @change="updateFieldNumNull('teacher_id', $event)"
             class="input-field"
             :class="{ 'input-error': errors.teacher_id }"
           >
-            <option :value="null">— Chọn giảng viên —</option>
+            <option value="" disabled>— Chọn giảng viên —</option>
             <option v-for="t in teachers" :key="t.id" :value="t.id">{{ t.name }}</option>
           </select>
           <p v-if="errors.teacher_id" class="error-msg">{{ errors.teacher_id }}</p>
@@ -76,11 +76,11 @@
         <div>
           <label class="label-form">Danh mục</label>
           <select
-            :value="form.category_id"
-            @change="updateFieldNum('category_id', $event)"
+            :value="form.category_id !== null ? form.category_id : ''"
+            @change="updateFieldNumNull('category_id', $event)"
             class="input-field"
           >
-            <option :value="null">— Chọn danh mục —</option>
+            <option value="">— Chọn danh mục —</option>
             <option v-for="c in flatCategories" :key="c.id" :value="c.id">
               {{ '—'.repeat(c.depth) }} {{ c.name }}
             </option>

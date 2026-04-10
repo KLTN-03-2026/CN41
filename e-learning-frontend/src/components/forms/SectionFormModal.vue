@@ -9,24 +9,24 @@
         <h3 class="text-base font-semibold text-gray-800 dark:text-white/90 mb-5">
           {{ isEdit ? 'Chỉnh sửa chương' : 'Thêm chương mới' }}
         </h3>
-        <form @submit.prevent="$emit('submit')" class="space-y-4">
+        <form @submit.prevent="handleSubmit" class="space-y-4">
           <div>
             <label class="label-form">Tiêu đề <span class="text-red-500">*</span></label>
-            <input v-model="form.title" type="text" class="input-field" :class="{ 'input-error': errors.title }" placeholder="Chương 1: Giới thiệu" />
+            <input v-model="localForm.title" type="text" class="input-field" :class="{ 'input-error': errors.title }" placeholder="Chương 1: Giới thiệu" />
             <p v-if="errors.title" class="error-msg">{{ errors.title }}</p>
           </div>
           <div>
             <label class="label-form">Mô tả</label>
-            <textarea v-model="form.description" rows="2" class="input-field resize-none" placeholder="Mô tả nội dung chương..." />
+            <textarea v-model="localForm.description" rows="2" class="input-field resize-none" placeholder="Mô tả nội dung chương..." />
           </div>
           <div class="flex items-center gap-4">
             <div class="flex-1">
               <label class="label-form">Thứ tự</label>
-              <input v-model.number="form.order" type="number" min="0" class="input-field" placeholder="0" />
+              <input v-model.number="localForm.order" type="number" min="0" class="input-field" placeholder="0" />
             </div>
             <div>
               <label class="label-form">Trạng thái</label>
-              <select v-model="form.status" class="input-field w-auto px-3">
+              <select v-model="localForm.status" class="input-field w-auto px-3">
                 <option :value="0">Nháp</option>
                 <option :value="1">Đã đăng</option>
               </select>
@@ -58,6 +58,8 @@
 </template>
 
 <script setup lang="ts">
+import { ref, watch } from 'vue'
+
 const props = defineProps<{
   show: boolean
   isEdit: boolean
@@ -74,8 +76,25 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'update:show': [value: boolean]
-  'submit': []
+  'submit': [data: any]
 }>()
+
+// Local state to avoid mutating props directly
+const localForm = ref({ ...props.form })
+
+// Sync local form when modal opens or prop changes
+watch(
+  () => props.show,
+  (isShown) => {
+    if (isShown) {
+      localForm.value = { ...props.form }
+    }
+  }
+)
+
+function handleSubmit() {
+  emit('submit', localForm.value)
+}
 
 function closeModal() {
   emit('update:show', false)

@@ -1,5 +1,5 @@
 import { ref, provide, inject, onMounted, watch, computed } from 'vue'
-import type { Ref, ComputedRef } from 'vue'
+import type { ComputedRef } from 'vue'
 
 interface ThemeContextType {
   isDarkMode: ComputedRef<boolean>

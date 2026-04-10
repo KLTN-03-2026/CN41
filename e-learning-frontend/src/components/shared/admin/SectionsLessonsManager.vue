@@ -190,7 +190,7 @@
       :errors="sErrors"
       :submit-error="sSubmitError"
       :form="sForm"
-      @submit="submitSection"
+      @submit="(data) => { sForm = data; submitSection() }"
     />
 
     <!-- ═══════ MODAL: Lesson Form ═══════ -->
@@ -202,7 +202,7 @@
       :submit-error="lSubmitError"
       :form="lForm"
       :sections-list="sectionsList"
-      @submit="submitLesson"
+      @submit="(data) => { lForm = data; submitLesson() }"
     />
 
     <!-- ═══════ MODAL: Confirm Delete Section ═══════ -->
