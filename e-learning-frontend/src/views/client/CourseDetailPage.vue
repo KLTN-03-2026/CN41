@@ -194,9 +194,9 @@ import { courseService } from '@/services/course.service'
 import { useCartStore } from '@/stores/cart.store'
 import { useStudentAuthStore } from '@/stores/studentAuth.store'
 import { formatCurrency } from '@/utils/formatCurrency'
-import CourseCard from '@/components/client/CourseCard.vue'
-import CourseFeaturesGrid, { type FeatureItem } from '@/components/client/CourseFeaturesGrid.vue'
-import CourseSyllabus from '@/components/client/CourseSyllabus.vue'
+import CourseCard from '@/components/shared/client/CourseCard.vue'
+import CourseFeaturesGrid, { type FeatureItem } from '@/components/shared/client/CourseFeaturesGrid.vue'
+import CourseSyllabus from '@/components/shared/client/CourseSyllabus.vue'
 
 const route = useRoute()
 const router = useRouter()

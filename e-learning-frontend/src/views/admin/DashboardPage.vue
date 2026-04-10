@@ -214,7 +214,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, markRaw, type Component } from 'vue'
-import { UserGroupIcon, BoxCubeIcon, BoxIcon, BarChartIcon, ChevronRightIcon } from '@/icons'
+import { UserGroupIcon, BoxCubeIcon, BoxIcon, BarChartIcon, ChevronRightIcon } from '@/components/icons'
 import { formatCurrency } from '@/utils/formatCurrency'
 import { orderService } from '@/services/order.service'
 

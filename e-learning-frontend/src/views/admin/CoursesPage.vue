@@ -442,8 +442,8 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useToast } from 'vue-toastification'
-import { PlusIcon, TrashIcon, BoxCubeIcon } from '@/icons'
-import BulkActions from '@/components/admin/BulkActions.vue'
+import { PlusIcon, TrashIcon, BoxCubeIcon } from '@/components/icons'
+import BulkActions from '@/components/table/BulkActions.vue'
 import ConfirmModal from '@/components/common/ConfirmModal.vue'
 import { courseService } from '@/services/course.service'
 import { formatCurrency } from '@/utils/formatCurrency'

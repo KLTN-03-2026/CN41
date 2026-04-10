@@ -77,7 +77,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { courseService } from '@/services/course.service'
 import { categoryService } from '@/services/category.service'
-import CourseCard from '@/components/client/CourseCard.vue'
+import CourseCard from '@/components/shared/client/CourseCard.vue'
 import { usePagination } from '@/composables/usePagination'
 import { useDebounceSearch } from '@/composables/useDebounceSearch'
 

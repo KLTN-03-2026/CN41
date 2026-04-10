@@ -74,8 +74,8 @@ import { useToast } from 'vue-toastification'
 import { courseService } from '@/services/course.service'
 import { categoryService } from '@/services/category.service'
 import { teacherService } from '@/services/teacher.service'
-import SectionsLessonsManager from '@/components/admin/SectionsLessonsManager.vue'
-import CourseInfoForm from '@/components/admin/CourseInfoForm.vue'
+import SectionsLessonsManager from '@/components/shared/admin/SectionsLessonsManager.vue'
+import CourseInfoForm from '@/components/forms/CourseInfoForm.vue'
 import { useFormErrors } from '@/composables/useFormErrors'
 
 const route  = useRoute()

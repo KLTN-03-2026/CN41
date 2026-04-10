@@ -181,7 +181,7 @@
 </template>
 
 <script setup lang="ts">
-import ThumbnailUpload from '@/components/admin/ThumbnailUpload.vue'
+import ThumbnailUpload from '@/components/forms/ThumbnailUpload.vue'
 
 const props = defineProps<{
   form: Record<string, any>

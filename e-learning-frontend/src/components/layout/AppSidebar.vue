@@ -192,7 +192,7 @@ import {
   BoxCubeIcon,
   ListIcon,
   TaskIcon,
-} from '@/icons'
+} from '@/components/icons'
 import { useSidebar } from '@/composables/useSidebar'
 
 const route = useRoute()

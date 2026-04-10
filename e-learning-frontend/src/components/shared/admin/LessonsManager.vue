@@ -208,7 +208,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useToast } from 'vue-toastification'
-import { PlusIcon, TrashIcon } from '@/icons'
+import { PlusIcon, TrashIcon } from '@/components/icons'
 import { lessonService } from '@/services/lesson.service'
 import { formatSeconds } from '@/utils/formatDuration'
 

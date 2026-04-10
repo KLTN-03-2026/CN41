@@ -113,7 +113,7 @@ import { useToast } from 'vue-toastification'
 import { useCartStore } from '@/stores/cart.store'
 import { orderService } from '@/services/order.service'
 import { formatCurrency } from '@/utils/formatCurrency'
-import PaymentMethodSelector from '@/components/client/PaymentMethodSelector.vue'
+import PaymentMethodSelector from '@/components/forms/PaymentMethodSelector.vue'
 
 const router = useRouter()
 const toast = useToast()

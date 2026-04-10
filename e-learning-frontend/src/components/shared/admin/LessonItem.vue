@@ -94,7 +94,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { TrashIcon } from '@/icons'
+import { TrashIcon } from '@/components/icons'
 import { formatSeconds } from '@/utils/formatDuration'
 
 interface Lesson {

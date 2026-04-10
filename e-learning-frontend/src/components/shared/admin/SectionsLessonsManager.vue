@@ -272,188 +272,27 @@
     </template>
 
     <!-- ═══════ MODAL: Section Form ═══════ -->
-    <Teleport to="body">
-      <div
-        v-if="showSectionModal"
-        class="fixed inset-0 z-[100000] flex items-center justify-center bg-black/50 px-4"
-        @click.self="showSectionModal = false"
-      >
-        <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-md p-6">
-          <h3 class="text-base font-semibold text-gray-800 dark:text-white/90 mb-5">
-            {{ editingSectionId ? 'Chỉnh sửa chương' : 'Thêm chương mới' }}
-          </h3>
-          <form @submit.prevent="submitSection" class="space-y-4">
-            <div>
-              <label class="label-form">Tiêu đề <span class="text-red-500">*</span></label>
-              <input v-model="sForm.title" type="text" class="input-field" :class="{ 'input-error': sErrors.title }" placeholder="Chương 1: Giới thiệu" />
-              <p v-if="sErrors.title" class="error-msg">{{ sErrors.title }}</p>
-            </div>
-            <div>
-              <label class="label-form">Mô tả</label>
-              <textarea v-model="sForm.description" rows="2" class="input-field resize-none" placeholder="Mô tả nội dung chương..." />
-            </div>
-            <div class="flex items-center gap-4">
-              <div class="flex-1">
-                <label class="label-form">Thứ tự</label>
-                <input v-model.number="sForm.order" type="number" min="0" class="input-field" placeholder="0" />
-              </div>
-              <div>
-                <label class="label-form">Trạng thái</label>
-                <select v-model="sForm.status" class="input-field w-auto px-3">
-                  <option :value="0">Nháp</option>
-                  <option :value="1">Đã đăng</option>
-                </select>
-              </div>
-            </div>
-
-            <p v-if="sSubmitError" class="text-sm text-red-500">{{ sSubmitError }}</p>
-
-            <div class="flex justify-end gap-3 pt-2">
-              <button type="button" @click="showSectionModal = false" class="px-4 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400">
-                Hủy
-              </button>
-              <button
-                type="submit"
-                :disabled="sSubmitting"
-                class="px-4 py-2 text-sm rounded-lg bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50 flex items-center gap-2"
-              >
-                <svg v-if="sSubmitting" class="animate-spin w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
-                </svg>
-                {{ editingSectionId ? 'Cập nhật' : 'Tạo mới' }}
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </Teleport>
+    <SectionFormModal
+      v-model:show="showSectionModal"
+      :is-edit="!!editingSectionId"
+      :submitting="sSubmitting"
+      :errors="sErrors"
+      :submit-error="sSubmitError"
+      :form="sForm"
+      @submit="submitSection"
+    />
 
     <!-- ═══════ MODAL: Lesson Form ═══════ -->
-    <Teleport to="body">
-      <div
-        v-if="showLessonModal"
-        class="fixed inset-0 z-[100000] flex items-center justify-center bg-black/50 px-4"
-        @click.self="showLessonModal = false"
-      >
-        <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
-          <h3 class="text-base font-semibold text-gray-800 dark:text-white/90 mb-5">
-            {{ editingLessonId ? 'Chỉnh sửa bài giảng' : 'Thêm bài giảng' }}
-          </h3>
-
-          <form @submit.prevent="submitLesson" class="space-y-4">
-            <!-- Chương -->
-            <div>
-              <label class="label-form">Chương</label>
-              <select v-model="lForm.section_id" class="input-field">
-                <option :value="null">— Chưa phân chương —</option>
-                <option v-for="s in sectionsList" :key="s.id" :value="s.id">{{ s.title }}</option>
-              </select>
-            </div>
-
-            <div>
-              <label class="label-form">Tiêu đề <span class="text-red-500">*</span></label>
-              <input v-model="lForm.title" type="text" class="input-field" :class="{ 'input-error': lErrors.title }" placeholder="Giới thiệu khóa học" />
-              <p v-if="lErrors.title" class="error-msg">{{ lErrors.title }}</p>
-            </div>
-
-            <div>
-              <label class="label-form">Loại bài giảng <span class="text-red-500">*</span></label>
-              <select v-model="lForm.type" class="input-field">
-                <option value="video">Video</option>
-                <option value="document">Tài liệu</option>
-              </select>
-            </div>
-
-            <div>
-              <label class="label-form">Nội dung tải lên (Video / Tài liệu) <span class="text-red-500">*</span></label>
-              
-              <div v-if="lForm.content" class="flex flex-col gap-2 relative">
-                 <input v-model="lForm.content" type="text" class="input-field pr-10" />
-                 <button
-                  type="button"
-                  @click="lForm.content = ''"
-                  class="absolute right-2 top-2 w-6 h-6 flex items-center justify-center bg-gray-100 hover:bg-red-100 text-gray-500 hover:text-red-500 rounded-md transition-colors"
-                 >
-                   <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-                 </button>
-              </div>
-
-              <div
-                v-else
-                @dragover.prevent=""
-                @drop.prevent="handleLessonDrop"
-                @click="!lUploading && lFileInput?.click()"
-                :class="[lUploading ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer hover:border-blue-400 dark:hover:border-blue-500', 'border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-xl px-4 py-8 text-center transition-all']"
-              >
-                 <div v-if="lUploading" class="max-w-xs mx-auto">
-                    <div class="flex justify-between text-xs text-blue-600 dark:text-blue-400 font-medium mb-2">
-                       <span>Đang tải lên...</span>
-                       <span>{{ lUploadProgress }}%</span>
-                    </div>
-                    <div class="w-full h-2 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
-                       <div class="h-full bg-blue-500 rounded-full transition-all duration-300" :style="{ width: lUploadProgress + '%' }" />
-                    </div>
-                 </div>
-                 <div v-else class="flex flex-col items-center justify-center space-y-2">
-                    <svg class="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-                    </svg>
-                    <p class="text-sm font-medium text-gray-600 dark:text-gray-300">
-                      <span class="text-blue-500">Nhấp để tải lên</span> hoặc kéo thả file
-                    </p>
-                    <p class="text-xs text-gray-500 dark:text-gray-400">
-                      {{ lForm.type === 'video' ? 'Hỗ trợ MP4, WebM (Max: 50MB)' : 'Hỗ trợ PDF, DOCX (Max: 10MB)' }}
-                    </p>
-                 </div>
-              </div>
-              <input ref="lFileInput" type="file" class="hidden" :accept="lForm.type === 'video' ? 'video/*' : '*/*'" @change="handleLessonFileSelect" />
-              <p v-if="lUploadError" class="error-msg mt-2">{{ lUploadError }}</p>
-              <p v-if="lErrors.content" class="error-msg mt-1">{{ lErrors.content }}</p>
-              <p v-if="lErrors.video_id" class="error-msg mt-1">{{ lErrors.video_id }}</p>
-              <p v-if="lErrors.document_id" class="error-msg mt-1">{{ lErrors.document_id }}</p>
-            </div>
-
-            <div v-if="lForm.type === 'video'">
-              <label class="label-form">Thời lượng (giây)</label>
-              <input v-model.number="lForm.duration" type="number" min="0" class="input-field cursor-not-allowed bg-gray-50 dark:bg-gray-800/50" readonly disabled placeholder="Tự động tính khi tải lên video" />
-            </div>
-
-            <div class="flex items-center gap-4">
-              <label class="flex items-center gap-2 cursor-pointer">
-                <input v-model="lForm.is_preview" type="checkbox" class="w-4 h-4 rounded border-gray-300" />
-                <span class="text-sm text-gray-700 dark:text-gray-400">Cho xem thử (preview)</span>
-              </label>
-              <div>
-                <select v-model="lForm.status" class="input-field w-auto px-3">
-                  <option :value="0">Nháp</option>
-                  <option :value="1">Đã đăng</option>
-                </select>
-              </div>
-            </div>
-
-            <p v-if="lSubmitError" class="text-sm text-red-500">{{ lSubmitError }}</p>
-
-            <div class="flex justify-end gap-3 pt-2">
-              <button type="button" @click="showLessonModal = false" class="px-4 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400">
-                Hủy
-              </button>
-              <button
-                type="submit"
-                :disabled="lSubmitting"
-                class="px-4 py-2 text-sm rounded-lg bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50 flex items-center gap-2"
-              >
-                <svg v-if="lSubmitting" class="animate-spin w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
-                </svg>
-                {{ editingLessonId ? 'Cập nhật' : 'Tạo mới' }}
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </Teleport>
+    <LessonFormModal
+      v-model:show="showLessonModal"
+      :is-edit="!!editingLessonId"
+      :submitting="lSubmitting"
+      :errors="lErrors"
+      :submit-error="lSubmitError"
+      :form="lForm"
+      :sections-list="sectionsList"
+      @submit="submitLesson"
+    />
 
     <!-- ═══════ MODAL: Confirm Delete Section (via composable) ═══════ -->
     <ConfirmModal
@@ -554,16 +393,17 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useToast } from 'vue-toastification'
-import { PlusIcon, TrashIcon } from '@/icons'
+import { PlusIcon, TrashIcon } from '@/components/icons'
 import { sectionService } from '@/services/section.service'
 import { lessonService } from '@/services/lesson.service'
-import { uploadService } from '@/services/upload.service'
-import { formatSeconds } from '@/utils/formatDuration'
-import BulkActions from '@/components/admin/BulkActions.vue'
-import LessonPreviewModal from '@/components/admin/LessonPreviewModal.vue'
-import LessonItem from '@/components/admin/LessonItem.vue'
+import BulkActions from '@/components/table/BulkActions.vue'
+import LessonPreviewModal from '@/components/shared/admin/LessonPreviewModal.vue'
+import LessonItem from '@/components/shared/admin/LessonItem.vue'
 import ConfirmModal from '@/components/common/ConfirmModal.vue'
 import { useDeleteConfirm } from '@/composables/useDeleteConfirm'
+import SectionFormModal from '@/components/forms/SectionFormModal.vue'
+import LessonFormModal from '@/components/forms/LessonFormModal.vue'
+import { useFormErrors } from '@/composables/useFormErrors'
 
 const props = defineProps<{ courseId: number }>()
 const toast = useToast()
@@ -612,8 +452,7 @@ const totalLessons = computed(() => {
 const showSectionModal = ref(false)
 const editingSectionId = ref<number | null>(null)
 const sSubmitting = ref(false)
-const sSubmitError = ref('')
-const sErrors = ref<Record<string, string>>({})
+const { errors: sErrors, apiError: sSubmitError, handleApiError: handleSectionError, clearErrors: clearSectionErrors } = useFormErrors()
 
 const defaultSForm = () => ({
   title: '',
@@ -838,8 +677,7 @@ const showLessonModal = ref(false)
 const editingLessonId = ref<number | null>(null)
 const draggedLessonIdx = ref<number | null>(null)
 const lSubmitting = ref(false)
-const lSubmitError = ref('')
-const lErrors = ref<Record<string, string>>({})
+const { errors: lErrors, apiError: lSubmitError, handleApiError: handleLessonError, clearErrors: clearLessonErrors } = useFormErrors()
 
 const defaultLForm = () => ({
   section_id: null as number | null,
@@ -854,82 +692,6 @@ const defaultLForm = () => ({
 })
 const lForm = ref(defaultLForm())
 
-// ── Lesson Upload State ───────────────────────────────────────
-const lUploading = ref(false)
-const lUploadProgress = ref(0)
-const lUploadError = ref('')
-const lFileInput = ref<HTMLInputElement>()
-
-async function handleLessonDrop(event: DragEvent) {
-  const file = event.dataTransfer?.files?.[0]
-  if (file) uploadLessonFile(file)
-}
-async function handleLessonFileSelect(event: Event) {
-  const input = event.target as HTMLInputElement
-  const file = input.files?.[0]
-  if (file) await uploadLessonFile(file)
-  if (input) input.value = ''
-}
-function extractVideoDuration(file: File): Promise<number | null> {
-  return new Promise((resolve) => {
-    const video = document.createElement('video')
-    video.preload = 'metadata'
-    video.onloadedmetadata = () => {
-      window.URL.revokeObjectURL(video.src)
-      resolve(Math.round(video.duration))
-    }
-    video.onerror = () => resolve(null)
-    video.src = URL.createObjectURL(file)
-  })
-}
-
-async function uploadLessonFile(file: File) {
-  lUploadError.value = ''
-  lUploadProgress.value = 0
-  
-  if (lForm.value.type === 'video' && !file.type.startsWith('video/')) {
-    lUploadError.value = 'Vui lòng chọn file video.'
-    return
-  }
-
-  if (lForm.value.type === 'video') {
-    const duration = await extractVideoDuration(file)
-    if (duration) lForm.value.duration = duration
-  }
-  
-  lUploading.value = true
-  try {
-    const onProgress = (progressEvent: any) => {
-      if (progressEvent.total) {
-        lUploadProgress.value = Math.round((progressEvent.loaded / progressEvent.total) * 100)
-      }
-    }
-    
-    let res;
-    if (lForm.value.type === 'video') {
-       res = await uploadService.video(file, onProgress)
-    } else {
-       res = await uploadService.document(file, onProgress)
-    }
-    
-    let url = res.data.data.url
-    lForm.value.media_id = res.data.data.id
-    try {
-      const parsed = new URL(url)
-      if (parsed.origin !== window.location.origin) {
-        url = parsed.pathname
-      }
-    } catch {}
-    
-    lForm.value.content = url
-    toast.success('Tải lên thành công')
-  } catch (err: any) {
-    lUploadError.value = err.response?.data?.message || 'Tải lên thất bại'
-  } finally {
-    lUploading.value = false
-    setTimeout(() => { lUploadProgress.value = 0 }, 1000)
-  }
-}
 
 // ── Toggle state ──────────────────────────────────────────────
 const togglingSection = ref<number | null>(null)
@@ -1050,13 +812,11 @@ function typeClass(type: string) {
   }[type] || 'bg-gray-100 text-gray-600'
 }
 
-// ── Section CRUD ──────────────────────────────────────────────
 function openCreateSection() {
   editingSectionId.value = null
   sForm.value = defaultSForm()
   sForm.value.order = sectionsList.value.length
-  sErrors.value = {}
-  sSubmitError.value = ''
+  clearSectionErrors()
   showSectionModal.value = true
 }
 
@@ -1068,14 +828,12 @@ function openEditSection(section: Section) {
     order: section.order,
     status: section.status,
   }
-  sErrors.value = {}
-  sSubmitError.value = ''
+  clearSectionErrors()
   showSectionModal.value = true
 }
 
 async function submitSection() {
-  sErrors.value = {}
-  sSubmitError.value = ''
+  clearSectionErrors()
   if (!sForm.value.title) { sErrors.value.title = 'Vui lòng nhập tiêu đề'; return }
 
   sSubmitting.value = true
@@ -1097,14 +855,7 @@ async function submitSection() {
     showSectionModal.value = false
     fetchAll()
   } catch (err: any) {
-    const data = err.response?.data
-    if (err.response?.status === 422 && data?.errors) {
-      for (const [key, msgs] of Object.entries(data.errors as Record<string, string[]>)) {
-        sErrors.value[key] = msgs[0]
-      }
-    } else {
-      sSubmitError.value = data?.message || 'Có lỗi xảy ra'
-    }
+    handleSectionError(err)
   } finally {
     sSubmitting.value = false
   }
@@ -1158,8 +909,7 @@ function openCreateLesson(sectionId: number | null) {
   }
   lForm.value.order = nextOrder
 
-  lErrors.value = {}
-  lSubmitError.value = ''
+  clearLessonErrors()
   showLessonModal.value = true
 }
 
@@ -1176,14 +926,12 @@ function openEditLesson(lesson: Lesson) {
     is_preview: lesson.is_preview,
     status: lesson.status,
   }
-  lErrors.value = {}
-  lSubmitError.value = ''
+  clearLessonErrors()
   showLessonModal.value = true
 }
 
 async function submitLesson() {
-  lErrors.value = {}
-  lSubmitError.value = ''
+  clearLessonErrors()
   if (!lForm.value.title) { lErrors.value.title = 'Vui lòng nhập tiêu đề'; return }
 
   lSubmitting.value = true
@@ -1217,15 +965,9 @@ async function submitLesson() {
     showLessonModal.value = false
     fetchAll()
   } catch (err: any) {
-    const data = err.response?.data
-    if (err.response?.status === 422 && data?.errors) {
-      for (const [key, msgs] of Object.entries(data.errors as Record<string, string[]>)) {
-        lErrors.value[key] = msgs[0]
-      }
-    } else {
-      const msg = data?.message || 'Có lỗi xảy ra'
-      lSubmitError.value = msg
-      toast.error(msg)
+    handleLessonError(err)
+    if (lSubmitError.value) {
+      toast.error(lSubmitError.value)
     }
   } finally {
     lSubmitting.value = false

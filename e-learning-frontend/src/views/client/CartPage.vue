@@ -95,7 +95,7 @@ import { computed } from 'vue'
 import { useToast } from 'vue-toastification'
 import { useCartStore } from '@/stores/cart.store'
 import { formatCurrency } from '@/utils/formatCurrency'
-import CartItemCard from '@/components/client/CartItemCard.vue'
+import CartItemCard from '@/components/shared/client/CartItemCard.vue'
 
 const toast = useToast()
 const cartStore = useCartStore()

@@ -155,6 +155,40 @@ src/
 10. `refactor(admin): extract CategoryTreeNode and CategoryForm`
 11. `refactor(admin): extract LessonItem, apply composables to SectionsLessonsManager`
 12. `refactor(frontend): add useFormErrors and useAsyncData composables`
+13. `feat(refactor): split large components and extract reusable composables. Finish phase 1 and 2.`
+
+---
+
+## GIAI ĐOẠN 2: MODULAR ARCHITECTURE & CẮT GIẢM FILE > 300 DÒNG
+*(Dựa trên phân tích codebase mới nhất)*
+
+### TUẦN 6 — Xử lý triệt để God Objects
+
+#### Task 6.1 — Tách admin/SectionsLessonsManager.vue (~1300 dòng)
+- [ ] Tách `LessonFormModal.vue`: Chuyển 350 dòng modal form + file upload video/tài liệu ra component riêng.
+- [ ] Tách `SectionFormModal.vue`: Chuyển 150 dòng modal form thêm chương ra component riêng.
+- [ ] Thừa hưởng: `useBulkSelect` (thay thế vòng lặp tick chọn), `useFormErrors` (thay thế for-in báo lỗi API).
+- Mục tiêu: `SectionsLessonsManager.vue` giảm xuống còn ~500 dòng.
+
+#### Task 6.2 — Tách client/LearnPage.vue (~1800 dòng)
+- [ ] Tách `LearnSidebar.vue`: Cột trái hiển thị tiến độ và chương bài học.
+- [ ] Tách `LearnVideoPlayer.vue`: Gói thẻ `<video>` và logic cập nhật progress.
+- [ ] Tách `LearnDocumentViewer.vue`: Vùng hiển thị iframe trực tiếp tài liệu PDF.
+- Mục tiêu: `LearnPage.vue` đóng đóng vai trò bố cục (layout) và load dữ liệu API.
+
+### TUẦN 7 — Đồng bộ Cấu trúc Modular Monolith
+
+Kiến trúc hiện tại rẽ nhánh theo Layer ngang (`pages/admin`, `pages/client`, `components/admin`, `services/...`). Để đồng bộ với kiến trúc Modular Monolith của Laravel Backend, ta sẽ gom chúng thành các Khối tính năng (Modules).
+
+#### Task 7.1 — Cấu trúc lại thư mục cốt lõi
+- [ ] Đổi tên `src/pages` thành `src/views`
+- [ ] Di chuyển `src/icons` vào trong `src/components/icons`
+
+#### Task 7.2 — Tạo và Di chuyển vào thư mục `src/modules`
+- [ ] Tạo module **Auth**: Gom `src/views/auth/*`, `adminAuth.store.ts`, `studentAuth.store.ts` vào `src/modules/auth/`.
+- [ ] Tạo module **Courses**: Gom dịch vụ `course.service.ts`, các `views` danh sách/tạo mới khóa học, các `components` liên quan.
+- [ ] Tạo module **Learning**: Gom khu vực Học tập (`LearnPage` và các con của nó), `lesson.service.ts`.
+- [ ] Sửa lại hàng loạt đường dẫn import `@/...`.
 
 ---
 

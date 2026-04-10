@@ -91,7 +91,7 @@
 </template>
 
 <script setup lang="ts">
-import { TrashIcon } from '@/icons'
+import { TrashIcon } from '@/components/icons'
 
 interface Category {
   id: number
