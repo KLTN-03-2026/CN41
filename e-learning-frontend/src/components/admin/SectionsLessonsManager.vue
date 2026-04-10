@@ -167,87 +167,21 @@
           </div>
           <table v-else class="w-full text-sm">
             <tbody class="divide-y divide-gray-50 dark:divide-gray-800">
-              <tr
+              <LessonItem
                 v-for="(lesson, lIdx) in section.lessons"
                 :key="lesson.id"
-                class="hover:bg-gray-50 dark:hover:bg-white/5 transition-colors group cursor-grab active:cursor-grabbing"
-                draggable="true"
+                :lesson="lesson"
+                :index="lIdx"
+                :is-selected="selectedLessons.includes(lesson.id)"
+                :is-toggling="togglingLesson === lesson.id"
+                @toggle-select="toggleLessonSelect"
+                @toggle-status="toggleLessonStatus"
+                @preview="handlePreviewLesson"
+                @edit="openEditLesson"
+                @delete="deleteLesson.confirm"
                 @dragstart="draggedLessonIdx = lIdx"
-                @dragover.prevent
-                @drop.prevent="reorderLessonDrag(section, lIdx)"
-              >
-                <td class="pl-4 pr-1 py-2.5 w-8">
-                  <input type="checkbox" v-model="selectedLessons" :value="lesson.id" @click.stop class="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer" />
-                </td>
-                <td class="pl-2 pr-2 py-2.5 text-gray-400 text-xs w-8">{{ lIdx + 1 }}</td>
-                <td class="px-2 py-2.5 font-medium text-gray-800 dark:text-gray-200 max-w-[200px] truncate">
-                  {{ lesson.title }}
-                </td>
-                <td class="px-2 py-2.5">
-                  <span
-                    :class="typeClass(lesson.type)"
-                    class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium"
-                  >
-                    {{ typeLabel(lesson.type) }}
-                  </span>
-                </td>
-                <td class="px-2 py-2.5">
-                  <span
-                    v-if="lesson.is_preview"
-                    class="inline-flex items-center px-1.5 py-0.5 rounded border border-indigo-200 bg-indigo-50 text-indigo-600 dark:border-indigo-500/20 dark:bg-indigo-500/10 dark:text-indigo-400 text-[10px] font-medium whitespace-nowrap"
-                  >
-                    Học thử
-                  </span>
-                </td>
-                <td class="px-2 py-2.5 text-gray-500 dark:text-gray-400 text-xs">
-                  {{ lesson.duration ? formatSeconds(lesson.duration) : '—' }}
-                </td>
-                <td class="px-2 py-2.5">
-                  <button
-                    @click="toggleLessonStatus(lesson)"
-                    :disabled="togglingLesson === lesson.id"
-                    :class="lesson.status === 1
-                      ? 'bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-400'
-                      : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-500/10 dark:text-yellow-400'"
-                    class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium cursor-pointer disabled:opacity-50"
-                  >
-                    {{ lesson.status === 1 ? 'Đã đăng' : 'Nháp' }}
-                  </button>
-                </td>
-                <td class="px-2 py-2.5 text-right">
-                  <div class="flex items-center justify-end gap-1">
-                    <!-- Drag Handle (replacing UI arrows since we drag the row) -->
-                    <button class="p-1 text-gray-400 hover:text-gray-600 transition-colors opacity-0 group-hover:opacity-100" title="Kéo thả hàng để sắp xếp">
-                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 8h16M4 16h16"/></svg>
-                    </button>
-                    <!-- Preview -->
-                    <button
-                      @click="handlePreviewLesson(lesson.id)"
-                      class="p-1 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg dark:hover:bg-indigo-500/10 transition-colors"
-                      title="Xem trước nội dung"
-                    >
-                      <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                      </svg>
-                    </button>
-                    <button
-                      @click="openEditLesson(lesson)"
-                      class="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg dark:hover:bg-blue-500/10 transition-colors"
-                    >
-                      <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                      </svg>
-                    </button>
-                    <button
-                      @click="confirmDeleteLesson(lesson)"
-                      class="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg dark:hover:bg-red-500/10 transition-colors"
-                    >
-                      <TrashIcon class="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                </td>
-              </tr>
+                @drop="reorderLessonDrag(section, lIdx)"
+              />
             </tbody>
           </table>
         </div>
@@ -283,71 +217,20 @@
         <div v-if="expandedSections.has('orphan')" class="border-t border-orange-200 dark:border-orange-500/20">
           <table class="w-full text-sm">
             <tbody class="divide-y divide-orange-100 dark:divide-orange-500/10">
-              <tr
+              <LessonItem
                 v-for="(lesson, lIdx) in orphanLessons"
                 :key="lesson.id"
-                class="hover:bg-orange-50 dark:hover:bg-orange-500/5 transition-colors"
-              >
-                <td class="pl-4 pr-1 py-2.5 w-8">
-                  <input type="checkbox" v-model="selectedLessons" :value="lesson.id" @click.stop class="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer" />
-                </td>
-                <td class="pl-2 pr-2 py-2.5 text-gray-400 text-xs w-8">{{ lIdx + 1 }}</td>
-                <td class="px-2 py-2.5 font-medium text-gray-800 dark:text-gray-200 max-w-[200px] truncate">
-                  {{ lesson.title }}
-                </td>
-                <td class="px-2 py-2.5">
-                  <span
-                    :class="typeClass(lesson.type)"
-                    class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium"
-                  >
-                    {{ typeLabel(lesson.type) }}
-                  </span>
-                </td>
-                <td class="px-2 py-2.5">
-                  <span
-                    v-if="lesson.is_preview"
-                    class="inline-flex items-center px-1.5 py-0.5 rounded border border-indigo-200 bg-indigo-50 text-indigo-600 dark:border-indigo-500/20 dark:bg-indigo-500/10 dark:text-indigo-400 text-[10px] font-medium whitespace-nowrap"
-                  >
-                    Học thử
-                  </span>
-                </td>
-                <td class="px-2 py-2.5 text-gray-500 text-xs">{{ lesson.duration ? formatSeconds(lesson.duration) : '—' }}</td>
-                <td class="px-2 py-2.5">
-                  <button
-                    @click="toggleLessonStatus(lesson)"
-                    :disabled="togglingLesson === lesson.id"
-                    :class="lesson.status === 1
-                      ? 'bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-400'
-                      : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-500/10 dark:text-yellow-400'"
-                    class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium cursor-pointer disabled:opacity-50"
-                  >
-                    {{ lesson.status === 1 ? 'Đã đăng' : 'Nháp' }}
-                  </button>
-                </td>
-                <td class="px-2 py-2.5 text-right">
-                  <div class="flex items-center justify-end gap-1">
-                    <!-- Preview -->
-                    <button
-                      @click="handlePreviewLesson(lesson.id)"
-                      class="p-1 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg dark:hover:bg-indigo-500/10 transition-colors"
-                      title="Xem trước nội dung"
-                    >
-                      <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                      </svg>
-                    </button>
-                    <button @click="openEditLesson(lesson)" class="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg dark:hover:bg-blue-500/10 transition-colors">
-                      <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                      </svg>
-                    </button>
-                    <button @click="confirmDeleteLesson(lesson)" class="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg dark:hover:bg-red-500/10 transition-colors">
-                      <TrashIcon class="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                </td>
-              </tr>
+                :lesson="lesson"
+                :index="lIdx"
+                :is-selected="selectedLessons.includes(lesson.id)"
+                :is-toggling="togglingLesson === lesson.id"
+                :is-orphan="true"
+                @toggle-select="toggleLessonSelect"
+                @toggle-status="toggleLessonStatus"
+                @preview="handlePreviewLesson"
+                @edit="openEditLesson"
+                @delete="deleteLesson.confirm"
+              />
             </tbody>
           </table>
         </div>
@@ -572,54 +455,75 @@
       </div>
     </Teleport>
 
-    <!-- ═══════ MODAL: Confirm Delete Section ═══════ -->
-    <Teleport to="body">
-      <div
-        v-if="deleteSectionTarget"
-        class="fixed inset-0 z-[100000] flex items-center justify-center bg-black/50 px-4"
-        @click.self="deleteSectionTarget = null"
-      >
-        <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-sm p-6">
-          <h3 class="text-base font-semibold text-gray-800 dark:text-white/90 mb-2">Xác nhận xóa chương</h3>
-          <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">
-            Bạn có chắc muốn xóa chương
-            <strong class="text-gray-800 dark:text-white/90">{{ deleteSectionTarget.title }}</strong>?
-          </p>
-          <p class="text-xs text-orange-500 mb-5">
-            ⚠️ Các bài giảng trong chương sẽ chuyển thành "Chưa phân chương".
-          </p>
-          <div class="flex justify-end gap-3">
-            <button @click="deleteSectionTarget = null" class="px-4 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400">Hủy</button>
-            <button @click="doDeleteSection" :disabled="deletingSection" class="px-4 py-2 text-sm rounded-lg bg-red-500 text-white hover:bg-red-600 disabled:opacity-50">
-              {{ deletingSection ? 'Đang xóa...' : 'Xóa' }}
-            </button>
-          </div>
-        </div>
-      </div>
-    </Teleport>
+    <!-- ═══════ MODAL: Confirm Delete Section (via composable) ═══════ -->
+    <ConfirmModal
+      :show="deleteSection.isOpen.value"
+      title="Xác nhận xóa chương"
+      :loading="deleteSection.loading.value"
+      confirm-text="Xóa"
+      loading-text="Đang xóa..."
+      @cancel="deleteSection.cancel()"
+      @confirm="deleteSection.execute()"
+    >
+      <p>
+        Bạn có chắc muốn xóa chương
+        <strong class="text-gray-800 dark:text-white/90">{{ deleteSection.target.value?.title }}</strong>?
+      </p>
+      <p class="text-xs text-orange-500 mt-1">
+        ⚠️ Các bài giảng trong chương sẽ chuyển thành "Chưa phân chương".
+      </p>
+    </ConfirmModal>
 
-    <!-- ═══════ MODAL: Confirm Delete Lesson ═══════ -->
-    <Teleport to="body">
-      <div
-        v-if="deleteLessonTarget"
-        class="fixed inset-0 z-[100000] flex items-center justify-center bg-black/50 px-4"
-        @click.self="deleteLessonTarget = null"
-      >
-        <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-sm p-6">
-          <h3 class="text-base font-semibold text-gray-800 dark:text-white/90 mb-2">Xác nhận xóa bài giảng</h3>
-          <p class="text-sm text-gray-500 dark:text-gray-400 mb-5">
-            Bạn có chắc muốn xóa bài giảng
-            <strong class="text-gray-800 dark:text-white/90">{{ deleteLessonTarget.title }}</strong>?
-          </p>
-          <div class="flex justify-end gap-3">
-            <button @click="deleteLessonTarget = null" class="px-4 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400">Hủy</button>
-            <button @click="doDeleteLesson" :disabled="deletingLesson" class="px-4 py-2 text-sm rounded-lg bg-red-500 text-white hover:bg-red-600 disabled:opacity-50">
-              {{ deletingLesson ? 'Đang xóa...' : 'Xóa' }}
-            </button>
-          </div>
-        </div>
-      </div>
-    </Teleport>
+    <!-- ═══════ MODAL: Confirm Delete Lesson (via composable) ═══════ -->
+    <ConfirmModal
+      :show="deleteLesson.isOpen.value"
+      title="Xác nhận xóa bài giảng"
+      :loading="deleteLesson.loading.value"
+      confirm-text="Xóa"
+      loading-text="Đang xóa..."
+      @cancel="deleteLesson.cancel()"
+      @confirm="deleteLesson.execute()"
+    >
+      <p>
+        Bạn có chắc muốn xóa bài giảng
+        <strong class="text-gray-800 dark:text-white/90">{{ deleteLesson.target.value?.title }}</strong>?
+      </p>
+    </ConfirmModal>
+
+    <!-- ═══════ MODAL: Confirm Restore Lesson (trashed) ═══════ -->
+    <ConfirmModal
+      :show="restoreLessonConfirm.isOpen.value"
+      title="Khôi phục bài giảng"
+      variant="info"
+      :loading="restoreLessonConfirm.loading.value"
+      confirm-text="Khôi phục"
+      loading-text="Đang khôi phục..."
+      @cancel="restoreLessonConfirm.cancel()"
+      @confirm="restoreLessonConfirm.execute()"
+    >
+      <p>
+        Khôi phục bài giảng
+        <strong class="text-gray-800 dark:text-white/90">{{ restoreLessonConfirm.target.value?.title }}</strong>?
+      </p>
+    </ConfirmModal>
+
+    <!-- ═══════ MODAL: Confirm Force Delete Lesson (trashed) ═══════ -->
+    <ConfirmModal
+      :show="forceDeleteLessonConfirm.isOpen.value"
+      title="Xóa vĩnh viễn"
+      subtitle="Hành động này không thể hoàn tác!"
+      icon="warning"
+      :loading="forceDeleteLessonConfirm.loading.value"
+      confirm-text="Xóa vĩnh viễn"
+      loading-text="Đang xóa..."
+      @cancel="forceDeleteLessonConfirm.cancel()"
+      @confirm="forceDeleteLessonConfirm.execute()"
+    >
+      <p>
+        Xóa vĩnh viễn bài giảng
+        <strong class="text-gray-800 dark:text-white/90">{{ forceDeleteLessonConfirm.target.value?.title }}</strong>?
+      </p>
+    </ConfirmModal>
 
     <!-- ═══════ REUSABLE BULK ACTIONS COMPONENT ═══════ -->
     <BulkActions
@@ -657,6 +561,9 @@ import { uploadService } from '@/services/upload.service'
 import { formatSeconds } from '@/utils/formatDuration'
 import BulkActions from '@/components/admin/BulkActions.vue'
 import LessonPreviewModal from '@/components/admin/LessonPreviewModal.vue'
+import LessonItem from '@/components/admin/LessonItem.vue'
+import ConfirmModal from '@/components/common/ConfirmModal.vue'
+import { useDeleteConfirm } from '@/composables/useDeleteConfirm'
 
 const props = defineProps<{ courseId: number }>()
 const toast = useToast()
@@ -872,26 +779,12 @@ async function doBulkAssignSection(sectionId: number | null) {
   }
 }
 
-async function handleRestoreLessonTr(lesson: Lesson) {
-  if (!confirm(`Khôi phục bài giảng "${lesson.title}"?`)) return
-  try {
-    await lessonService.restore(lesson.id)
-    toast.success('Khôi phục thành công')
-    fetchTrashed()
-  } catch {
-    toast.error('Khôi phục thất bại')
-  }
+function handleRestoreLessonTr(lesson: Lesson) {
+  restoreLessonConfirm.confirm(lesson)
 }
 
-async function handleForceDeleteLessonTr(lesson: Lesson) {
-  if (!confirm(`Xóa vĩnh viễn bài giảng "${lesson.title}"?`)) return
-  try {
-    await lessonService.forceDelete(lesson.id)
-    toast.success('Đã xóa vĩnh viễn')
-    fetchTrashed()
-  } catch {
-    toast.error('Xóa vĩnh viễn thất bại')
-  }
+function handleForceDeleteLessonTr(lesson: Lesson) {
+  forceDeleteLessonConfirm.confirm(lesson)
 }
 
 async function handlePreviewLesson(lessonId: number) {
@@ -922,15 +815,17 @@ async function fetchTrashed() {
   loadingTrashed.value = true
   try {
     const res = await lessonService.trashed({ course_id: props.courseId, per_page: 100 })
-    trashedLessons.value = Array.isArray(res.data?.data) 
-      ? res.data.data 
-      : (res.data?.data?.data || [])
-  } catch (err: any) {
-    const data = err.response?.data
+    const resData = res.data as any
+    trashedLessons.value = Array.isArray(resData?.data) 
+      ? resData.data 
+      : (resData?.data?.data || [])
+  } catch (err: unknown) {
+    const axiosErr = err as { response?: { data?: { message?: string; errors?: Record<string, string[]> } } }
+    const data = axiosErr.response?.data
     console.error('Fetch trashed error:', JSON.stringify(data, null, 2))
     let msg = data?.message || 'Lỗi tải thùng rác bài giảng'
     if (data?.errors) {
-       msg += ': ' + Object.values(data.errors).map(e => e[0]).join(', ')
+       msg += ': ' + Object.values(data.errors).map((e: string[]) => e[0]).join(', ')
     }
     toast.error(msg)
   } finally {
@@ -1036,13 +931,52 @@ async function uploadLessonFile(file: File) {
   }
 }
 
-// ── Toggle & Delete state ─────────────────────────────────────
+// ── Toggle state ──────────────────────────────────────────────
 const togglingSection = ref<number | null>(null)
 const togglingLesson = ref<number | null>(null)
-const deleteSectionTarget = ref<Section | null>(null)
-const deletingSection = ref(false)
-const deleteLessonTarget = ref<Lesson | null>(null)
-const deletingLesson = ref(false)
+
+// ── Delete confirmations (via composable) ─────────────────────
+const deleteSection = useDeleteConfirm({
+  async onConfirm(section: Section) {
+    await sectionService.destroy(section.id)
+    toast.success('Xóa chương thành công')
+    fetchAll()
+  },
+})
+
+const deleteLesson = useDeleteConfirm({
+  async onConfirm(lesson: Lesson) {
+    await lessonService.destroy(lesson.id)
+    toast.success('Xóa bài giảng thành công')
+    fetchAll()
+  },
+})
+
+const restoreLessonConfirm = useDeleteConfirm({
+  async onConfirm(lesson: Lesson) {
+    await lessonService.restore(lesson.id)
+    toast.success('Khôi phục thành công')
+    fetchTrashed()
+  },
+})
+
+const forceDeleteLessonConfirm = useDeleteConfirm({
+  async onConfirm(lesson: Lesson) {
+    await lessonService.forceDelete(lesson.id)
+    toast.success('Đã xóa vĩnh viễn')
+    fetchTrashed()
+  },
+})
+
+// ── Lesson select helper ──────────────────────────────────────
+function toggleLessonSelect(id: number) {
+  const idx = selectedLessons.value.indexOf(id)
+  if (idx >= 0) {
+    selectedLessons.value.splice(idx, 1)
+  } else {
+    selectedLessons.value.push(id)
+  }
+}
 
 // ── Fetch data ────────────────────────────────────────────────
 async function fetchAll() {
@@ -1054,12 +988,12 @@ async function fetchAll() {
       lessonService.index(props.courseId, { per_page: 100 }),
     ])
 
-    const allSections: Section[] = (sectionsRes.data.data || []).map((s: any) => ({
+    const allSections: Section[] = ((sectionsRes.data as any).data || []).map((s: any) => ({
       ...s,
       lessons: [],
     }))
 
-    const allLessons: Lesson[] = lessonsRes.data.data || []
+    const allLessons: Lesson[] = (lessonsRes.data as any).data || []
 
     // Phân bổ lessons vào sections
     const sectionMap = new Map<number, Section>()
@@ -1189,22 +1123,7 @@ async function toggleSectionStatus(section: Section) {
 }
 
 function confirmDeleteSection(section: Section) {
-  deleteSectionTarget.value = section
-}
-
-async function doDeleteSection() {
-  if (!deleteSectionTarget.value) return
-  deletingSection.value = true
-  try {
-    await sectionService.destroy(deleteSectionTarget.value.id)
-    toast.success('Xóa chương thành công')
-    deleteSectionTarget.value = null
-    fetchAll()
-  } catch (err: any) {
-    toast.error(err.response?.data?.message || 'Xóa chương thất bại')
-  } finally {
-    deletingSection.value = false
-  }
+  deleteSection.confirm(section)
 }
 
 async function reorderSection(fromIdx: number, toIdx: number) {
@@ -1300,10 +1219,6 @@ async function submitLesson() {
   } catch (err: any) {
     const data = err.response?.data
     if (err.response?.status === 422 && data?.errors) {
-      const firstErrorMsg = Object.values(data.errors)[0]?.[0] as string | undefined
-      if (firstErrorMsg) {
-        toast.error(firstErrorMsg) // Trực tiếp show toast lên để dễ nhìn
-      }
       for (const [key, msgs] of Object.entries(data.errors as Record<string, string[]>)) {
         lErrors.value[key] = msgs[0]
       }
@@ -1330,22 +1245,7 @@ async function toggleLessonStatus(lesson: Lesson) {
 }
 
 function confirmDeleteLesson(lesson: Lesson) {
-  deleteLessonTarget.value = lesson
-}
-
-async function doDeleteLesson() {
-  if (!deleteLessonTarget.value) return
-  deletingLesson.value = true
-  try {
-    await lessonService.destroy(deleteLessonTarget.value.id)
-    toast.success('Xóa bài giảng thành công')
-    deleteLessonTarget.value = null
-    fetchAll()
-  } catch (err: any) {
-    toast.error(err.response?.data?.message || 'Xóa bài giảng thất bại')
-  } finally {
-    deletingLesson.value = false
-  }
+  deleteLesson.confirm(lesson)
 }
 
 async function reorderLesson(section: Section, fromIdx: number, toIdx: number) {

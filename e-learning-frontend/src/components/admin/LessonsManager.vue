@@ -254,8 +254,9 @@ async function fetchLessons() {
   loading.value = true
   try {
     const res = await lessonService.index(props.courseId, { per_page: 100 })
-    lessons.value = res.data.data
-    pagination.value = res.data.pagination
+    const resData = res.data as any
+    lessons.value = resData.data
+    pagination.value = resData.pagination
   } catch {
     toast.error('Không thể tải bài giảng')
   } finally {

@@ -83,7 +83,7 @@
       </div>
 
       <!-- Pagination -->
-      <div v-if="pagination.last_page > 1" class="flex justify-center gap-2 mt-8">
+      <div v-if="pagination && pagination.last_page > 1" class="flex justify-center gap-2 mt-8">
         <button
           v-for="page in pagination.last_page"
           :key="page"
@@ -101,21 +101,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useToast } from 'vue-toastification'
 import { orderService } from '@/services/order.service'
 import { formatCurrency } from '@/utils/formatCurrency'
 import OrderStatusBadge from '@/components/common/OrderStatusBadge.vue'
+import { usePagination } from '@/composables/usePagination'
 
 const toast = useToast()
 
 const loading = ref(true)
 const orders = ref<any[]>([])
-const pagination = reactive({
-  current_page: 1,
-  last_page: 1,
-  total: 0,
-})
 
 function formatDate(iso: string) {
   if (!iso) return ''
@@ -123,17 +119,23 @@ function formatDate(iso: string) {
   return d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
 }
 
-async function fetchOrders(page = 1) {
+async function loadPage(page = 1) {
   loading.value = true
   try {
     const res = await orderService.myOrders({ page, per_page: 10 })
     orders.value = res.data.data
-    Object.assign(pagination, res.data.pagination)
+    updatePagination(res.data.pagination)
   } catch {
     toast.error('Không thể tải lịch sử đơn hàng.')
   } finally {
     loading.value = false
   }
+}
+
+const { pagination, setPage, updatePagination } = usePagination(loadPage)
+
+function fetchOrders(page: number) {
+  setPage(page)
 }
 
 async function handleRetry(orderCode: string) {
@@ -148,5 +150,5 @@ async function handleRetry(orderCode: string) {
   }
 }
 
-onMounted(() => fetchOrders())
+onMounted(() => loadPage())
 </script>
