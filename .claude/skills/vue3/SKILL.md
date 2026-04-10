@@ -5,62 +5,112 @@ You are an expert in this project's Vue 3 + TypeScript + Pinia frontend architec
 ## Project Setup
 
 - Vue 3.5 with `<script setup lang="ts">` (Composition API only — no Options API)
-- Pinia 3 for state management
-- Vue Router 5 with lazy-loaded routes
+- Pinia 3 for state management (auth state only — feature state in composables)
+- Vue Router 5 with lazy-loaded routes from `@/views/`
 - Axios via `@/plugins/axios` (pre-configured with auth interceptors)
 - Tailwind CSS 3 for styling
 - `vue-toastification` for notifications
 - NProgress for route transition loading bar
 
-## Component Template
+## Architecture: Views are thin, logic lives in composables
+
+Views (`src/views/`) only import composables and wire props/events. All state, API calls, and side effects belong in `src/composables/`.
 
 ```vue
+<!-- src/views/admin/CoursesPage.vue — thin view -->
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue'
-import { useToast } from 'vue-toastification'
-import { coursesApi } from '@/api/coursesApi'
-import type { Course, Pagination } from '@/types'
-import CourseCard from '@/components/client/CourseCard.vue'
+import { onMounted } from 'vue'
+import { useCourses } from '@/composables/useCourses'
+import CourseFilters from '@/components/admin/courses/CourseFilters.vue'
+import CourseTable from '@/components/admin/courses/CourseTable.vue'
 
-// State
-const loading = ref(false)
-const courses = ref<Course[]>([])
-const pagination = ref<Pagination | null>(null)
-const filters = reactive({ search: '', level: '', category_id: '' })
+const {
+  courses, loading, filters, activePagination,
+  loadActivePage, toggleStatus, softDelete, ...
+} = useCourses()
 
-const toast = useToast()
-
-// Fetch
-const fetchPage = async (page = 1) => {
-  loading.value = true
-  try {
-    const res = await coursesApi.getPublic({ ...filters, page, per_page: 15 })
-    courses.value = res.data.data
-    pagination.value = res.data.pagination
-  } catch (err: any) {
-    toast.error(err.response?.data?.message || 'Đã có lỗi xảy ra.')
-  } finally {
-    loading.value = false
-  }
-}
-
-onMounted(() => fetchPage())
+onMounted(() => loadActivePage())
 </script>
-
-<template>
-  <div>
-    <div v-if="loading">Loading...</div>
-    <CourseCard v-for="course in courses" :key="course.id" :course="course" />
-  </div>
-</template>
 ```
 
-## Pinia Store Template
+## Composable Template
+
+```ts
+// src/composables/useCourses.ts
+import { ref, reactive } from 'vue'
+import { useToast } from 'vue-toastification'
+import { courseService } from '@/services/course.service'
+import { useDeleteConfirm } from '@/composables/useDeleteConfirm'
+import { useBulkSelect } from '@/composables/useBulkSelect'
+import { usePagination } from '@/composables/usePagination'
+import type { AdminCourse } from '@/types/admin-category.types'
+
+export function useCourses() {
+  const toast = useToast()
+  const courses = ref<AdminCourse[]>([])
+  const loading = ref(true)
+  const filters = reactive({ search: '', status: '', level: '' })
+
+  async function loadActivePage(page = 1) {
+    loading.value = true
+    try {
+      const res = await courseService.index({ page, per_page: 15, ...filters })
+      courses.value = res.data.data
+      activeUpdatePagination(res.data.pagination)
+    } catch {
+      toast.error('Không thể tải khóa học')
+    } finally {
+      loading.value = false
+    }
+  }
+
+  const { pagination: activePagination, updatePagination: activeUpdatePagination } =
+    usePagination(loadActivePage, 15)
+
+  const softDelete = useDeleteConfirm({
+    async onConfirm(course: AdminCourse) {
+      await courseService.destroy(course.id)
+      toast.success('Xóa thành công')
+      loadActivePage()
+    },
+  })
+
+  return { courses, loading, filters, activePagination, loadActivePage, softDelete }
+}
+```
+
+## Service Layer Template
+
+```ts
+// src/services/course.service.ts
+import http from '@/plugins/axios'
+import type { AxiosResponse } from 'axios'
+import type { ApiResponse, PaginatedResponse } from '@/types'
+import type { AdminCourse } from '@/types/admin-category.types'
+
+export const courseService = {
+  index:        (params: Record<string, unknown>) =>
+    http.get<PaginatedResponse<AdminCourse>>('/admin/courses', { params }),
+  store:        (data: Record<string, unknown>) =>
+    http.post<ApiResponse<AdminCourse>>('/admin/courses', data),
+  update:       (id: number, data: Record<string, unknown>) =>
+    http.patch<ApiResponse<AdminCourse>>(`/admin/courses/${id}`, data),
+  destroy:      (id: number) => http.delete(`/admin/courses/${id}`),
+  toggleStatus: (id: number) => http.patch(`/admin/courses/${id}/toggle-status`),
+  trashed:      (params: Record<string, unknown>) =>
+    http.get<PaginatedResponse<AdminCourse>>('/admin/courses/trashed', { params }),
+  restore:      (id: number) => http.post(`/admin/courses/${id}/restore`),
+  forceDelete:  (id: number) => http.delete(`/admin/courses/${id}/force-delete`),
+  bulkDelete:   (ids: number[]) => http.delete('/admin/courses/bulk-delete', { data: { ids } }),
+}
+```
+
+## Pinia Store Template (auth only)
 
 ```ts
 // src/stores/studentAuthStore.ts
 import { defineStore } from 'pinia'
-import { authApi } from '@/api/authApi'
+import { authService } from '@/services/auth.service'
 
 export const useStudentAuthStore = defineStore('studentAuth', {
   state: () => ({
@@ -68,17 +118,14 @@ export const useStudentAuthStore = defineStore('studentAuth', {
     student: null as Student | null,
     loading: false,
   }),
-
   getters: {
     isLoggedIn: (state) => !!state.token,
-    fullName: (state) => state.student?.name || '',
   },
-
   actions: {
     async login(email: string, password: string) {
       this.loading = true
       try {
-        const res = await authApi.studentLogin(email, password)
+        const res = await authService.studentLogin(email, password)
         const { token, student } = res.data.data
         this.token = token
         this.student = student
@@ -94,7 +141,6 @@ export const useStudentAuthStore = defineStore('studentAuth', {
         this.loading = false
       }
     },
-
     logout() {
       this.token = null
       this.student = null
@@ -104,73 +150,70 @@ export const useStudentAuthStore = defineStore('studentAuth', {
 })
 ```
 
-## API Module Template
+## defineEmits — Always tuple syntax
 
 ```ts
-// src/api/coursesApi.ts
-import http from '@/plugins/axios'
+// ✅ Correct
+defineEmits<{
+  'update:modelValue': [value: string]
+  'submit': []
+  'switch-tab': [trashed: boolean]
+}>()
 
-export const coursesApi = {
-  getPublic:  (params?: object)    => http.get('/courses', { params }),
-  getDetail:  (slug: string)       => http.get(`/courses/${slug}`),
-  getAdmin:   (params?: object)    => http.get('/admin/courses', { params }),
-  create:     (data: object)       => http.post('/admin/courses', data),
-  update:     (id: number, data: object) => http.patch(`/admin/courses/${id}`, data),
-  remove:     (id: number)         => http.delete(`/admin/courses/${id}`),
-  toggleStatus: (id: number)       => http.patch(`/admin/courses/${id}/toggle-status`),
-  bulkDelete: (ids: number[])      => http.delete('/admin/courses/bulk-delete', { data: { ids } }),
+// ❌ Old call-signature syntax — Volar flags as error
+defineEmits<{
+  (e: 'update:modelValue', value: string): void
+}>()
+```
+
+## Template: No `as` cast
+
+Never cast inside template expressions — extract to a function in `<script setup>`:
+
+```vue
+<!-- ❌ Volar parse error -->
+@input="emit('update:value', ($event.target as HTMLInputElement).value)"
+
+<!-- ✅ Extract to function -->
+@input="onInput"
+
+// in script:
+function onInput(e: Event) {
+  emit('update:value', (e.target as HTMLInputElement).value)
 }
 ```
 
-## Composable Template (Provide/Inject pattern)
+## Template ref for composable refs
 
-```ts
-// src/composables/useMyFeature.ts
-import { ref, provide, inject, type InjectionKey, type Ref } from 'vue'
+When a template `ref` points to a variable from a composable, use `:ref` binding:
 
-interface MyContextType {
-  value: Ref<string>
-  setValue: (v: string) => void
-}
+```vue
+<!-- ❌ String ref doesn't bind to composable ref -->
+<BulkActions ref="bulkActionsRef" />
 
-const MySymbol: InjectionKey<MyContextType> = Symbol('myFeature')
+<!-- ✅ Use setter function -->
+<BulkActions :ref="setBulkActionsRef" />
 
-export function useMyFeatureProvider() {
-  const value = ref('')
-  const setValue = (v: string) => { value.value = v }
-  const context: MyContextType = { value, setValue }
-  provide(MySymbol, context)
-  return context
-}
-
-export function useMyFeature(): MyContextType {
-  const context = inject<MyContextType>(MySymbol)
-  if (!context) throw new Error('useMyFeature must be used within provider')
-  return context
-}
+// in script:
+function setBulkActionsRef(el: unknown) { bulkActionsRef.value = el }
 ```
 
 ## Router Meta Pattern
 
 ```ts
-// Route with auth guard
-{
-  path: '/my-courses',
-  component: () => import('@/pages/client/MyCoursesPage.vue'),
-  meta: { requiresAuth: true, guard: 'student' }
-}
-
-// Admin route
 {
   path: '/admin/courses',
-  component: () => import('@/pages/admin/CoursesPage.vue'),
+  component: () => import('@/views/admin/CoursesPage.vue'),  // views/, not pages/
   meta: { requiresAuth: true, guard: 'admin' }
 }
-
-// Guest-only page
+{
+  path: '/my-courses',
+  component: () => import('@/views/client/MyCoursesPage.vue'),
+  meta: { requiresAuth: true, guard: 'student' }
+}
 {
   path: '/login',
-  component: () => import('@/pages/auth/LoginPage.vue'),
+  component: () => import('@/views/auth/LoginPage.vue'),
   meta: { requiresGuest: true, guard: 'student' }
 }
 ```
@@ -179,27 +222,30 @@ export function useMyFeature(): MyContextType {
 
 ```
 src/
-├── api/              One file per resource — plain object exports
 ├── components/
-│   ├── admin/        Admin-only components
-│   ├── client/       Student-facing components
-│   ├── common/       Shared UI (ThemeToggler, etc.)
-│   └── layout/       AdminLayout.vue, ClientLayout.vue
-├── composables/      useTheme.ts, useSidebar.ts (Provide/Inject pattern)
-├── pages/
-│   ├── admin/        Admin pages (*Page.vue)
-│   ├── client/       Student pages (*Page.vue)
-│   └── auth/         Login/Register pages
-├── plugins/          axios.js (with interceptors)
-├── router/           index.js with beforeEach guards
-├── stores/           Pinia stores (*Store.ts or *AuthStore.ts)
-└── types/            TypeScript interfaces
+│   ├── admin/        Per-resource tables/filters/rows (admin panel)
+│   │   ├── categories/  CategoryFilters, CategoryTable, CategoryTrashedTable
+│   │   ├── courses/     CourseFilters, CourseTable, CourseTableRow
+│   │   ├── lessons/     LessonList, LessonItem
+│   │   └── sections/    SectionItem
+│   ├── common/       Shared UI: ConfirmModal, BulkActions
+│   ├── forms/        Form modals
+│   ├── layout/       AppSidebar, AppHeader, ThemeProvider, SidebarProvider
+│   └── shared/admin/ Complex multi-feature components (SectionsLessonsManager)
+├── composables/      All feature logic — thin views import from here
+├── services/         API calls — one file per resource (*.service.ts)
+├── stores/           Pinia — auth state only
+├── types/            TypeScript interfaces (admin-category.types, section-lesson.types, ...)
+├── views/            Thin page components — admin/ | client/ | auth/
+├── plugins/          axios.ts (with interceptors)
+└── router/           index.ts with beforeEach guards
 ```
 
 ## Conventions
 - Always `<script setup lang="ts">` — never Options API
-- Loading states: `ref(false)` on every async operation, reset in `finally`
-- Error handling: try/catch in stores returning `{ success, message, errors }`, toast in components
+- Import order: Vue core → composables → services → components
+- Loading states: `ref(false)` reset in `finally`
+- Error handling: try/catch in composables/stores, toast for user feedback
 - Never access `localStorage` directly in components — use stores
-- Debounce search inputs (use `useDebounceFn` from vueuse or implement manually)
-- Lazy-load all page-level components in router
+- Debounce search with `useDebounceSearch` composable
+- Lazy-load all page-level components: `() => import('@/views/...')`

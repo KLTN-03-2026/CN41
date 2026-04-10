@@ -60,59 +60,105 @@ public function store(StoreCourseRequest $request): JsonResponse
 
 ### File Naming
 - Components: `PascalCase.vue` — `CourseCard.vue`, `SectionsLessonsManager.vue`
-- Pages: `PascalCasePage.vue` — `CoursesPage.vue`, `AdminLoginPage.vue`
-- Composables: `camelCase.ts` — `useTheme.ts`, `useSidebar.ts`
+- Views (pages): `PascalCasePage.vue` — `CoursesPage.vue`, `AdminLoginPage.vue`
+- Composables: `camelCase.ts` — `useTheme.ts`, `useCourses.ts`
 - Stores: `camelCase.ts` — `studentAuthStore.ts`, `adminAuthStore.ts`
-- API files: `camelCaseApi.js` — `coursesApi.js`, `authApi.js`
+- Service files: `camelCase.service.ts` — `course.service.ts`, `category.service.ts`
 
 ### Component Style
 - Always use `<script setup lang="ts">` (Composition API)
-- Import order: Vue core → composables/stores → API → child components
+- Import order: Vue core → composables/stores → services → child components
 - Reactive state: `ref()` for primitives, `reactive()` for filter objects
+- **Never use `as` cast inside `<template>` expressions** — extract to a function in `<script setup>`
 
 ```vue
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
-import { useToast } from 'vue-toastification'
-import { coursesApi } from '@/api/coursesApi'
+import { useCourses } from '@/composables/useCourses'
 import CourseCard from '@/components/client/CourseCard.vue'
 
-const loading = ref(false)
-const courses = ref([])
-const filters = reactive({ search: '', level: '', category_id: '' })
+const { courses, loading, filters, loadActivePage } = useCourses()
+onMounted(() => loadActivePage())
 </script>
+```
+
+### Composables Pattern
+Logic (state + API calls + side effects) lives in `src/composables/`, **not** in views.
+Views are thin orchestrators — they import composables and wire props/events to components.
+
+```ts
+// src/composables/useCourses.ts
+export function useCourses() {
+  const courses = ref<AdminCourse[]>([])
+  const loading = ref(true)
+  // ... state, methods
+  return { courses, loading, ... }
+}
+```
+
+Composable naming conventions:
+- `useXxx` — generic feature composable (usePagination, useBulkSelect)
+- `useXxxManager` — manages a resource within a page (useSectionsManager)
+- `useXxxs` / `useXxx` — full CRUD for a resource (useCourses, useCategories)
+
+### Service Layer (`src/services/`)
+- One file per resource, named `<resource>.service.ts`
+- Plain object export with typed return (AxiosResponse)
+- No error handling — throw to composable/store
+
+```ts
+// src/services/course.service.ts
+export const courseService = {
+  index: (params: Record<string, unknown>) => http.get('/admin/courses', { params }),
+  store: (data: Record<string, unknown>) => http.post('/admin/courses', data),
+  update: (id: number, data: Record<string, unknown>) => http.patch(`/admin/courses/${id}`, data),
+}
 ```
 
 ### Pinia Stores
 - Options API syntax (`defineStore` with `state/getters/actions`)
 - Token persisted to `localStorage` on login, cleared on logout
 - Actions always return `{ success: boolean, message?: string, errors?: object }`
+- Stores handle **auth state only** — feature state lives in composables
 
-### API Layer (`src/api/`)
-- One file per resource, plain object export (not class-based)
-- All functions return the raw axios promise
-- No error handling in api files — catch in stores/components
+### `defineEmits` Syntax
+Always use **tuple syntax** (not call-signature):
 
-```js
-export const coursesApi = {
-  getPublic: (params) => http.get('/courses', { params }),
-  getById: (id) => http.get(`/admin/courses/${id}`),
-  create: (data) => http.post('/admin/courses', data),
-}
+```ts
+// ✅ Correct
+defineEmits<{
+  'update:modelValue': [value: string]
+  'submit': []
+  'switch-tab': [trashed: boolean]
+}>()
+
+// ❌ Old syntax — Volar flags as error
+defineEmits<{
+  (e: 'update:modelValue', value: string): void
+}>()
 ```
 
 ### Router
 - Admin routes: `meta: { requiresAuth: true, guard: 'admin' }`
 - Student routes: `meta: { requiresAuth: true, guard: 'student' }`
 - Guest-only pages: `meta: { requiresGuest: true, guard: 'admin|student' }`
-- All page imports are lazy: `() => import('@/pages/...')`
+- All page imports are lazy: `() => import('@/views/...')`
 - NProgress start/stop in `beforeEach`/`afterEach`
 
 ### Component Organization
 ```
 components/
-├── admin/    Components used only in admin panel
-├── client/   Components used only in student-facing UI
-├── common/   Shared UI (theme toggler, shapes, etc.)
-└── layout/   AdminLayout.vue, ClientLayout.vue
+├── admin/          Per-resource UI tables, filters, rows (admin panel only)
+│   ├── categories/ CategoryFilters, CategoryTable, CategoryTrashedTable
+│   ├── courses/    CourseFilters, CourseTable, CourseTableRow
+│   ├── lessons/    LessonList, LessonItem
+│   └── sections/   SectionItem
+├── common/         Shared UI: ConfirmModal, BulkActions, Pagination
+├── forms/          Form modals: CategoryForm, SectionFormModal, LessonFormModal
+├── icons/          SVG icon components
+├── layout/         AppSidebar, AppHeader, ThemeProvider, SidebarProvider
+├── shared/
+│   ├── admin/      Complex shared admin components (SectionsLessonsManager)
+│   └── client/     Complex shared client components
+└── table/          Generic table utilities (BulkActions)
 ```
