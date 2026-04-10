@@ -115,6 +115,7 @@ php artisan storage:link
 
 # Khởi chạy
 php artisan serve
+php artisan queue:work    # Chạy queue worker xử lý email/AI/thanh toán
 ```
 
 > Backend chạy tại: `http://localhost:8000`
@@ -153,6 +154,7 @@ npm run dev
 ### Backend
 ```bash
 php artisan serve         # Khởi chạy server
+php artisan queue:work    # Chạy worker xử lý tiến trình ngầm
 php artisan migrate       # Chạy migration
 php artisan db:seed       # Seed dữ liệu mẫu
 php artisan test          # Chạy unit tests

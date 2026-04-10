@@ -71,6 +71,7 @@ e-learning/
 # Terminal 1 — Backend
 cd e-learning-backend
 php artisan serve         # http://localhost:8000
+php artisan queue:work    # background jobs
 
 # Terminal 2 — Frontend
 cd e-learning-frontend
