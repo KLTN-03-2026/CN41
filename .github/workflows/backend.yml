@@ -35,6 +35,13 @@ jobs:
     - name: Directory Permissions
       run: chmod -R 777 storage bootstrap/cache
 
-    - name: Execute tests (Unit and Feature)
-      run: php artisan test --parallel
+    - name: Create SQLite DB and Execute tests (Unit and Feature)
+      env:
+        DB_CONNECTION: sqlite
+        DB_DATABASE: database/database.sqlite
+        MAIL_MAILER: log
+      run: |
+        mkdir -p database
+        touch database/database.sqlite
+        php artisan test --parallel
 

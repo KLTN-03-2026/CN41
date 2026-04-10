@@ -22,7 +22,7 @@ export function useCourses() {
   async function loadActivePage(page = 1) {
     loading.value = true
     try {
-      const params: Record<string, any> = { page, per_page: 15 }
+      const params: Record<string, string | number> = { page, per_page: 15 }
       if (filters.search) params.search = filters.search
       if (filters.status !== '') params.status = filters.status
       if (filters.level) params.level = filters.level
@@ -54,9 +54,9 @@ export function useCourses() {
   const trashedFilters  = reactive({ search: '' })
 
   async function loadTrashedPage(page = 1) {
-    trashedLoading.value = true
+    loading.value = true
     try {
-      const params: Record<string, any> = { page, per_page: 15 }
+      const params: Record<string, string | number> = { page, per_page: 15 }
       if (trashedFilters.search) params.search = trashedFilters.search
 
       const res = await courseService.trashed(params)
@@ -83,7 +83,9 @@ export function useCourses() {
     try {
       const res = await courseService.trashed({ per_page: 1 })
       trashedCount.value = res.data.pagination?.total || res.data.data?.length || 0
-    } catch {}
+    } catch (err) {
+      console.error('Failed to fetch trashed count', err)
+    }
   }
 
   // ── Tab switch ─────────────────────────────────────────────────
@@ -118,7 +120,7 @@ export function useCourses() {
 
   const bulkForceDeleting = ref(false)
   const bulkRestoring     = ref(false)
-  const bulkActionsRef    = ref<any>(null)
+  const bulkActionsRef    = ref<{ closeModal: () => void } | null>(null)
 
   // ── Toggle status ──────────────────────────────────────────────
   async function toggleStatus(course: AdminCourse) {
@@ -162,8 +164,9 @@ export function useCourses() {
       loadTrashedPage(trashedCurrentPage.value)
       fetchTrashedCount()
       loadActivePage(activeCurrentPage.value)
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Khôi phục thất bại')
+    } catch (err: unknown) {
+      const axiosError = err as { response?: { data?: { message?: string } } }
+      toast.error(axiosError.response?.data?.message || 'Khôi phục thất bại')
     } finally {
       restoringId.value = null
     }
@@ -179,8 +182,9 @@ export function useCourses() {
       bulkActionsRef.value?.closeModal()
       loadActivePage(activeCurrentPage.value)
       fetchTrashedCount()
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Xóa nhiều thất bại')
+    } catch (err: unknown) {
+      const axiosError = err as { response?: { data?: { message?: string } } }
+      toast.error(axiosError.response?.data?.message || 'Xóa nhiều thất bại')
     } finally {
       bulkDeleting.value = false
     }
@@ -213,8 +217,9 @@ export function useCourses() {
       loadTrashedPage(trashedCurrentPage.value)
       fetchTrashedCount()
       loadActivePage(activeCurrentPage.value)
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Khôi phục nhiều thất bại')
+    } catch (err: unknown) {
+      const axiosError = err as { response?: { data?: { message?: string } } }
+      toast.error(axiosError.response?.data?.message || 'Khôi phục nhiều thất bại')
     } finally {
       bulkRestoring.value = false
     }
@@ -229,8 +234,9 @@ export function useCourses() {
       bulkActionsRef.value?.closeModal()
       loadTrashedPage(trashedCurrentPage.value)
       fetchTrashedCount()
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Xóa vĩnh viễn nhiều thất bại')
+    } catch (err: unknown) {
+      const axiosError = err as { response?: { data?: { message?: string } } }
+      toast.error(axiosError.response?.data?.message || 'Xóa vĩnh viễn nhiều thất bại')
     } finally {
       bulkForceDeleting.value = false
     }

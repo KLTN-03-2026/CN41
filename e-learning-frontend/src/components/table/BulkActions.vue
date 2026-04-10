@@ -206,7 +206,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 
-const props = defineProps({
+defineProps({
   count: {
     type: Number,
     required: true
@@ -232,7 +232,7 @@ const props = defineProps({
     default: 'Nháp'
   },
   sections: {
-    type: Array as () => Array<{ id: number; title: string }>,
+    type: Array as unknown as () => Array<{ id: number; title: string }>,
     default: () => []
   }
 })

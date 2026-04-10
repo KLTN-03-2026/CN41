@@ -74,7 +74,9 @@ export const useAdminAuthStore = defineStore('adminAuth', {
     async logout(): Promise<ActionResult> {
       try {
         await authService.adminLogout()
-      } catch {}
+      } catch {
+        // Ignore logout errors as we're clearing state anyway
+      }
       this.token = null
       this.user = null
       // Xóa ở cả 2 storage

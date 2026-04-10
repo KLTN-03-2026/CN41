@@ -97,7 +97,9 @@ export const useStudentAuthStore = defineStore('studentAuth', {
     async logout(): Promise<ActionResult> {
       try {
         await authService.studentLogout()
-      } catch {}
+      } catch {
+        // Ignore logout errors as we're clearing state anyway
+      }
       this.token = null
       this.student = null
       // Xóa ở cả 2 storage

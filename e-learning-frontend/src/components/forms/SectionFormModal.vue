@@ -60,23 +60,20 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 
+import type { AdminSectionForm } from '@/types/course.types'
+
 const props = defineProps<{
   show: boolean
   isEdit: boolean
   submitting: boolean
   errors: Record<string, string>
   submitError: string
-  form: {
-    title: string
-    description: string
-    order: number
-    status: number
-  }
+  form: AdminSectionForm
 }>()
 
 const emit = defineEmits<{
-  'update:show': [value: boolean]
-  'submit': [data: any]
+  (e: 'update:show', value: boolean): void
+  (e: 'submit', data: AdminSectionForm): void
 }>()
 
 // Local state to avoid mutating props directly

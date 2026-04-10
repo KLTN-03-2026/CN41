@@ -29,9 +29,10 @@ export function useFormErrors(initialErrors: Record<string, string> = {}) {
     submitError.value = ''
   }
 
-  function handleApiError(err: any, defaultMessage = 'Có lỗi xảy ra, vui lòng thử lại') {
-    const data = err.response?.data
-    if (err.response?.status === 422 && data?.errors) {
+  function handleApiError(err: unknown, defaultMessage = 'Có lỗi xảy ra, vui lòng thử lại') {
+    const axiosError = err as { response?: { status?: number; data?: { errors?: Record<string, string[]>; message?: string } } }
+    const data = axiosError.response?.data
+    if (axiosError.response?.status === 422 && data?.errors) {
       setErrors(data.errors)
     } else {
       setSubmitError(data?.message || defaultMessage)

@@ -155,8 +155,9 @@ async function handleCheckout() {
       toast.success('Đơn hàng miễn phí đã được xử lý thành công!')
       router.push(`/payment/result?order_code=${order.order_code}&status=success&message=Đăng+ký+thành+công`)
     }
-  } catch (err: any) {
-    const data = err.response?.data
+  } catch (err: unknown) {
+    const axiosError = err as { response?: { data?: { message?: string; errors?: { course_ids?: string | string[] } } } }
+    const data = axiosError.response?.data
     if (data?.errors?.course_ids) {
       // Student đã sở hữu khóa học
       errorMessage.value = Array.isArray(data.errors.course_ids) 

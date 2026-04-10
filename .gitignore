@@ -104,7 +104,7 @@ e-learning-backend/public/vendor/scribe/
 e-learning-backend/resources/views/scribe/
 
 # FE lock file (managed per-project)
-e-learning-frontend/package-lock.json
+# e-learning-frontend/package-lock.json
 
 *.log
 *.DS_Store

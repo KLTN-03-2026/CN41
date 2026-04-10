@@ -211,23 +211,13 @@ import { useToast } from 'vue-toastification'
 import { PlusIcon, TrashIcon } from '@/components/icons'
 import { lessonService } from '@/services/lesson.service'
 import { formatSeconds } from '@/utils/formatDuration'
+import type { Lesson, Pagination } from '@/types/common.types'
 
 const props = defineProps<{ courseId: number }>()
 const toast = useToast()
 
-interface Lesson {
-  id: number
-  title: string
-  type: string
-  content?: string | null
-  order: number
-  is_preview: boolean
-  duration?: number | null
-  status: number
-}
-
 const lessons    = ref<Lesson[]>([])
-const pagination = ref<any>(null)
+const pagination = ref<Pagination | null>(null)
 const loading    = ref(true)
 const togglingId = ref<number | null>(null)
 const deleteTarget = ref<Lesson | null>(null)
@@ -254,7 +244,7 @@ async function fetchLessons() {
   loading.value = true
   try {
     const res = await lessonService.index(props.courseId, { per_page: 100 })
-    const resData = res.data as any
+    const resData = res.data as { data: Lesson[]; pagination: Pagination }
     lessons.value = resData.data
     pagination.value = resData.pagination
   } catch {
@@ -343,10 +333,11 @@ async function submitForm() {
     }
     closeModal()
     fetchLessons()
-  } catch (err: any) {
-    const data = err.response?.data
-    if (err.response?.status === 422 && data?.errors) {
-      for (const [key, msgs] of Object.entries(data.errors as Record<string, string[]>)) {
+  } catch (err: unknown) {
+    const axiosError = err as { response?: { status?: number; data?: { message?: string; errors?: Record<string, string[]> } } }
+    const data = axiosError.response?.data
+    if (axiosError.response?.status === 422 && data?.errors) {
+      for (const [key, msgs] of Object.entries(data.errors)) {
         lErrors.value[key] = msgs[0]
       }
     } else {
@@ -369,8 +360,9 @@ async function doDelete() {
     toast.success('Xóa bài giảng thành công')
     deleteTarget.value = null
     fetchLessons()
-  } catch (err: any) {
-    toast.error(err.response?.data?.message || 'Xóa thất bại')
+  } catch (err: unknown) {
+    const axiosError = err as { response?: { data?: { message?: string } } }
+    toast.error(axiosError.response?.data?.message || 'Xóa thất bại')
   } finally {
     deleting.value = false
   }

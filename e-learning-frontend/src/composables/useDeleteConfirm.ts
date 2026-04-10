@@ -4,7 +4,7 @@ interface UseDeleteConfirmOptions<T> {
   onConfirm: (item: T) => Promise<void>
 }
 
-export function useDeleteConfirm<T = any>(options: UseDeleteConfirmOptions<T>) {
+export function useDeleteConfirm<T = unknown>(options: UseDeleteConfirmOptions<T>) {
   const target = ref<T | null>(null) as Ref<T | null>
   const isOpen = computed(() => target.value !== null)
   const loading = ref(false)

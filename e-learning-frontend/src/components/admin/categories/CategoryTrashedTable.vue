@@ -135,7 +135,7 @@ defineProps<{
   isAllSelected: boolean
   isIndeterminate: boolean
   restoringId: number | null
-  pagination: any
+  pagination: import('@/types/common.types').Pagination | null
 }>()
 
 defineEmits<{

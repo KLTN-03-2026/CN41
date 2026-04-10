@@ -119,8 +119,9 @@ async function handleRetry() {
     if (payment_url) {
       window.location.href = payment_url
     }
-  } catch (err: any) {
-    toast.error(err.response?.data?.message || 'Không thể tạo liên kết thanh toán mới.')
+  } catch (err: unknown) {
+    const axiosError = err as { response?: { data?: { message?: string } } }
+    toast.error(axiosError.response?.data?.message || 'Không thể tạo liên kết thanh toán mới.')
   } finally {
     retrying.value = false
   }
