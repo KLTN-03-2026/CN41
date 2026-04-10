@@ -111,7 +111,7 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import { ref } from 'vue'
 import { useStudentAuthStore } from '@/stores/studentAuth.store'
 import { useCartStore } from '@/stores/cart.store'

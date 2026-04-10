@@ -10,11 +10,11 @@
           {{ isEdit ? 'Chỉnh sửa bài giảng' : 'Thêm bài giảng' }}
         </h3>
 
-        <form @submit.prevent="$emit('submit')" class="space-y-4">
+        <form @submit.prevent="handleSubmit" class="space-y-4">
           <!-- Chương -->
           <div>
             <label class="label-form">Chương</label>
-            <select v-model="form.section_id" class="input-field">
+            <select v-model="localForm.section_id" class="input-field">
               <option :value="null">— Chưa phân chương —</option>
               <option v-for="s in sectionsList" :key="s.id" :value="s.id">{{ s.title }}</option>
             </select>
@@ -23,14 +23,14 @@
           <!-- Tiêu đề -->
           <div>
             <label class="label-form">Tiêu đề <span class="text-red-500">*</span></label>
-            <input v-model="form.title" type="text" class="input-field" :class="{ 'input-error': errors.title }" placeholder="Giới thiệu khóa học" />
+            <input v-model="localForm.title" type="text" class="input-field" :class="{ 'input-error': errors.title }" placeholder="Giới thiệu khóa học" />
             <p v-if="errors.title" class="error-msg">{{ errors.title }}</p>
           </div>
 
           <!-- Loại bài giảng -->
           <div>
             <label class="label-form">Loại bài giảng <span class="text-red-500">*</span></label>
-            <select v-model="form.type" class="input-field">
+            <select v-model="localForm.type" class="input-field">
               <option value="video">Video</option>
               <option value="document">Tài liệu</option>
             </select>
@@ -40,11 +40,11 @@
           <div>
             <label class="label-form">Nội dung tải lên (Video / Tài liệu) <span class="text-red-500">*</span></label>
             
-            <div v-if="form.content" class="flex flex-col gap-2 relative">
-               <input v-model="form.content" type="text" class="input-field pr-10" />
+            <div v-if="localForm.content" class="flex flex-col gap-2 relative">
+               <input v-model="localForm.content" type="text" class="input-field pr-10" />
                <button
                 type="button"
-                @click="form.content = ''"
+                @click="localForm.content = ''"
                 class="absolute right-2 top-2 w-6 h-6 flex items-center justify-center bg-gray-100 hover:bg-red-100 text-gray-500 hover:text-red-500 rounded-md transition-colors"
                >
                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -75,11 +75,11 @@
                     <span class="text-blue-500">Nhấp để tải lên</span> hoặc kéo thả file
                   </p>
                   <p class="text-xs text-gray-500 dark:text-gray-400">
-                    {{ form.type === 'video' ? 'Hỗ trợ MP4, WebM (Max: 50MB)' : 'Hỗ trợ PDF, DOCX (Max: 10MB)' }}
+                    {{ localForm.type === 'video' ? 'Hỗ trợ MP4, WebM (Max: 50MB)' : 'Hỗ trợ PDF, DOCX (Max: 10MB)' }}
                   </p>
                </div>
             </div>
-            <input ref="lFileInput" type="file" class="hidden" :accept="form.type === 'video' ? 'video/*' : '*/*'" @change="handleLessonFileSelect" />
+            <input ref="lFileInput" type="file" class="hidden" :accept="localForm.type === 'video' ? 'video/*' : '*/*'" @change="handleLessonFileSelect" />
             <p v-if="lUploadError" class="error-msg mt-2">{{ lUploadError }}</p>
             <p v-if="errors.content" class="error-msg mt-1">{{ errors.content }}</p>
             <p v-if="errors.video_id" class="error-msg mt-1">{{ errors.video_id }}</p>
@@ -87,18 +87,18 @@
           </div>
 
           <!-- Thời lượng (nếu là video) -->
-          <div v-if="form.type === 'video'">
+          <div v-if="localForm.type === 'video'">
             <label class="label-form">Thời lượng (giây)</label>
-            <input v-model.number="form.duration" type="number" min="0" class="input-field cursor-not-allowed bg-gray-50 dark:bg-gray-800/50" readonly disabled placeholder="Tự động tính khi tải lên video" />
+            <input v-model.number="localForm.duration" type="number" min="0" class="input-field cursor-not-allowed bg-gray-50 dark:bg-gray-800/50" readonly disabled placeholder="Tự động tính khi tải lên video" />
           </div>
 
           <div class="flex items-center gap-4">
             <label class="flex items-center gap-2 cursor-pointer">
-              <input v-model="form.is_preview" type="checkbox" class="w-4 h-4 rounded border-gray-300" />
+              <input v-model="localForm.is_preview" type="checkbox" class="w-4 h-4 rounded border-gray-300" />
               <span class="text-sm text-gray-700 dark:text-gray-400">Cho xem thử (preview)</span>
             </label>
             <div>
-              <select v-model="form.status" class="input-field w-auto px-3">
+              <select v-model="localForm.status" class="input-field w-auto px-3">
                 <option :value="0">Nháp</option>
                 <option :value="1">Đã đăng</option>
               </select>
@@ -130,7 +130,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { useToast } from 'vue-toastification'
 import { uploadService } from '@/services/upload.service'
 
@@ -156,10 +156,26 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'update:show': [value: boolean]
-  'submit': []
+  'update:form': [value: any]
+  'submit': [data: any]
 }>()
 
 const toast = useToast()
+
+// Local state to avoid mutating props directly
+const localForm = ref({ ...props.form })
+
+// Sync local form when modal opens or prop changes
+watch(
+  () => props.show,
+  (isShown) => {
+    if (isShown) {
+      localForm.value = { ...props.form }
+      lUploadError.value = ''
+      lUploadProgress.value = 0
+    }
+  }
+)
 
 // Upload state
 const lUploading = ref(false)
@@ -194,14 +210,14 @@ async function uploadLessonFile(file: File) {
   lUploadError.value = ''
   lUploadProgress.value = 0
   
-  if (props.form.type === 'video' && !file.type.startsWith('video/')) {
+  if (localForm.value.type === 'video' && !file.type.startsWith('video/')) {
     lUploadError.value = 'Vui lòng chọn file video.'
     return
   }
 
-  if (props.form.type === 'video') {
+  if (localForm.value.type === 'video') {
     const duration = await extractVideoDuration(file)
-    if (duration) props.form.duration = duration
+    if (duration) localForm.value.duration = duration
   }
   
   lUploading.value = true
@@ -213,14 +229,14 @@ async function uploadLessonFile(file: File) {
     }
     
     let res;
-    if (props.form.type === 'video') {
+    if (localForm.value.type === 'video') {
        res = await uploadService.video(file, onProgress)
     } else {
        res = await uploadService.document(file, onProgress)
     }
     
     let url = res.data.data.url
-    props.form.media_id = res.data.data.id
+    localForm.value.media_id = res.data.data.id
     try {
       const parsed = new URL(url)
       if (parsed.origin !== window.location.origin) {
@@ -228,7 +244,7 @@ async function uploadLessonFile(file: File) {
       }
     } catch {}
     
-    props.form.content = url
+    localForm.value.content = url
     toast.success('Tải lên thành công')
   } catch (err: any) {
     lUploadError.value = err.response?.data?.message || 'Tải lên thất bại'
@@ -236,6 +252,10 @@ async function uploadLessonFile(file: File) {
     lUploading.value = false
     setTimeout(() => { lUploadProgress.value = 0 }, 1000)
   }
+}
+
+function handleSubmit() {
+  emit('submit', localForm.value)
 }
 
 function closeModal() {
