@@ -250,10 +250,10 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useToast } from 'vue-toastification'
-import { coursesApi } from '@/api/coursesApi'
-import { categoriesApi } from '@/api/categoriesApi'
-import { teachersApi } from '@/api/teachersApi'
-import { uploadApi } from '@/api/uploadApi'
+import { courseService } from '@/services/course.service'
+import { categoryService } from '@/services/category.service'
+import { teacherService } from '@/services/teacher.service'
+import { uploadService } from '@/services/upload.service'
 import SectionsLessonsManager from '@/components/admin/SectionsLessonsManager.vue'
 
 const route  = useRoute()
@@ -353,7 +353,7 @@ async function uploadThumbnail(file: File) {
   form.value.thumbnail = thumbnailPreview.value
 
   try {
-    const res = await uploadApi.image(file, 'thumbnails', (progressEvent: any) => {
+    const res = await uploadService.image(file, 'thumbnails', (progressEvent: any) => {
       if (progressEvent.total) {
         uploadProgress.value = Math.round((progressEvent.loaded / progressEvent.total) * 100)
       }
@@ -399,7 +399,7 @@ async function removeThumbnail() {
   // Nếu có media_id → gọi API xóa file trên server
   if (thumbnailMediaId.value) {
     try {
-      await uploadApi.destroy(thumbnailMediaId.value)
+      await uploadService.destroy(thumbnailMediaId.value)
     } catch {
       // Bỏ qua lỗi xóa — vẫn cho xóa trên FE
     }
@@ -417,8 +417,8 @@ async function removeThumbnail() {
 onMounted(async () => {
   // Load teachers + categories in parallel
   const [teacherRes, catRes] = await Promise.all([
-    teachersApi.index({ per_page: 100 }).catch(() => null),
-    categoriesApi.flatTree().catch(() => null),
+    teacherService.index({ per_page: 100 }).catch(() => null),
+    categoryService.flatTree().catch(() => null),
   ])
   if (teacherRes) teachers.value = teacherRes.data.data
   if (catRes) flatCategories.value = catRes.data.data
@@ -427,7 +427,7 @@ onMounted(async () => {
   if (isEdit.value) {
     pageLoading.value = true
     try {
-      const res = await coursesApi.show(courseId.value!)
+      const res = await courseService.show(courseId.value!)
       const c = res.data.data
       form.value = {
         name: c.name,
@@ -502,10 +502,10 @@ async function submitForm() {
 
   try {
     if (isEdit.value) {
-      await coursesApi.update(courseId.value!, payload)
+      await courseService.update(courseId.value!, payload)
       toast.success('Cập nhật khóa học thành công')
     } else {
-      const res = await coursesApi.store(payload)
+      const res = await courseService.store(payload)
       toast.success('Tạo khóa học thành công')
       router.push('/admin/courses')
     }

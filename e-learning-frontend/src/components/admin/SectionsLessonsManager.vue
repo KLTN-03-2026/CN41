@@ -651,9 +651,9 @@
 import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useToast } from 'vue-toastification'
 import { PlusIcon, TrashIcon } from '@/icons'
-import { sectionsApi } from '@/api/sectionsApi'
-import { lessonsApi } from '@/api/lessonsApi'
-import { uploadApi } from '@/api/uploadApi'
+import { sectionService } from '@/services/section.service'
+import { lessonService } from '@/services/lesson.service'
+import { uploadService } from '@/services/upload.service'
 import { formatSeconds } from '@/utils/formatDuration'
 import BulkActions from '@/components/admin/BulkActions.vue'
 import LessonPreviewModal from '@/components/admin/LessonPreviewModal.vue'
@@ -793,7 +793,7 @@ const bulkActionLoading = ref(false)
 async function doBulkStatusLessons(statusVal: 'activate' | 'deactivate') {
   bulkActionLoading.value = true
   try {
-    await lessonsApi.bulkAction({ ids: selectedLessons.value, action: statusVal })
+    await lessonService.bulkAction({ ids: selectedLessons.value, action: statusVal })
     toast.success('Cập nhật trạng thái thành công')
     selectedLessons.value = []
     bulkActionsRef.value?.closeModal()
@@ -808,7 +808,7 @@ async function doBulkStatusLessons(statusVal: 'activate' | 'deactivate') {
 async function doBulkDeleteLessons() {
   bulkActionLoading.value = true
   try {
-    await lessonsApi.bulkDelete(selectedLessons.value)
+    await lessonService.bulkDelete(selectedLessons.value)
     toast.success('Xóa bài giảng thành công')
     selectedLessons.value = []
     bulkActionsRef.value?.closeModal()
@@ -823,7 +823,7 @@ async function doBulkDeleteLessons() {
 async function doBulkRestoreLessons() {
   bulkActionLoading.value = true
   try {
-    await lessonsApi.bulkRestore(selectedLessons.value)
+    await lessonService.bulkRestore(selectedLessons.value)
     toast.success('Khôi phục thành công')
     selectedLessons.value = []
     bulkActionsRef.value?.closeModal()
@@ -838,7 +838,7 @@ async function doBulkRestoreLessons() {
 async function doBulkForceDeleteLessons() {
   bulkActionLoading.value = true
   try {
-    await lessonsApi.bulkForceDelete(selectedLessons.value)
+    await lessonService.bulkForceDelete(selectedLessons.value)
     toast.success('Xóa vĩnh viễn thành công')
     selectedLessons.value = []
     bulkActionsRef.value?.closeModal()
@@ -853,7 +853,7 @@ async function doBulkForceDeleteLessons() {
 async function doBulkAssignSection(sectionId: number | null) {
   bulkActionLoading.value = true
   try {
-    await lessonsApi.bulkAction({
+    await lessonService.bulkAction({
       ids: selectedLessons.value,
       action: 'assign-section',
       section_id: sectionId,
@@ -875,7 +875,7 @@ async function doBulkAssignSection(sectionId: number | null) {
 async function handleRestoreLessonTr(lesson: Lesson) {
   if (!confirm(`Khôi phục bài giảng "${lesson.title}"?`)) return
   try {
-    await lessonsApi.restore(lesson.id)
+    await lessonService.restore(lesson.id)
     toast.success('Khôi phục thành công')
     fetchTrashed()
   } catch {
@@ -886,7 +886,7 @@ async function handleRestoreLessonTr(lesson: Lesson) {
 async function handleForceDeleteLessonTr(lesson: Lesson) {
   if (!confirm(`Xóa vĩnh viễn bài giảng "${lesson.title}"?`)) return
   try {
-    await lessonsApi.forceDelete(lesson.id)
+    await lessonService.forceDelete(lesson.id)
     toast.success('Đã xóa vĩnh viễn')
     fetchTrashed()
   } catch {
@@ -899,7 +899,7 @@ async function handlePreviewLesson(lessonId: number) {
   previewLoading.value = true
   previewModalRef.value?.open()
   try {
-    const res = await lessonsApi.show(lessonId)
+    const res = await lessonService.show(lessonId)
     previewLesson.value = res.data.data
   } catch {
     toast.error('Không thể tải nội dung xem trước')
@@ -921,7 +921,7 @@ watch(currentTab, (val) => {
 async function fetchTrashed() {
   loadingTrashed.value = true
   try {
-    const res = await lessonsApi.trashed({ course_id: props.courseId, per_page: 100 })
+    const res = await lessonService.trashed({ course_id: props.courseId, per_page: 100 })
     trashedLessons.value = Array.isArray(res.data?.data) 
       ? res.data.data 
       : (res.data?.data?.data || [])
@@ -1012,9 +1012,9 @@ async function uploadLessonFile(file: File) {
     
     let res;
     if (lForm.value.type === 'video') {
-       res = await uploadApi.video(file, onProgress)
+       res = await uploadService.video(file, onProgress)
     } else {
-       res = await uploadApi.document(file, onProgress)
+       res = await uploadService.document(file, onProgress)
     }
     
     let url = res.data.data.url
@@ -1050,8 +1050,8 @@ async function fetchAll() {
   try {
     // Lấy danh sách sections (kèm lessons nested)
     const [sectionsRes, lessonsRes] = await Promise.all([
-      sectionsApi.index(props.courseId, { per_page: 100 }),
-      lessonsApi.index(props.courseId, { per_page: 100 }),
+      sectionService.index(props.courseId, { per_page: 100 }),
+      lessonService.index(props.courseId, { per_page: 100 }),
     ])
 
     const allSections: Section[] = (sectionsRes.data.data || []).map((s: any) => ({
@@ -1154,10 +1154,10 @@ async function submitSection() {
 
   try {
     if (editingSectionId.value) {
-      await sectionsApi.update(editingSectionId.value, payload)
+      await sectionService.update(editingSectionId.value, payload)
       toast.success('Cập nhật chương thành công')
     } else {
-      await sectionsApi.store(props.courseId, payload)
+      await sectionService.store(props.courseId, payload)
       toast.success('Tạo chương thành công')
     }
     showSectionModal.value = false
@@ -1179,7 +1179,7 @@ async function submitSection() {
 async function toggleSectionStatus(section: Section) {
   togglingSection.value = section.id
   try {
-    await sectionsApi.toggleStatus(section.id)
+    await sectionService.toggleStatus(section.id)
     section.status = section.status === 1 ? 0 : 1
   } catch {
     toast.error('Không thể cập nhật trạng thái chương')
@@ -1196,7 +1196,7 @@ async function doDeleteSection() {
   if (!deleteSectionTarget.value) return
   deletingSection.value = true
   try {
-    await sectionsApi.destroy(deleteSectionTarget.value.id)
+    await sectionService.destroy(deleteSectionTarget.value.id)
     toast.success('Xóa chương thành công')
     deleteSectionTarget.value = null
     fetchAll()
@@ -1215,7 +1215,7 @@ async function reorderSection(fromIdx: number, toIdx: number) {
 
   const orders = arr.map((s, i) => ({ id: s.id, order: i }))
   try {
-    await sectionsApi.reorder(orders)
+    await sectionService.reorder(orders)
   } catch {
     toast.error('Sắp xếp chương thất bại')
     fetchAll()
@@ -1289,10 +1289,10 @@ async function submitLesson() {
 
   try {
     if (editingLessonId.value) {
-      await lessonsApi.update(editingLessonId.value, payload)
+      await lessonService.update(editingLessonId.value, payload)
       toast.success('Cập nhật bài giảng thành công')
     } else {
-      await lessonsApi.store(props.courseId, payload)
+      await lessonService.store(props.courseId, payload)
       toast.success('Tạo bài giảng thành công')
     }
     showLessonModal.value = false
@@ -1320,7 +1320,7 @@ async function submitLesson() {
 async function toggleLessonStatus(lesson: Lesson) {
   togglingLesson.value = lesson.id
   try {
-    await lessonsApi.toggleStatus(lesson.id)
+    await lessonService.toggleStatus(lesson.id)
     lesson.status = lesson.status === 1 ? 0 : 1
   } catch {
     toast.error('Không thể cập nhật trạng thái bài giảng')
@@ -1337,7 +1337,7 @@ async function doDeleteLesson() {
   if (!deleteLessonTarget.value) return
   deletingLesson.value = true
   try {
-    await lessonsApi.destroy(deleteLessonTarget.value.id)
+    await lessonService.destroy(deleteLessonTarget.value.id)
     toast.success('Xóa bài giảng thành công')
     deleteLessonTarget.value = null
     fetchAll()
@@ -1356,7 +1356,7 @@ async function reorderLesson(section: Section, fromIdx: number, toIdx: number) {
 
   const orders = arr.map((l, i) => ({ id: l.id, order: i }))
   try {
-    await lessonsApi.reorder(orders)
+    await lessonService.reorder(orders)
   } catch {
     toast.error('Sắp xếp bài giảng thất bại')
     fetchAll()

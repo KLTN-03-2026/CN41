@@ -209,7 +209,7 @@
 import { ref, onMounted } from 'vue'
 import { useToast } from 'vue-toastification'
 import { PlusIcon, TrashIcon } from '@/icons'
-import { lessonsApi } from '@/api/lessonsApi'
+import { lessonService } from '@/services/lesson.service'
 import { formatSeconds } from '@/utils/formatDuration'
 
 const props = defineProps<{ courseId: number }>()
@@ -253,7 +253,7 @@ const lForm = ref(defaultLForm())
 async function fetchLessons() {
   loading.value = true
   try {
-    const res = await lessonsApi.index(props.courseId, { per_page: 100 })
+    const res = await lessonService.index(props.courseId, { per_page: 100 })
     lessons.value = res.data.data
     pagination.value = res.data.pagination
   } catch {
@@ -279,7 +279,7 @@ function typeClass(type: string) {
 async function toggleStatus(lesson: Lesson) {
   togglingId.value = lesson.id
   try {
-    await lessonsApi.toggleStatus(lesson.id)
+    await lessonService.toggleStatus(lesson.id)
     lesson.status = lesson.status === 1 ? 0 : 1
   } catch {
     toast.error('Không thể cập nhật trạng thái')
@@ -334,10 +334,10 @@ async function submitForm() {
 
   try {
     if (editingId.value) {
-      await lessonsApi.update(editingId.value, payload)
+      await lessonService.update(editingId.value, payload)
       toast.success('Cập nhật bài giảng thành công')
     } else {
-      await lessonsApi.store(props.courseId, payload)
+      await lessonService.store(props.courseId, payload)
       toast.success('Tạo bài giảng thành công')
     }
     closeModal()
@@ -364,7 +364,7 @@ async function doDelete() {
   if (!deleteTarget.value) return
   deleting.value = true
   try {
-    await lessonsApi.destroy(deleteTarget.value.id)
+    await lessonService.destroy(deleteTarget.value.id)
     toast.success('Xóa bài giảng thành công')
     deleteTarget.value = null
     fetchLessons()

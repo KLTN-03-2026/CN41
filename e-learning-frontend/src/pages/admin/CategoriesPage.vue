@@ -577,7 +577,7 @@ import { ref, computed, onMounted, reactive } from 'vue'
 import { useToast } from 'vue-toastification'
 import { PlusIcon, TrashIcon } from '@/icons'
 import BulkActions from '@/components/admin/BulkActions.vue'
-import { categoriesApi } from '@/api/categoriesApi'
+import { categoryService } from '@/services/category.service'
 
 const toast = useToast()
 
@@ -863,7 +863,7 @@ function checkAllExpanded(): boolean {
 async function fetchCategories() {
   loading.value = true
   try {
-    const res = await categoriesApi.flatTree()
+    const res = await categoryService.flatTree()
     allCategories.value = res.data.data
     // Mặc định thu gọn tất cả, chỉ hiện danh mục cha
     expandedIds.value = new Set()
@@ -877,7 +877,7 @@ async function fetchCategories() {
 
 async function fetchFlatTree() {
   try {
-    const res = await categoriesApi.flatTree()
+    const res = await categoryService.flatTree()
     flatTree.value = res.data.data
   } catch {}
 }
@@ -889,7 +889,7 @@ async function fetchTrashedCategories(page = 1) {
     const params: Record<string, any> = { page, per_page: 20 }
     if (trashedSearchQuery.value) params.search = trashedSearchQuery.value
 
-    const res = await categoriesApi.trashed(params)
+    const res = await categoryService.trashed(params)
     trashedCategories.value = res.data.data
     trashedPagination.value = res.data.pagination
     trashedCount.value = res.data.pagination?.total || res.data.data?.length || 0
@@ -902,7 +902,7 @@ async function fetchTrashedCategories(page = 1) {
 
 async function fetchTrashedCount() {
   try {
-    const res = await categoriesApi.trashed({ per_page: 1 })
+    const res = await categoryService.trashed({ per_page: 1 })
     trashedCount.value = res.data.pagination?.total || res.data.data?.length || 0
   } catch {
     // im lặng
@@ -978,10 +978,10 @@ async function submitForm() {
 
   try {
     if (editingId.value) {
-      await categoriesApi.update(editingId.value, payload)
+      await categoryService.update(editingId.value, payload)
       toast.success('Cập nhật danh mục thành công')
     } else {
-      await categoriesApi.store(payload)
+      await categoryService.store(payload)
       toast.success('Tạo danh mục thành công')
     }
     closeModal()
@@ -1009,7 +1009,7 @@ async function doDelete() {
   if (!deleteTarget.value) return
   deleting.value = true
   try {
-    await categoriesApi.destroy(deleteTarget.value.id)
+    await categoryService.destroy(deleteTarget.value.id)
     toast.success('Xóa danh mục thành công')
     deleteTarget.value = null
     fetchCategories()
@@ -1026,7 +1026,7 @@ async function doDelete() {
 async function doRestoreCategory(cat: Category) {
   restoringId.value = cat.id
   try {
-    await categoriesApi.restore(cat.id)
+    await categoryService.restore(cat.id)
     toast.success(`Đã khôi phục "${cat.name}"`)
     fetchTrashedCategories()
     fetchTrashedCount()
@@ -1048,7 +1048,7 @@ async function doForceDeleteCategory() {
   if (!forceDeleteTarget.value) return
   forceDeleting.value = true
   try {
-    await categoriesApi.forceDelete(forceDeleteTarget.value.id)
+    await categoryService.forceDelete(forceDeleteTarget.value.id)
     toast.success('Đã xóa vĩnh viễn danh mục')
     forceDeleteTarget.value = null
     fetchTrashedCategories()
@@ -1065,7 +1065,7 @@ async function doBulkDelete() {
   bulkDeleting.value = true
   try {
     const ids = [...selectedIds]
-    await Promise.all(ids.map(id => categoriesApi.destroy(id)))
+    await Promise.all(ids.map(id => categoryService.destroy(id)))
     toast.success(`Đã xóa ${ids.length} danh mục`)
     selectedIds.clear()
     bulkActionsRef.value?.closeModal()
@@ -1084,7 +1084,7 @@ async function bulkToggleStatus(status: number) {
   bulkUpdating.value = true
   try {
     const ids = [...selectedIds]
-    await Promise.all(ids.map(id => categoriesApi.update(id, { status })))
+    await Promise.all(ids.map(id => categoryService.update(id, { status })))
     toast.success(`Đã cập nhật ${ids.length} danh mục`)
     selectedIds.clear()
     bulkActionsRef.value?.closeModal()
@@ -1102,7 +1102,7 @@ async function doBulkRestoreCategories() {
   bulkRestoring.value = true
   try {
     const ids = [...trashedSelectedIds]
-    await Promise.all(ids.map(id => categoriesApi.restore(id)))
+    await Promise.all(ids.map(id => categoryService.restore(id)))
     toast.success(`Đã khôi phục ${ids.length} danh mục`)
     trashedSelectedIds.clear()
     bulkActionsRef.value?.closeModal()
@@ -1122,7 +1122,7 @@ async function doBulkForceDeleteCategories() {
   bulkForceDeleting.value = true
   try {
     const ids = [...trashedSelectedIds]
-    await Promise.all(ids.map(id => categoriesApi.forceDelete(id)))
+    await Promise.all(ids.map(id => categoryService.forceDelete(id)))
     toast.success(`Đã xóa vĩnh viễn ${ids.length} danh mục`)
     trashedSelectedIds.clear()
     bulkActionsRef.value?.closeModal()

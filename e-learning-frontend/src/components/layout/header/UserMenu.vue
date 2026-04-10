@@ -59,7 +59,7 @@
 import { UserCircleIcon, ChevronDownIcon, LogoutIcon, SettingsIcon } from '@/icons'
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAdminAuthStore } from '@/stores/adminAuth'
+import { useAdminAuthStore } from '@/stores/adminAuth.store'
 import { useToast } from 'vue-toastification'
 
 const router = useRouter()

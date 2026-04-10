@@ -110,8 +110,8 @@
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useToast } from 'vue-toastification'
-import { useCartStore } from '@/stores/cart'
-import { ordersApi } from '@/api/ordersApi'
+import { useCartStore } from '@/stores/cart.store'
+import { orderService } from '@/services/order.service'
 import { formatCurrency } from '@/utils/formatCurrency'
 import PaymentMethodSelector from '@/components/client/PaymentMethodSelector.vue'
 
@@ -139,7 +139,7 @@ async function handleCheckout() {
   errorMessage.value = ''
 
   try {
-    const res = await ordersApi.createOrder({
+    const res = await orderService.createOrder({
       course_ids: cartStore.courseIds,
     })
 

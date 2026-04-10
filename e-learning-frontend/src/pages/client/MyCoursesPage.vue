@@ -92,7 +92,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useToast } from 'vue-toastification'
-import { coursesApi } from '@/api/coursesApi'
+import { courseService } from '@/services/course.service'
 
 const toast = useToast()
 
@@ -111,7 +111,7 @@ const loading    = ref(true)
 async function fetchPage(page = 1) {
   loading.value = true
   try {
-    const res = await coursesApi.myCourses({ page, per_page: 12 })
+    const res = await courseService.myCourses({ page, per_page: 12 })
     courses.value = res.data.data
     pagination.value = res.data.pagination
   } catch {

@@ -484,7 +484,7 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { useToast } from 'vue-toastification'
 import { PlusIcon, TrashIcon, BoxCubeIcon } from '@/icons'
 import BulkActions from '@/components/admin/BulkActions.vue'
-import { coursesApi } from '@/api/coursesApi'
+import { courseService } from '@/services/course.service'
 import { formatCurrency } from '@/utils/formatCurrency'
 
 const toast = useToast()
@@ -606,7 +606,7 @@ async function fetchPage(page = 1) {
     if (filters.status !== '') params.status = filters.status
     if (filters.level) params.level = filters.level
 
-    const res = await coursesApi.index(params)
+    const res = await courseService.index(params)
     courses.value = res.data.data
     pagination.value = res.data.pagination
   } catch {
@@ -624,7 +624,7 @@ async function fetchTrashedPage(page = 1) {
     const params: Record<string, any> = { page, per_page: 15 }
     if (trashedFilters.search) params.search = trashedFilters.search
 
-    const res = await coursesApi.trashed(params)
+    const res = await courseService.trashed(params)
     trashedCourses.value = res.data.data
     trashedPagination.value = res.data.pagination
     trashedCount.value = res.data.pagination?.total || res.data.data?.length || 0
@@ -638,7 +638,7 @@ async function fetchTrashedPage(page = 1) {
 // Lấy count thùng rác (gọi lúc mount để hiển thị badge)
 async function fetchTrashedCount() {
   try {
-    const res = await coursesApi.trashed({ per_page: 1 })
+    const res = await courseService.trashed({ per_page: 1 })
     trashedCount.value = res.data.pagination?.total || res.data.data?.length || 0
   } catch {
     // im lặng
@@ -665,7 +665,7 @@ function formatDate(dateStr: string | null | undefined): string {
 async function toggleStatus(course: Course) {
   togglingId.value = course.id
   try {
-    await coursesApi.toggleStatus(course.id)
+    await courseService.toggleStatus(course.id)
     course.status = course.status === 1 ? 0 : 1
     toast.success(`Đã ${course.status === 1 ? 'đăng' : 'chuyển về nháp'} khóa học`)
   } catch {
@@ -684,7 +684,7 @@ async function doDelete() {
   if (!deleteTarget.value) return
   deleting.value = true
   try {
-    await coursesApi.destroy(deleteTarget.value.id)
+    await courseService.destroy(deleteTarget.value.id)
     toast.success('Xóa khóa học thành công')
     deleteTarget.value = null
     fetchPage(currentPage.value)
@@ -700,7 +700,7 @@ async function doDelete() {
 async function doBulkDelete() {
   bulkDeleting.value = true
   try {
-    await coursesApi.bulkDelete([...selectedIds])
+    await courseService.bulkDelete([...selectedIds])
     toast.success(`Đã xóa ${selectedIds.size} khóa học`)
     selectedIds.clear()
     bulkActionsRef.value?.closeModal()
@@ -718,7 +718,7 @@ async function bulkToggleStatus(status: number) {
   bulkUpdating.value = true
   try {
     const ids = [...selectedIds]
-    await Promise.all(ids.map(id => coursesApi.update(id, { status })))
+    await Promise.all(ids.map(id => courseService.update(id, { status })))
     toast.success(`Đã cập nhật ${ids.length} khóa học`)
     selectedIds.clear()
     bulkActionsRef.value?.closeModal()
@@ -734,7 +734,7 @@ async function bulkToggleStatus(status: number) {
 async function doRestore(course: Course) {
   restoringId.value = course.id
   try {
-    await coursesApi.restore(course.id)
+    await courseService.restore(course.id)
     toast.success(`Đã khôi phục "${course.name}"`)
     fetchTrashedPage(trashedPage.value)
     fetchTrashedCount()
@@ -756,7 +756,7 @@ async function doForceDelete() {
   if (!forceDeleteTarget.value) return
   forceDeleting.value = true
   try {
-    await coursesApi.forceDelete(forceDeleteTarget.value.id)
+    await courseService.forceDelete(forceDeleteTarget.value.id)
     toast.success('Đã xóa vĩnh viễn khóa học')
     forceDeleteTarget.value = null
     fetchTrashedPage(trashedPage.value)
@@ -772,7 +772,7 @@ async function doForceDelete() {
 async function doBulkRestore() {
   bulkRestoring.value = true
   try {
-    await coursesApi.bulkRestore([...trashedSelectedIds])
+    await courseService.bulkRestore([...trashedSelectedIds])
     toast.success(`Đã khôi phục ${trashedSelectedIds.size} khóa học`)
     trashedSelectedIds.clear()
     bulkActionsRef.value?.closeModal()
@@ -790,7 +790,7 @@ async function doBulkRestore() {
 async function doBulkForceDelete() {
   bulkForceDeleting.value = true
   try {
-    await coursesApi.bulkForceDelete([...trashedSelectedIds])
+    await courseService.bulkForceDelete([...trashedSelectedIds])
     toast.success(`Đã xóa vĩnh viễn ${trashedSelectedIds.size} khóa học`)
     trashedSelectedIds.clear()
     bulkActionsRef.value?.closeModal()

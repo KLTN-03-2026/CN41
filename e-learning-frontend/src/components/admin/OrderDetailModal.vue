@@ -165,7 +165,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import { useToast } from 'vue-toastification'
-import { ordersApi } from '@/api/ordersApi'
+import { orderService } from '@/services/order.service'
 import { formatCurrency } from '@/utils/formatCurrency'
 import OrderStatusBadge from '@/components/common/OrderStatusBadge.vue'
 
@@ -195,7 +195,7 @@ watch(() => props.show, async (isOpen) => {
     loading.value = true
     order.value = null
     try {
-      const res = await ordersApi.adminShow(props.orderId)
+      const res = await orderService.adminShow(props.orderId)
       order.value = res.data.data
       newStatus.value = order.value.status
     } catch {
@@ -211,7 +211,7 @@ async function handleUpdateStatus() {
 
   updating.value = true
   try {
-    await ordersApi.adminUpdateStatus(order.value.id, { status: newStatus.value })
+    await orderService.adminUpdateStatus(order.value.id, { status: newStatus.value })
     toast.success('Cập nhật trạng thái thành công.')
     order.value.status = newStatus.value
     emit('updated')

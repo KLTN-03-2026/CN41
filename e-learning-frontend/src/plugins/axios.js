@@ -33,14 +33,14 @@ http.interceptors.response.use(
     if (status === 401 && !isAuthEndpoint) {
       const isAdminRoute = requestUrl.startsWith('/admin')
       if (isAdminRoute) {
-        const { useAdminAuthStore } = await import('@/stores/adminAuth')
+        const { useAdminAuthStore } = await import('@/stores/adminAuth.store')
         const adminStore = useAdminAuthStore()
         adminStore.token = null
         adminStore.user = null
         localStorage.removeItem('adminToken')
         window.location.href = '/admin/login'
       } else {
-        const { useStudentAuthStore } = await import('@/stores/studentAuth')
+        const { useStudentAuthStore } = await import('@/stores/studentAuth.store')
         const studentStore = useStudentAuthStore()
         studentStore.token = null
         studentStore.student = null

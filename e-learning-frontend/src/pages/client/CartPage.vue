@@ -93,7 +93,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useToast } from 'vue-toastification'
-import { useCartStore } from '@/stores/cart'
+import { useCartStore } from '@/stores/cart.store'
 import { formatCurrency } from '@/utils/formatCurrency'
 import CartItemCard from '@/components/client/CartItemCard.vue'
 

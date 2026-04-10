@@ -139,7 +139,7 @@ import * as z from 'zod'
 import { toTypedSchema } from '@vee-validate/zod'
 import { useToast } from 'vue-toastification'
 import { BookOpen, User, Mail, Lock, Eye, EyeOff, AlertCircle } from 'lucide-vue-next'
-import { useStudentAuthStore } from '@/stores/studentAuth'
+import { useStudentAuthStore } from '@/stores/studentAuth.store'
 
 export default {
   components: { Form, Field, BookOpen, User, Mail, Lock, Eye, EyeOff, AlertCircle },

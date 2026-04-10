@@ -129,7 +129,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { useAdminAuthStore } from '@/stores/adminAuth'
+import { useAdminAuthStore } from '@/stores/adminAuth.store'
 
 const adminAuth = useAdminAuthStore()
 

@@ -103,7 +103,7 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { useToast } from 'vue-toastification'
-import { ordersApi } from '@/api/ordersApi'
+import { orderService } from '@/services/order.service'
 import { formatCurrency } from '@/utils/formatCurrency'
 import OrderStatusBadge from '@/components/common/OrderStatusBadge.vue'
 
@@ -126,7 +126,7 @@ function formatDate(iso: string) {
 async function fetchOrders(page = 1) {
   loading.value = true
   try {
-    const res = await ordersApi.myOrders({ page, per_page: 10 })
+    const res = await orderService.myOrders({ page, per_page: 10 })
     orders.value = res.data.data
     Object.assign(pagination, res.data.pagination)
   } catch {
@@ -138,7 +138,7 @@ async function fetchOrders(page = 1) {
 
 async function handleRetry(orderCode: string) {
   try {
-    const res = await ordersApi.retryPayment(orderCode)
+    const res = await orderService.retryPayment(orderCode)
     const { payment_url } = res.data.data
     if (payment_url) {
       window.location.href = payment_url

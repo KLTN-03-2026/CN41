@@ -216,7 +216,7 @@
 import { ref, computed, onMounted, markRaw, type Component } from 'vue'
 import { UserGroupIcon, BoxCubeIcon, BoxIcon, BarChartIcon, ChevronRightIcon } from '@/icons'
 import { formatCurrency } from '@/utils/formatCurrency'
-import { ordersApi } from '@/api/ordersApi'
+import { orderService } from '@/services/order.service'
 
 const SKELETON_HEIGHTS = [55, 72, 48, 85, 63, 90, 78, 42, 68, 80, 58, 45]
 
@@ -326,8 +326,8 @@ onMounted(async () => {
   try {
     // Fetch revenue stats từ API
     const [revenueRes, ordersRes] = await Promise.allSettled([
-      ordersApi.revenueStats({ period: 'monthly', from: `${currentYear}-01-01`, to: `${currentYear}-12-31` }),
-      ordersApi.adminList({ per_page: 5 }),
+      orderService.revenueStats({ period: 'monthly', from: `${currentYear}-01-01`, to: `${currentYear}-12-31` }),
+      orderService.adminList({ per_page: 5 }),
     ])
 
     // Revenue stats

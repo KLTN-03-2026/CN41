@@ -235,7 +235,7 @@ import { Form, Field } from 'vee-validate'
 import { z } from 'zod'
 import { toTypedSchema } from '@vee-validate/zod'
 import { useToast } from 'vue-toastification'
-import { useAdminAuthStore } from '@/stores/adminAuth'
+import { useAdminAuthStore } from '@/stores/adminAuth.store'
 import CommonGridShape from '@/components/common/CommonGridShape.vue'
 
 const router = useRouter()

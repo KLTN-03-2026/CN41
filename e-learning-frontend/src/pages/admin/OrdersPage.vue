@@ -188,7 +188,7 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { useToast } from 'vue-toastification'
-import { ordersApi } from '@/api/ordersApi'
+import { orderService } from '@/services/order.service'
 import { formatCurrency } from '@/utils/formatCurrency'
 import OrderStatusBadge from '@/components/common/OrderStatusBadge.vue'
 import OrderDetailModal from '@/components/admin/OrderDetailModal.vue'
@@ -245,7 +245,7 @@ async function fetchOrders(page = 1) {
     if (filters.from)   params.from = filters.from
     if (filters.to)     params.to = filters.to
 
-    const res = await ordersApi.adminList(params)
+    const res = await orderService.adminList(params)
     orders.value = res.data.data
     Object.assign(pagination, res.data.pagination)
   } catch {
@@ -264,7 +264,7 @@ async function handleDelete(id: number) {
   if (!confirm('Bạn có chắc muốn xoá đơn hàng này?')) return
 
   try {
-    await ordersApi.adminDelete(id)
+    await orderService.adminDelete(id)
     toast.success('Đơn hàng đã được xoá.')
     fetchOrders(pagination.current_page)
   } catch {

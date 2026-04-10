@@ -113,8 +113,8 @@
 
 <script>
 import { ref } from 'vue'
-import { useStudentAuthStore } from '@/stores/studentAuth'
-import { useCartStore } from '@/stores/cart'
+import { useStudentAuthStore } from '@/stores/studentAuth.store'
+import { useCartStore } from '@/stores/cart.store'
 import { useRouter } from 'vue-router'
 import { BookOpen, ShoppingCart, ChevronDown, Menu, X } from 'lucide-vue-next'
 import { useToast } from 'vue-toastification'

@@ -81,8 +81,8 @@
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useToast } from 'vue-toastification'
-import { useCartStore } from '@/stores/cart'
-import { ordersApi } from '@/api/ordersApi'
+import { useCartStore } from '@/stores/cart.store'
+import { orderService } from '@/services/order.service'
 
 const route = useRoute()
 const toast = useToast()
@@ -113,7 +113,7 @@ async function handleRetry() {
 
   retrying.value = true
   try {
-    const res = await ordersApi.retryPayment(orderCode.value)
+    const res = await orderService.retryPayment(orderCode.value)
     const { payment_url } = res.data.data
 
     if (payment_url) {

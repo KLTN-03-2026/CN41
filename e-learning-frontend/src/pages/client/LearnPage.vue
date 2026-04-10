@@ -393,7 +393,7 @@
 import { ref, computed, onMounted, onUnmounted, reactive, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { useToast } from 'vue-toastification'
-import { lessonsApi } from '@/api/lessonsApi'
+import { lessonService } from '@/services/lesson.service'
 import { formatSeconds } from '@/utils/formatDuration'
 
 const route = useRoute()
@@ -479,13 +479,13 @@ onMounted(async () => {
     let rawData = null
     let purchased = true
     try {
-      const res = await lessonsApi.myLessons(slug.value)
+      const res = await lessonService.myLessons(slug.value)
       rawData = res.data.data
     } catch (err: any) {
       if (err.response?.status === 403 || err.response?.status === 401) {
         purchased = false
-        const { coursesApi } = await import('@/api/coursesApi')
-        const res2 = await coursesApi.publicLessons(slug.value)
+        const { courseService } = await import('@/services/course.service')
+        const res2 = await courseService.publicLessons(slug.value)
         rawData = res2.data.data
       } else {
         throw err
@@ -567,7 +567,7 @@ async function selectLesson(lesson: any) {
 
   try {
     if (isPurchased.value) {
-      const res = await lessonsApi.myLessonDetail(slug.value, lesson.slug)
+      const res = await lessonService.myLessonDetail(slug.value, lesson.slug)
       lessonDetail.value = res.data.data
       courseName.value = res.data.data?.course_name || courseName.value
 
@@ -581,8 +581,8 @@ async function selectLesson(lesson: any) {
          contentLoading.value = false
          return
       }
-      const { coursesApi } = await import('@/api/coursesApi')
-      const res = await coursesApi.publicPreviewLesson(slug.value, lesson.slug)
+      const { courseService } = await import('@/services/course.service')
+      const res = await courseService.publicPreviewLesson(slug.value, lesson.slug)
       lessonDetail.value = res.data.data
     }
   } catch {
@@ -614,7 +614,7 @@ async function onVideoEnded() {
 async function saveProgress(watchedSeconds: number, isCompleted: boolean) {
   if (!currentLesson.value) return
   try {
-    await lessonsApi.updateProgress(currentLesson.value.id, {
+    await lessonService.updateProgress(currentLesson.value.id, {
       watched_seconds: watchedSeconds,
       is_completed: isCompleted,
     })
@@ -636,7 +636,7 @@ async function markComplete(isCompleted: boolean) {
   markingComplete.value = true
   try {
     const watchedSeconds = videoEl.value ? Math.floor(videoEl.value.currentTime) : (currentLesson.value.duration || 0)
-    await lessonsApi.updateProgress(currentLesson.value.id, {
+    await lessonService.updateProgress(currentLesson.value.id, {
       watched_seconds: watchedSeconds,
       is_completed: isCompleted,
     })

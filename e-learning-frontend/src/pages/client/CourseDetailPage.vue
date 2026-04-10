@@ -253,9 +253,9 @@
 import { ref, watch, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useToast } from 'vue-toastification'
-import { coursesApi } from '@/api/coursesApi'
-import { useCartStore } from '@/stores/cart'
-import { useStudentAuthStore } from '@/stores/studentAuth'
+import { courseService } from '@/services/course.service'
+import { useCartStore } from '@/stores/cart.store'
+import { useStudentAuthStore } from '@/stores/studentAuth.store'
 import { formatCurrency } from '@/utils/formatCurrency'
 import { formatSeconds } from '@/utils/formatDuration'
 import CourseCard from '@/components/client/CourseCard.vue'
@@ -341,8 +341,8 @@ watch(() => route.params.slug, async (newSlug) => {
   const slug = newSlug as string
   try {
     const [courseRes, lessonsRes] = await Promise.allSettled([
-      coursesApi.publicShow(slug),
-      coursesApi.publicLessons(slug),
+      courseService.publicShow(slug),
+      courseService.publicLessons(slug),
     ])
 
     if (courseRes.status === 'fulfilled') {
@@ -357,7 +357,7 @@ watch(() => route.params.slug, async (newSlug) => {
           // Sử dụng ancestor cao nhất (root) nếu có, không thì dùng chính nó
           const rootCatId = (cat.ancestors && cat.ancestors.length) ? cat.ancestors[0].id : cat.id
           
-          const relatedRes = await coursesApi.publicIndex({ category_id: rootCatId, per_page: 5 })
+          const relatedRes = await courseService.publicIndex({ category_id: rootCatId, per_page: 5 })
           const filtered = relatedRes.data.data.filter((c: Course) => c.id !== course.value?.id)
           relatedCourses.value = filtered.slice(0, 4)
         } catch {
@@ -428,7 +428,7 @@ async function handleEnrollFree() {
   
   isEnrolling.value = true
   try {
-    await coursesApi.enrollFree(course.value.slug)
+    await courseService.enrollFree(course.value.slug)
     toast.success('Đăng ký khóa học miễn phí thành công! Bắt đầu học nào.')
     // Đánh dấu là đã mua để UI tự cập nhật -> "Vào học ngay"
     lessonData.value.is_purchased = true

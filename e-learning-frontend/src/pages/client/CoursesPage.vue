@@ -75,8 +75,8 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
-import { coursesApi } from '@/api/coursesApi'
-import { categoriesApi } from '@/api/categoriesApi'
+import { courseService } from '@/services/course.service'
+import { categoryService } from '@/services/category.service'
 import CourseCard from '@/components/client/CourseCard.vue'
 
 interface Course {
@@ -112,7 +112,7 @@ async function fetchPage(page = 1) {
     if (filters.level)       params.level = filters.level
     if (filters.category_id) params.category_id = filters.category_id
 
-    const res = await coursesApi.publicIndex(params)
+    const res = await courseService.publicIndex(params)
     courses.value = res.data.data
     pagination.value = res.data.pagination
   } finally {
@@ -122,7 +122,7 @@ async function fetchPage(page = 1) {
 
 async function fetchCategories() {
   try {
-    const res = await categoriesApi.publicList()
+    const res = await categoryService.publicList()
     categories.value = res.data.data
   } catch {}
 }
