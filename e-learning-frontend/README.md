@@ -60,18 +60,56 @@ Truy cập: `http://localhost:5173`
 
 ```
 src/
-├── api/            # HTTP calls (Axios)
+├── assets/             # Static assets (images, fonts)
 ├── components/
-│   ├── common/     # ThemeToggler, CommonGridShape
-│   └── layout/     # TailAdmin: AppSidebar, AppHeader, ThemeProvider, SidebarProvider, header/*
-├── composables/    # useSidebar.ts, useTheme.ts
-├── icons/          # TailAdmin SVG icon components (~48 icons)
-├── layouts/        # AdminLayout.vue (TailAdmin) | ClientLayout.vue (Flowbite)
-├── pages/          # admin/ | client/ | auth/ | ForbiddenPage | NotFoundPage
-├── plugins/        # axios.js (instance + interceptors) | nprogress.js
-├── router/         # index.js (routes + guards)
-├── stores/         # adminAuth.js | studentAuth.js | cart.js
-└── utils/          # formatCurrency.js | formatDate.js | formatDuration.js
+│   ├── admin/          # UI components dùng riêng cho admin panel
+│   │   ├── categories/ # CategoryFilters, CategoryTable, CategoryTrashedTable
+│   │   ├── courses/    # CourseFilters, CourseTable, CourseTableRow
+│   │   ├── lessons/    # LessonList, LessonItem
+│   │   └── sections/   # SectionItem
+│   ├── common/         # Shared UI: ConfirmModal, BulkActions, ThemeToggler...
+│   ├── forms/          # Form modals: CategoryForm, CourseForm, SectionFormModal, LessonFormModal...
+│   ├── icons/          # SVG icon components
+│   ├── layout/         # AppSidebar, AppHeader, ThemeProvider, SidebarProvider, header/*
+│   ├── shared/
+│   │   ├── admin/      # SectionsLessonsManager, LessonPreviewModal, OrderDetailModal...
+│   │   └── client/     # Components dùng chung phía client
+│   └── table/          # BulkActions, Pagination
+├── composables/        # Logic tái sử dụng (Composition API)
+│   ├── useCategories.ts       # CRUD + bulk + form + delete cho danh mục
+│   ├── useCategoryTree.ts     # Cây danh mục: expand/collapse, search, filter
+│   ├── useCourses.ts          # CRUD + bulk + trashed cho khóa học
+│   ├── useSectionsManager.ts  # Quản lý chương (section) theo khóa học
+│   ├── useLessonsManager.ts   # Quản lý bài giảng (lesson) + drag-drop + bulk
+│   ├── useBulkSelect.ts       # Generic multi-select cho bảng
+│   ├── useDeleteConfirm.ts    # Confirm dialog pattern
+│   ├── useFormErrors.ts       # Xử lý lỗi form từ API
+│   ├── usePagination.ts       # Phân trang
+│   ├── useDebounceSearch.ts   # Debounce search input
+│   ├── useSidebar.ts          # Trạng thái sidebar
+│   └── useTheme.ts            # Dark/light mode
+├── constants/          # Hằng số toàn cục
+├── layouts/            # AdminLayout.vue | ClientLayout.vue
+├── plugins/            # axios (instance + interceptors) | nprogress
+├── router/             # Routes + navigation guards
+├── services/           # API service layer (1 file/resource)
+│   ├── category.service.ts
+│   ├── course.service.ts
+│   └── ...
+├── stores/             # Pinia stores: adminAuthStore, studentAuthStore, cart
+├── types/              # TypeScript interfaces
+│   ├── admin-category.types.ts  # AdminCategory, AdminCourse
+│   ├── section-lesson.types.ts  # AdminSection, AdminLesson, SectionForm, LessonForm
+│   ├── course.types.ts
+│   ├── auth.types.ts
+│   ├── common.types.ts
+│   ├── order.types.ts
+│   └── index.ts        # Re-export tất cả types
+├── utils/              # formatCurrency, formatDate, formatDuration
+└── views/              # Pages (lazy-loaded)
+    ├── admin/          # CoursesPage, CategoriesPage, UsersPage...
+    ├── auth/           # LoginPage, RegisterPage...
+    └── client/         # HomePage, CourseDetailPage, MyCoursesPage...
 ```
 
 ---
