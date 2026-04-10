@@ -190,7 +190,7 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import { ref } from 'vue'
 import { Form, Field } from 'vee-validate'
 import * as z from 'zod'

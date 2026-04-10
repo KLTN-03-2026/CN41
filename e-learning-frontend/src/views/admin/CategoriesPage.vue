@@ -132,7 +132,7 @@
 
     <!-- Bulk Actions -->
     <BulkActions
-      :ref="(el) => { bulkActionsRef.value = el as any }"
+      :ref="setBulkActionsRef"
       :count="isTrashed ? trashedSelectedIds.size : selectedIds.size"
       itemName="danh mục"
       :is-trashed="isTrashed"
@@ -178,6 +178,8 @@ const {
   autoSlug, openCreate, openEdit, closeModal, submitForm,
   softDelete, forceDelete,
 } = useCategories()
+
+const setBulkActionsRef = (el: any) => { bulkActionsRef.value = el }
 
 const {
   expandedIds, allExpanded, searchQuery,

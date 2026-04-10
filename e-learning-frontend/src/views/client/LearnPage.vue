@@ -355,7 +355,7 @@ async function selectLesson(lesson: any) {
 }
 
 // ── Video progress ─────────────────────────────────────────────
-let progressTimer: ReturnType<typeof setInterval> | null = null
+const progressTimer: ReturnType<typeof setInterval> | null = null
 let lastSavedSeconds = 0
 
 function onTimeUpdate(currentTime: number) {

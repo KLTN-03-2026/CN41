@@ -100,7 +100,7 @@
 
     <!-- Bulk Actions -->
     <BulkActions
-      :ref="(el) => { bulkActionsRef.value = el as any }"
+      :ref="setBulkActionsRef"
       :count="isTrashed ? trashedSelectedIds.size : selectedIds.size"
       itemName="khóa học"
       :is-trashed="isTrashed"
@@ -141,6 +141,8 @@ const {
   bulkActionsRef,
   softDelete, forceDelete,
 } = useCourses()
+
+const setBulkActionsRef = (el: any) => { bulkActionsRef.value = el }
 
 onMounted(() => {
   loadActivePage()
