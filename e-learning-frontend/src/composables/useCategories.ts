@@ -34,12 +34,14 @@ export function useCategories() {
     try {
       const res = await categoryService.flatTree()
       flatTree.value = res.data.data
-    } catch {}
+    } catch (err) {
+      console.error('Failed to fetch flat tree', err)
+    }
   }
 
   // ── Trashed ────────────────────────────────────────────────────
   const trashedCategories  = ref<AdminCategory[]>([])
-  const trashedPagination  = ref<any>(null)
+  const trashedPagination  = ref<import('@/types/common.types').Pagination | null>(null)
   const trashedLoading     = ref(false)
   const trashedCount       = ref(0)
   const trashedSearchQuery = ref('')
@@ -50,7 +52,7 @@ export function useCategories() {
   async function fetchTrashedCategories(page = 1) {
     trashedLoading.value = true
     try {
-      const params: Record<string, any> = { page, per_page: 20 }
+      const params: Record<string, string | number> = { page, per_page: 20 }
       if (trashedSearchQuery.value) params.search = trashedSearchQuery.value
 
       const res = await categoryService.trashed(params)
@@ -68,7 +70,9 @@ export function useCategories() {
     try {
       const res = await categoryService.trashed({ per_page: 1 })
       trashedCount.value = res.data.pagination?.total || res.data.data?.length || 0
-    } catch {}
+    } catch (err) {
+      console.error('Failed to fetch trashed count', err)
+    }
   }
 
   // ── Bulk select (active) ───────────────────────────────────────
@@ -98,7 +102,7 @@ export function useCategories() {
   const bulkUpdating      = ref(false)
   const bulkRestoring     = ref(false)
   const bulkForceDeleting = ref(false)
-  const bulkActionsRef    = ref<any>(null)
+  const bulkActionsRef    = ref<{ closeModal: () => void } | null>(null)
 
   // ── Tab switch ─────────────────────────────────────────────────
   function switchTab(trashed: boolean) {
@@ -186,7 +190,7 @@ export function useCategories() {
       closeModal()
       fetchCategories()
       fetchFlatTree()
-    } catch (err: any) {
+    } catch (err: unknown) {
       handleApiError(err)
     } finally {
       submitting.value = false
@@ -223,8 +227,11 @@ export function useCategories() {
       fetchTrashedCount()
       fetchCategories()
       fetchFlatTree()
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Khôi phục thất bại')
+      fetchCategories()
+      fetchFlatTree()
+    } catch (err: unknown) {
+      const axiosError = err as { response?: { data?: { message?: string } } }
+      toast.error(axiosError.response?.data?.message || 'Khôi phục thất bại')
     } finally {
       restoringId.value = null
     }
@@ -242,8 +249,9 @@ export function useCategories() {
       fetchCategories()
       fetchFlatTree()
       fetchTrashedCount()
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Xóa nhiều thất bại')
+    } catch (err: unknown) {
+      const axiosError = err as { response?: { data?: { message?: string } } }
+      toast.error(axiosError.response?.data?.message || 'Xóa nhiều thất bại')
     } finally {
       bulkDeleting.value = false
     }
@@ -279,8 +287,9 @@ export function useCategories() {
       fetchTrashedCount()
       fetchCategories()
       fetchFlatTree()
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Khôi phục nhiều thất bại')
+    } catch (err: unknown) {
+      const axiosError = err as { response?: { data?: { message?: string } } }
+      toast.error(axiosError.response?.data?.message || 'Khôi phục nhiều thất bại')
     } finally {
       bulkRestoring.value = false
     }
@@ -296,8 +305,11 @@ export function useCategories() {
       bulkActionsRef.value?.closeModal()
       fetchTrashedCategories()
       fetchTrashedCount()
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Xóa vĩnh viễn nhiều thất bại')
+      fetchTrashedCategories()
+      fetchTrashedCount()
+    } catch (err: unknown) {
+      const axiosError = err as { response?: { data?: { message?: string } } }
+      toast.error(axiosError.response?.data?.message || 'Xóa vĩnh viễn nhiều thất bại')
     } finally {
       bulkForceDeleting.value = false
     }

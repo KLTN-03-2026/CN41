@@ -213,10 +213,12 @@ import { usePagination } from '@/composables/usePagination'
 import { useDebounceSearch } from '@/composables/useDebounceSearch'
 import { useDeleteConfirm } from '@/composables/useDeleteConfirm'
 
+import type { Order } from '@/types/order.types'
+
 const toast = useToast()
 
 const loading = ref(true)
-const orders = ref<any[]>([])
+const orders = ref<Order[]>([])
 
 const filters = reactive({
   search: '',
@@ -237,7 +239,7 @@ function formatDate(iso: string) {
 async function loadPage(page = 1) {
   loading.value = true
   try {
-    const params: any = { page, per_page: 15 }
+    const params: Record<string, string | number> = { page, per_page: 15 }
     if (filters.search) params.search = filters.search
     if (filters.status) params.status = filters.status
     if (filters.from)   params.from = filters.from
@@ -264,8 +266,8 @@ const {
 const { debounce: debouncedFetch } = useDebounceSearch(() => activeSetPage(1))
 
 // ── Delete confirmation ───────────────────────────────────────
-const deleteOrder = useDeleteConfirm({
-  async onConfirm(order: any) {
+const deleteOrder = useDeleteConfirm<Order>({
+  async onConfirm(order) {
     await orderService.adminDelete(order.id)
     toast.success('Đơn hàng đã được xoá.')
     loadPage(activeCurrentPage.value)

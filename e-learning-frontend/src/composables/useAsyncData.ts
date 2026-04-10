@@ -1,31 +1,39 @@
 import { ref, type Ref } from 'vue'
 
-interface AsyncDataOptions<T> {
-  onError?: (err: any) => void
-  transform?: (data: any) => T
+interface AsyncDataOptions<T, R> {
+  onError?: (err: unknown) => void
+  transform?: (data: R) => T
 }
 
-export function useAsyncData<T>(
-  fetchFn: (...args: any[]) => Promise<any>,
+export function useAsyncData<T, R = unknown>(
+  fetchFn: (...args: unknown[]) => Promise<{ data: { data: R } | R }>,
   initialData: T,
-  options: AsyncDataOptions<T> = {}
+  options: AsyncDataOptions<T, R> = {}
 ) {
   const data: Ref<T> = ref(initialData) as Ref<T>
   const loading = ref(false)
-  const error = ref<any>(null)
+  const error = ref<unknown>(null)
 
-  async function execute(...args: any[]) {
+  async function execute(...args: unknown[]): Promise<{ data: { data: R } | R }> {
     loading.value = true
     error.value = null
     try {
       const response = await fetchFn(...args)
-      let resultData = response?.data?.data !== undefined ? response.data.data : response?.data
+      const rawResponseData = response.data as Record<string, unknown>
+      const rawData = rawResponseData?.data !== undefined 
+        ? rawResponseData.data 
+        : response.data
+      
+      let resultData: T
       if (options.transform) {
-        resultData = options.transform(resultData)
+        resultData = options.transform(rawData as R)
+      } else {
+        resultData = rawData as unknown as T
       }
+      
       data.value = resultData
       return response
-    } catch (err: any) {
+    } catch (err: unknown) {
       error.value = err
       if (options.onError) {
         options.onError(err)

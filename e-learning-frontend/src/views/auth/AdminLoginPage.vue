@@ -265,7 +265,7 @@ onMounted(() => {
   }
 })
 
-const onSubmit = async (values: any) => {
+const onSubmit = async (values: z.infer<typeof schema.shape>) => {
   apiError.value = ''
   const result = await adminStore.login(values.email, values.password, keepLoggedIn.value)
 

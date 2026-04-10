@@ -171,6 +171,8 @@
 import CourseTableRow from '@/components/admin/courses/CourseTableRow.vue'
 import type { AdminCourse } from '@/types/admin-category.types'
 
+import type { Pagination } from '@/types/common.types'
+
 defineProps<{
   isTrashed: boolean
   // active
@@ -180,7 +182,7 @@ defineProps<{
   isAllSelected: boolean
   isIndeterminate: boolean
   togglingId: number | null
-  pagination: any
+  pagination: Pagination | null
   // trashed
   trashedCourses: AdminCourse[]
   trashedLoading: boolean
@@ -188,7 +190,7 @@ defineProps<{
   isTrashedAllSelected: boolean
   isTrashedIndeterminate: boolean
   restoringId: number | null
-  trashedPagination: any
+  trashedPagination: Pagination | null
 }>()
 
 defineEmits<{

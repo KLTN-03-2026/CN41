@@ -142,7 +142,7 @@ const {
   softDelete, forceDelete,
 } = useCourses()
 
-const setBulkActionsRef = (el: any) => { bulkActionsRef.value = el }
+const setBulkActionsRef = (el: { closeModal: () => void } | null) => { bulkActionsRef.value = el }
 
 onMounted(() => {
   loadActivePage()

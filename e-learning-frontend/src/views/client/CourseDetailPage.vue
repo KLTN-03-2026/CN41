@@ -221,7 +221,7 @@ interface Course {
 const course        = ref<Course | null>(null)
 const loading       = ref(true)
 const lessonsLoading = ref(true)
-const lessonData    = ref<{ is_purchased: boolean; sections: any[] }>({
+const lessonData    = ref<{ is_purchased: boolean; sections: import('@/types/course.types').AdminSection[] }>({
   is_purchased: false,
   sections: [],
 })
@@ -231,7 +231,7 @@ const relatedLoading = ref(false)
 
 const hasPreview = computed(() => {
   return lessonData.value.sections.some(section => 
-    section.lessons.some((lesson: any) => lesson.is_preview)
+    section.lessons.some((lesson) => lesson.is_preview)
   )
 })
 
@@ -369,21 +369,22 @@ async function handleEnrollFree() {
     toast.success('Đăng ký khóa học miễn phí thành công! Bắt đầu học nào.')
     // Đánh dấu là đã mua để UI tự cập nhật -> "Vào học ngay"
     lessonData.value.is_purchased = true
-  } catch (err: any) {
-    toast.error(err.response?.data?.message || 'Có lỗi xảy ra khi đăng ký.')
+  } catch (err: unknown) {
+    const axiosError = err as { response?: { data?: { message?: string } } }
+    toast.error(axiosError.response?.data?.message || 'Có lỗi xảy ra khi đăng ký.')
   } finally {
     isEnrolling.value = false
   }
 }
 
 // ── Xử lý Học Thử ──────────────────────────────────────────────
-function handleLessonClick(lesson: any) {
+function handleLessonClick(lesson: import('@/types/course.types').Lesson) {
   if (lessonData.value.is_purchased || lesson.is_preview) {
     router.push(`/courses/${course.value?.slug}/learn`)
   }
 }
 
-function openPreview(lesson: any = null) {
+function openPreview() {
   router.push(`/courses/${course.value?.slug}/learn`)
 }
 </script>

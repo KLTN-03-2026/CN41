@@ -102,7 +102,7 @@ const filters = reactive({ search: '', level: '', category_id: '' })
 async function loadPage(page = 1) {
   loading.value = true
   try {
-    const params: Record<string, any> = { page, per_page: 12 }
+    const params: Record<string, string | number> = { page, per_page: 12 }
     if (filters.search)      params.search = filters.search
     if (filters.level)       params.level = filters.level
     if (filters.category_id) params.category_id = filters.category_id
@@ -126,7 +126,9 @@ async function fetchCategories() {
   try {
     const res = await categoryService.publicList()
     categories.value = res.data.data
-  } catch {}
+  } catch (err) {
+    console.error('Failed to fetch categories', err)
+  }
 }
 
 onMounted(() => {

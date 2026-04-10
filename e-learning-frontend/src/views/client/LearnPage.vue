@@ -198,7 +198,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, reactive, nextTick } from 'vue'
+import { ref, computed, onMounted, onUnmounted, reactive } from 'vue'
 import { useRoute } from 'vue-router'
 import { useToast } from 'vue-toastification'
 import { lessonService } from '@/services/lesson.service'
@@ -207,30 +207,28 @@ import LearnSidebar from '@/components/shared/client/LearnSidebar.vue'
 import LearnVideoPlayer from '@/components/shared/client/LearnVideoPlayer.vue'
 import LearnDocumentViewer from '@/components/shared/client/LearnDocumentViewer.vue'
 
+import type { Lesson, Section } from '@/types/common.types'
+
 const route = useRoute()
 const toast = useToast()
 
 const slug         = computed(() => route.params.slug as string)
 const courseName   = ref('')
-const lessons      = ref<any[]>([])
-const sections     = ref<any[]>([])
+const lessons      = ref<Lesson[]>([])
+const sections     = ref<Section[]>([])
 const listLoading  = ref(true)
 const contentLoading = ref(false)
 const sidebarOpen  = ref(false)
 const markingComplete = ref(false)
 
-const currentLesson = ref<any>(null)
-const lessonDetail  = ref<any>(null)
-const videoPlayerRef = ref<any>(null)
+const currentLesson = ref<Lesson | null>(null)
+const lessonDetail  = ref<Lesson | null>(null)
+const videoPlayerRef = ref<{ videoElement?: HTMLVideoElement } | null>(null)
 const isPurchased   = ref(true)
 
 const expandedSections = reactive<Record<number, boolean>>({})
 
 // ── Computed ───────────────────────────────────────────────────
-const completedCount = computed(() => lessons.value.filter(l => l.progress?.is_completed).length)
-const progressPercent = computed(() =>
-  lessons.value.length ? Math.round((completedCount.value / lessons.value.length) * 100) : 0
-)
 const currentIndex = computed(() => lessons.value.findIndex(l => l.id === currentLesson.value?.id))
 const prevLesson   = computed(() => currentIndex.value > 0 ? lessons.value[currentIndex.value - 1] : null)
 const nextLesson   = computed(() => currentIndex.value < lessons.value.length - 1 ? lessons.value[currentIndex.value + 1] : null)
@@ -248,8 +246,9 @@ onMounted(async () => {
     try {
       const res = await lessonService.myLessons(slug.value)
       rawData = res.data.data
-    } catch (err: any) {
-      if (err.response?.status === 403 || err.response?.status === 401) {
+    } catch (err: unknown) {
+      const axiosError = err as { response?: { status?: number } }
+      if (axiosError.response?.status === 403 || axiosError.response?.status === 401) {
         purchased = false
         const { courseService } = await import('@/services/course.service')
         const res2 = await courseService.publicLessons(slug.value)
@@ -261,12 +260,12 @@ onMounted(async () => {
 
     isPurchased.value = purchased
 
-    const flatLessons: any[] = []
-    const sectionList: any[] = []
+    const flatLessons: Lesson[] = []
+    const sectionList: Section[] = []
 
     if (rawData) {
       if (rawData.sections) {
-        rawData.sections.forEach((sec: any, idx: number) => {
+        rawData.sections.forEach((sec: Section, idx: number) => {
           const sectionLessons = sec.lessons || []
           flatLessons.push(...sectionLessons)
           sectionList.push({
@@ -307,8 +306,9 @@ onMounted(async () => {
       // Auto-expand section chứa bài đang chọn
       expandSectionOf(first)
     }
-  } catch (err: any) {
-    if (err.response?.status === 404) {
+  } catch (err: unknown) {
+    const axiosError = err as { response?: { status?: number } }
+    if (axiosError.response?.status === 404) {
       toast.error('Không tìm thấy khóa học')
     }
   } finally {
@@ -316,16 +316,16 @@ onMounted(async () => {
   }
 })
 
-function expandSectionOf(lesson: any) {
+function expandSectionOf(lesson: Lesson) {
   sections.value.forEach((sec, idx) => {
-    if (sec.lessons.some((l: any) => l.id === lesson.id)) {
+    if (sec.lessons.some((l: Lesson) => l.id === lesson.id)) {
       expandedSections[idx] = true
     }
   })
 }
 
 // ── Select lesson ─────────────────────────────────────────────
-async function selectLesson(lesson: any) {
+async function selectLesson(lesson: Lesson) {
   currentLesson.value = lesson
   lessonDetail.value = null
   contentLoading.value = true
@@ -380,7 +380,9 @@ async function saveProgress(watchedSeconds: number, isCompleted: boolean) {
       is_completed: isCompleted,
     })
     if (isCompleted) markLessonComplete()
-  } catch {}
+  } catch (err) {
+    console.error('Failed to save progress', err)
+  }
 }
 
 function markLessonComplete() {

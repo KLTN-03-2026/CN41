@@ -109,18 +109,32 @@
 import { computed } from 'vue'
 import { formatSeconds } from '@/utils/formatDuration'
 
+interface Lesson {
+  id: number
+  title: string
+  type: 'video' | 'document'
+  duration?: number
+  progress?: { is_completed?: boolean }
+}
+
+interface Section {
+  id: number | null
+  title: string
+  lessons: Lesson[]
+}
+
 const props = defineProps<{
   courseName: string
   slug: string
-  lessons: any[]
-  sections: any[]
+  lessons: Lesson[]
+  sections: Section[]
   expandedSections: Record<number, boolean>
-  currentLesson: any
+  currentLesson: Lesson | null
   listLoading: boolean
 }>()
 
-const emit = defineEmits<{
-  (e: 'select-lesson', lesson: any): void
+defineEmits<{
+  (e: 'select-lesson', lesson: Lesson): void
   (e: 'toggle-section', idx: number): void
 }>()
 
@@ -129,7 +143,7 @@ const progressPercent = computed(() =>
   props.lessons.length ? Math.round((completedCount.value / props.lessons.length) * 100) : 0
 )
 
-function getLessonGlobalIndex(lesson: any) {
+function getLessonGlobalIndex(lesson: Lesson) {
   const idx = props.lessons.findIndex(l => l.id === lesson.id)
   return idx >= 0 ? idx + 1 : ''
 }

@@ -92,10 +92,10 @@ export function useLessonsManager(
     loadingTrashed.value = true
     try {
       const res = await lessonService.trashed({ course_id: courseId, per_page: 100 })
-      const resData = res.data as any
+      const resData = res.data as { data: AdminLesson[] | { data: AdminLesson[] } }
       trashedLessons.value = Array.isArray(resData?.data)
         ? resData.data
-        : (resData?.data?.data || [])
+        : ((resData?.data as { data: AdminLesson[] })?.data || [])
     } catch (err: unknown) {
       const axiosErr = err as { response?: { data?: { message?: string; errors?: Record<string, string[]> } } }
       const data = axiosErr.response?.data
@@ -224,7 +224,7 @@ export function useLessonsManager(
     }
 
     lSubmitting.value = true
-    const payload: any = {
+    const payload: Record<string, string | number | null> = {
       section_id: lForm.value.section_id || null,
       title: lForm.value.title,
       type: lForm.value.type,
@@ -233,7 +233,7 @@ export function useLessonsManager(
       duration: lForm.value.type === 'video' ? (lForm.value.duration ?? null) : null,
       is_preview: lForm.value.is_preview ? 1 : 0,
       status: lForm.value.status,
-    }
+    } as Record<string, string | number | null>
 
     if (lForm.value.media_id) {
       if (lForm.value.type === 'video') payload.video_id = lForm.value.media_id
@@ -250,7 +250,7 @@ export function useLessonsManager(
       }
       showLessonModal.value = false
       fetchAll()
-    } catch (err: any) {
+    } catch (err: unknown) {
       handleLessonError(err)
       if (lSubmitError.value) toast.error(lSubmitError.value)
     } finally {
@@ -292,9 +292,9 @@ export function useLessonsManager(
   }
 
   // ── Preview ────────────────────────────────────────────────────
-  const previewLesson = ref<any>(null)
+  const previewLesson = ref<AdminLesson | null>(null)
   const previewLoading = ref(false)
-  const previewModalRef = ref<any>(null)
+  const previewModalRef = ref<{ open: () => void; close: () => void } | null>(null)
 
   async function handlePreviewLesson(lessonId: number) {
     previewLesson.value = null
@@ -313,7 +313,7 @@ export function useLessonsManager(
 
   // ── Bulk Actions ───────────────────────────────────────────────
   const bulkActionLoading = ref(false)
-  const bulkActionsRef = ref<any>(null)
+  const bulkActionsRef = ref<{ closeModal: () => void } | null>(null)
 
   async function doBulkStatusLessons(statusVal: 'activate' | 'deactivate') {
     bulkActionLoading.value = true
