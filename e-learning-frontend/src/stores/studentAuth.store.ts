@@ -6,7 +6,7 @@ import { authService } from '@/services/auth.service'
 interface ActionResult {
   success: boolean
   message?: string
-  errors?: Record<string, string[]>
+  errors?: Record<string, unknown>
 }
 
 /**

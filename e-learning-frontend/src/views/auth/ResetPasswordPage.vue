@@ -144,8 +144,13 @@ export default {
 
     const schema = toTypedSchema(
       z.object({
-        password: z.string().min(1, 'Vui lòng nhập mật khẩu mới').min(8, 'Mật khẩu tối thiểu 8 ký tự'),
-        password_confirmation: z.string().min(1, 'Vui lòng xác nhận mật khẩu mới'),
+        password: z
+          .string({ required_error: 'Vui lòng nhập mật khẩu mới' })
+          .min(1, 'Vui lòng nhập mật khẩu mới')
+          .min(8, 'Mật khẩu tối thiểu 8 ký tự'),
+        password_confirmation: z
+          .string({ required_error: 'Vui lòng xác nhận mật khẩu mới' })
+          .min(1, 'Vui lòng xác nhận mật khẩu mới'),
       }).superRefine((data, ctx) => {
         if (data.password_confirmation && data.password !== data.password_confirmation) {
           ctx.addIssue({

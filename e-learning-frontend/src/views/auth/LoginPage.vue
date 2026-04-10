@@ -12,8 +12,37 @@
       </div>
 
       <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
-        <!-- Alert Error -->
-        <div v-if="apiError" class="mb-5 p-4 bg-red-50 text-red-600 rounded-lg text-sm flex items-start gap-2">
+        <!-- Alert: email chưa xác thực -->
+        <div v-if="emailNotVerified" class="mb-5 rounded-xl border border-amber-200 bg-amber-50 p-4">
+          <div class="flex items-start gap-3">
+            <MailWarning class="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+            <div class="flex-1">
+              <p class="text-sm font-semibold text-amber-800 mb-1">Tài khoản chưa được xác thực</p>
+              <p class="text-sm text-amber-700 mb-3">
+                Vui lòng kiểm tra hộp thư <strong>{{ unverifiedEmail }}</strong> và nhấn link xác thực để kích hoạt tài khoản.
+              </p>
+              <button
+                type="button"
+                @click="resendVerification"
+                :disabled="isResending || resendCooldown > 0"
+                class="inline-flex items-center gap-1.5 text-sm font-medium text-amber-800 bg-amber-100 hover:bg-amber-200 disabled:opacity-60 disabled:cursor-not-allowed px-3 py-1.5 rounded-lg transition-colors"
+              >
+                <svg v-if="isResending" class="animate-spin w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+                </svg>
+                <RefreshCw v-else class="w-3.5 h-3.5" />
+                <span v-if="isResending">Đang gửi...</span>
+                <span v-else-if="resendCooldown > 0">Gửi lại sau {{ resendCooldown }}s</span>
+                <span v-else>Gửi lại email xác thực</span>
+              </button>
+              <p v-if="resendSuccess" class="mt-2 text-xs text-green-700 font-medium">✓ Email xác thực đã được gửi lại!</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Alert Error thông thường -->
+        <div v-else-if="apiError" class="mb-5 p-4 bg-red-50 text-red-600 rounded-lg text-sm flex items-start gap-2">
           <AlertCircle class="w-5 h-5 shrink-0 mt-0.5" />
           <span>{{ apiError }}</span>
         </div>
@@ -110,20 +139,26 @@ import { Form, Field } from 'vee-validate'
 import * as z from 'zod'
 import { toTypedSchema } from '@vee-validate/zod'
 import { useToast } from 'vue-toastification'
-import { BookOpen, Mail, Lock, Eye, EyeOff, AlertCircle } from 'lucide-vue-next'
+import { BookOpen, Mail, Lock, Eye, EyeOff, AlertCircle, MailWarning, RefreshCw } from 'lucide-vue-next'
 import { useStudentAuthStore } from '@/stores/studentAuth.store'
+import { authService } from '@/services/auth.service'
 
 export default {
-  components: { Form, Field, BookOpen, Mail, Lock, Eye, EyeOff, AlertCircle },
+  components: { Form, Field, BookOpen, Mail, Lock, Eye, EyeOff, AlertCircle, MailWarning, RefreshCw },
   setup() {
     const router = useRouter()
     const route  = useRoute()
     const toast  = useToast()
     const studentStore = useStudentAuthStore()
 
-    const showPassword = ref(false)
-    const keepLoggedIn = ref(false)
-    const apiError     = ref('')
+    const showPassword    = ref(false)
+    const keepLoggedIn    = ref(false)
+    const apiError        = ref('')
+    const emailNotVerified = ref(false)
+    const unverifiedEmail  = ref('')
+    const isResending      = ref(false)
+    const resendSuccess    = ref(false)
+    const resendCooldown   = ref(0)
 
     const schema = toTypedSchema(
       z.object({
@@ -132,11 +167,34 @@ export default {
       })
     )
 
+    const startCooldown = () => {
+      resendCooldown.value = 60
+      const timer = setInterval(() => {
+        resendCooldown.value--
+        if (resendCooldown.value <= 0) clearInterval(timer)
+      }, 1000)
+    }
+
+    const resendVerification = async () => {
+      if (!unverifiedEmail.value || isResending.value || resendCooldown.value > 0) return
+      isResending.value = true
+      resendSuccess.value = false
+      try {
+        await authService.studentResendVerification({ email: unverifiedEmail.value })
+        resendSuccess.value = true
+        startCooldown()
+      } catch (err) {
+        toast.error(err?.response?.data?.message || 'Không thể gửi lại email. Vui lòng thử lại sau.')
+      } finally {
+        isResending.value = false
+      }
+    }
+
     const onSubmit = async (values) => {
       apiError.value = ''
+      emailNotVerified.value = false
+      resendSuccess.value = false
 
-      // Chỉ gọi student API — không fallback sang admin
-      // (fallback gây 2 request / lần submit → đốt throttle:5,1 rất nhanh → 429)
       const result = await studentStore.login(values.email, values.password, keepLoggedIn.value)
 
       if (result.success) {
@@ -146,11 +204,23 @@ export default {
         return
       }
 
-      // Hiện message từ server (401, 403 email_not_verified, v.v.)
+      // Trường hợp đặc biệt: email chưa xác thực
+      if (result.errors?.email_not_verified) {
+        emailNotVerified.value = true
+        unverifiedEmail.value = result.errors?.email || values.email
+        return
+      }
+
       apiError.value = result.message || 'Email hoặc mật khẩu không chính xác.'
     }
 
-    return { schema, onSubmit, showPassword, keepLoggedIn, apiError }
+    return {
+      schema, onSubmit,
+      showPassword, keepLoggedIn, apiError,
+      emailNotVerified, unverifiedEmail,
+      isResending, resendSuccess, resendCooldown,
+      resendVerification,
+    }
   }
 }
 </script>
