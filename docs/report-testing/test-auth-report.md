@@ -68,13 +68,27 @@ Dựa trên Checklist trong `docs/testing/test-auth.md`.
 ### Bug 2.1 — Sai message validation
 - **Fix:** Chaining `min(1)` (Required) trước `min(N)` (Length) để hiện đúng thứ tự lỗi.
 
+| 2.13 | Thông tin UI — đã verify hiện badge hoặc thông báo | ✅ PASS |
+| 2.14 | Logout → xóa `studentToken` → redirect `/login` | ✅ PASS |
+
+---
+
+## 🐛 Phần 4: Bug Đã Phát Hiện & Đã Fix (Quá trình thực hiện)
+
+### Bug 2.1 — Sai message validation
+- **Fix:** Chaining `min(1)` (Required) trước `min(N)` (Length) để hiện đúng thứ tự lỗi.
+
 ### Bug 2.10 — 429 Too Many Requests
 - **Fix:** Loại bỏ logic fallback admin trong trang login của student. Student login chỉ nhắm đúng endpoint của mình.
 
 ### Lỗi Zod Schema tại AdminLoginPage
 - **Fix:** Xử lý lỗi TS `error` không hợp lệ trong object khởi tạo `z.string()` (Zod yêu cầu `required_error`). Đã chuyển về validation fluent `min(1, '...')`.
 
+### Bug: 500 Internal Server Error tại Logout (Cần Null Check)
+- **Vấn đề:** Khi logout trong môi trường Testing (`actingAs`), `currentAccessToken()` trả về `null` gây crash.
+- **Fix:** Đã bổ sung kiểm tra null cho `currentAccessToken()` trong cả `Admin/AuthController` và `Student/AuthController`. Đảm bảo logout an toàn ngay cả khi token không tồn tại (linh hoạt cho cả Web và Automated Test).
+
 ---
 
 ## 🏁 Tổng kết
-Hệ thống Authentication đã đầy đủ tính năng theo yêu cầu, đảm bảo cả UX (Remember Me, Validation) và Security (Throttle, Route Guard).
+Hệ thống Authentication đã đầy đủ tính năng theo yêu cầu, đảm bảo cả UX (Remember Me, Validation) và Security (Throttle, Route Guard). Các bài test tự động (Feature Tests) đã được bổ sung cho cả Admin và Student để đảm bảo tính ổn định lâu dài.
