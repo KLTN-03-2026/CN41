@@ -49,14 +49,8 @@
       @switch-tab="switchTab"
       @update:searchQuery="searchQuery = $event"
       @clear-search="searchQuery = ''"
-      @trashedSearchInput="
-        trashedSearchQuery = $event
-        debouncedFetchTrashed()
-      "
-      @clear-trashed-search="
-        trashedSearchQuery = ''
-        fetchTrashedCategories()
-      "
+      @trashedSearchInput="onTrashedSearchInput"
+      @clear-trashed-search="onClearTrashedSearch"
     />
 
     <!-- Active Table -->
@@ -241,6 +235,16 @@ const {
   softDelete,
   forceDelete,
 } = useCategories()
+
+const onTrashedSearchInput = (val: string) => {
+  trashedSearchQuery.value = val
+  debouncedFetchTrashed()
+}
+
+const onClearTrashedSearch = () => {
+  trashedSearchQuery.value = ''
+  fetchTrashedCategories()
+}
 
 const setBulkActionsRef = (el: { closeModal: () => void } | null) => {
   bulkActionsRef.value = el
