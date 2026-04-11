@@ -15,8 +15,8 @@ export function useCategories() {
 
   // ── Active ─────────────────────────────────────────────────────
   const allCategories = ref<AdminCategory[]>([])
-  const flatTree      = ref<{ id: number; name: string; depth: number }[]>([])
-  const loading       = ref(true)
+  const flatTree = ref<{ id: number; name: string; depth: number }[]>([])
+  const loading = ref(true)
 
   async function fetchCategories() {
     loading.value = true
@@ -40,12 +40,12 @@ export function useCategories() {
   }
 
   // ── Trashed ────────────────────────────────────────────────────
-  const trashedCategories  = ref<AdminCategory[]>([])
-  const trashedPagination  = ref<import('@/types/common.types').Pagination | null>(null)
-  const trashedLoading     = ref(false)
-  const trashedCount       = ref(0)
+  const trashedCategories = ref<AdminCategory[]>([])
+  const trashedPagination = ref<import('@/types/common.types').Pagination | null>(null)
+  const trashedLoading = ref(false)
+  const trashedCount = ref(0)
   const trashedSearchQuery = ref('')
-  const restoringId        = ref<number | null>(null)
+  const restoringId = ref<number | null>(null)
 
   const { debounce: debouncedFetchTrashed } = useDebounceSearch(() => fetchTrashedCategories())
 
@@ -98,11 +98,11 @@ export function useCategories() {
     clear: clearTrashedSelection,
   } = useBulkSelect({ items: () => trashedCategories.value })
 
-  const bulkDeleting      = ref(false)
-  const bulkUpdating      = ref(false)
-  const bulkRestoring     = ref(false)
+  const bulkDeleting = ref(false)
+  const bulkUpdating = ref(false)
+  const bulkRestoring = ref(false)
   const bulkForceDeleting = ref(false)
-  const bulkActionsRef    = ref<{ closeModal: () => void } | null>(null)
+  const bulkActionsRef = ref<{ closeModal: () => void } | null>(null)
 
   // ── Tab switch ─────────────────────────────────────────────────
   function switchTab(trashed: boolean) {
@@ -112,8 +112,8 @@ export function useCategories() {
   }
 
   // ── Form ───────────────────────────────────────────────────────
-  const showModal  = ref(false)
-  const editingId  = ref<number | null>(null)
+  const showModal = ref(false)
+  const editingId = ref<number | null>(null)
   const submitting = ref(false)
   const { errors: formErrors, submitError, clearErrors, handleApiError } = useFormErrors()
 
@@ -200,20 +200,34 @@ export function useCategories() {
   // ── Delete confirms ────────────────────────────────────────────
   const softDelete = useDeleteConfirm({
     async onConfirm(cat: AdminCategory) {
-      await categoryService.destroy(cat.id)
-      toast.success('Xóa danh mục thành công')
-      fetchCategories()
-      fetchFlatTree()
-      fetchTrashedCount()
+      try {
+        await categoryService.destroy(cat.id)
+        toast.success('Xóa danh mục thành công')
+        fetchCategories()
+        fetchFlatTree()
+        fetchTrashedCount()
+      } catch (err: unknown) {
+        const message =
+          (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+          'Không thể xóa danh mục.'
+        toast.error(message)
+      }
     },
   })
 
   const forceDelete = useDeleteConfirm({
     async onConfirm(cat: AdminCategory) {
-      await categoryService.forceDelete(cat.id)
-      toast.success('Đã xóa vĩnh viễn danh mục')
-      fetchTrashedCategories()
-      fetchTrashedCount()
+      try {
+        await categoryService.forceDelete(cat.id)
+        toast.success('Đã xóa vĩnh viễn danh mục')
+        fetchTrashedCategories()
+        fetchTrashedCount()
+      } catch (err: unknown) {
+        const message =
+          (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+          'Không thể xóa vĩnh viễn danh mục.'
+        toast.error(message)
+      }
     },
   })
 
@@ -242,7 +256,7 @@ export function useCategories() {
     bulkDeleting.value = true
     try {
       const ids = [...selectedIds]
-      await Promise.all(ids.map(id => categoryService.destroy(id)))
+      await Promise.all(ids.map((id) => categoryService.destroy(id)))
       toast.success(`Đã xóa ${ids.length} danh mục`)
       clearSelection()
       bulkActionsRef.value?.closeModal()
@@ -261,7 +275,7 @@ export function useCategories() {
     bulkUpdating.value = true
     try {
       const ids = [...selectedIds]
-      await Promise.all(ids.map(id => categoryService.update(id, { status })))
+      await Promise.all(ids.map((id) => categoryService.update(id, { status })))
       toast.success(`Đã cập nhật ${ids.length} danh mục`)
       clearSelection()
       bulkActionsRef.value?.closeModal()
@@ -279,7 +293,7 @@ export function useCategories() {
     bulkRestoring.value = true
     try {
       const ids = [...trashedSelectedIds]
-      await Promise.all(ids.map(id => categoryService.restore(id)))
+      await Promise.all(ids.map((id) => categoryService.restore(id)))
       toast.success(`Đã khôi phục ${ids.length} danh mục`)
       clearTrashedSelection()
       bulkActionsRef.value?.closeModal()
@@ -299,7 +313,7 @@ export function useCategories() {
     bulkForceDeleting.value = true
     try {
       const ids = [...trashedSelectedIds]
-      await Promise.all(ids.map(id => categoryService.forceDelete(id)))
+      await Promise.all(ids.map((id) => categoryService.forceDelete(id)))
       toast.success(`Đã xóa vĩnh viễn ${ids.length} danh mục`)
       clearTrashedSelection()
       bulkActionsRef.value?.closeModal()
