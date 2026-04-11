@@ -12,6 +12,7 @@ Single main branch: `main` — always deployable.
 | UI change | `ui/<screen>` | `ui/course-detail-page` |
 | Urgent fix | `hotfix/<desc>` | `hotfix/login-crash` |
 | Experiment | `experiment/<name>` | `experiment/ai-quiz` |
+| Config/Tooling | `chore/<desc>` | `chore/pre-commit-setup` |
 
 - Use `-` not `_` or spaces
 - **Delete branches after merging** — no stale branches

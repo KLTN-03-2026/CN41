@@ -1,0 +1,17 @@
+#!/bin/sh
+commit_msg=$(cat "$1")
+pattern="^(feat|fix|ui|refactor|chore|docs|test|perf)(\([a-z0-9\-]+\))?: .{1,100}$"
+
+if ! echo "$commit_msg" | grep -qE "$pattern"; then
+  echo ""
+  echo "✖ Commit message không đúng format!"
+  echo ""
+  echo "  Format: <type>(<scope>): <description>"
+  echo "  Ví dụ:  feat(course): add course detail page"
+  echo ""
+  echo "  Types: feat | fix | ui | refactor | chore | docs | test | perf"
+  echo "  Scopes: auth | course | lesson | section | category | teacher"
+  echo "          student | payment | upload | dashboard | frontend | backend | api"
+  echo ""
+  exit 1
+fi

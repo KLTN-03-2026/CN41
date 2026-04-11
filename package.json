@@ -1,0 +1,19 @@
+{
+  "scripts": {
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "e-learning-frontend/**/*.{vue,ts,js}": [
+      "bash -c 'cd e-learning-frontend && npx oxlint --fix \"${@}\"' --",
+      "bash -c 'cd e-learning-frontend && npx eslint --fix --cache \"${@}\"' --",
+      "bash -c 'cd e-learning-frontend && npx prettier --write \"${@}\"' --"
+    ],
+    "e-learning-backend/**/*.php": [
+      "./e-learning-backend/vendor/bin/pint"
+    ]
+  },
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0"
+  }
+}

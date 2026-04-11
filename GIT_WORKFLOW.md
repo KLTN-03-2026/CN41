@@ -58,6 +58,7 @@ Khi làm tính năng mới hoặc fix bug, tạo branch riêng theo pattern:
 | Cải thiện UI/UX | `ui/ten-man-hinh` | `ui/course-detail-page` |
 | Hotfix khẩn | `hotfix/mo-ta` | `hotfix/login-crash` |
 | Thử nghiệm | `experiment/ten` | `experiment/ai-quiz` |
+| Config/Tooling | `chore/mo-ta` | `chore/pre-commit-setup` |
 
 Nguyên tắc:
 - Dùng dấu `-` thay vì `_` hoặc dấu cách
