@@ -72,6 +72,26 @@ git branch -d feature/my-feature
 | `backend-origin` | github.com/ahryxx0602/e-learning-backend | BE solo repo |
 | `frontend-origin` | github.com/ahryxx0602/e-learning-frontend | FE solo repo |
 
+## Automated Enforcement
+
+Pre-commit hooks (Husky + lint-staged) run automatically on every `git commit` from the **repo root**:
+
+| Hook | Trigger | What it does |
+|------|---------|-------------|
+| `pre-commit` | `git commit` | lint-staged: oxlint → eslint → prettier (FE files), pint (BE PHP files) |
+| `commit-msg` | `git commit` | Validates message matches `<type>(<scope>): <desc>` — rejects if wrong |
+
+**Never use `--no-verify`** — fix the lint/format error or commit message instead.
+
+First-time setup (installs husky + lint-staged at repo root):
+```bash
+npm install   # from e-learning/ (repo root)
+```
+
+lint-staged targets (root `package.json`):
+- `e-learning-frontend/**/*.{vue,ts,js}` → oxlint --fix → eslint --fix → prettier --write
+- `e-learning-backend/**/*.php` → pint
+
 ## Rules
 - `main` must always run — never commit broken code
 - Prefer `git add <specific-files>` over `git add .`

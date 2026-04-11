@@ -189,4 +189,30 @@ php artisan module:enable MyModule
 php artisan optimize:clear
 php artisan migrate
 php artisan migrate:fresh --seed    # DEV ONLY — resets all data
+php artisan test                    # run all feature/unit tests
 ```
+
+## Feature Test Patterns
+
+Auth setup in tests uses `forceCreate` (bypasses `$fillable` guard) + `actingAs`:
+
+```php
+// In test class — never use factories for simple auth setup
+protected function setupAdmin(): User
+{
+    $admin = User::forceCreate([
+        'name'     => 'Admin Test',
+        'email'    => 'admin_test@test.com',
+        'password' => bcrypt('password'),
+    ]);
+    $this->actingAs($admin, 'admin');
+    return $admin;
+}
+```
+
+Use `Model::create([...])` directly for test data — no factory dependency needed for simple cases.
+
+**HTTP method in tests must match API convention:**
+- Update → `patchJson` (not `putJson`) — project uses PATCH, never PUT
+- Soft delete → `deleteJson`
+- Toggle/restore → `patchJson`
