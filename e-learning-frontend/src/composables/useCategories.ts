@@ -207,10 +207,8 @@ export function useCategories() {
         fetchFlatTree()
         fetchTrashedCount()
       } catch (err: unknown) {
-        const message =
-          (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
-          'Không thể xóa danh mục.'
-        toast.error(message)
+        const axiosError = err as { response?: { data?: { message?: string } } }
+        toast.error(axiosError.response?.data?.message || 'Xóa danh mục thất bại')
       }
     },
   })
@@ -223,10 +221,8 @@ export function useCategories() {
         fetchTrashedCategories()
         fetchTrashedCount()
       } catch (err: unknown) {
-        const message =
-          (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
-          'Không thể xóa vĩnh viễn danh mục.'
-        toast.error(message)
+        const axiosError = err as { response?: { data?: { message?: string } } }
+        toast.error(axiosError.response?.data?.message || 'Xóa vĩnh viễn danh mục thất bại')
       }
     },
   })
@@ -239,8 +235,6 @@ export function useCategories() {
       toast.success(`Đã khôi phục "${cat.name}"`)
       fetchTrashedCategories()
       fetchTrashedCount()
-      fetchCategories()
-      fetchFlatTree()
       fetchCategories()
       fetchFlatTree()
     } catch (err: unknown) {
@@ -317,8 +311,6 @@ export function useCategories() {
       toast.success(`Đã xóa vĩnh viễn ${ids.length} danh mục`)
       clearTrashedSelection()
       bulkActionsRef.value?.closeModal()
-      fetchTrashedCategories()
-      fetchTrashedCount()
       fetchTrashedCategories()
       fetchTrashedCount()
     } catch (err: unknown) {
