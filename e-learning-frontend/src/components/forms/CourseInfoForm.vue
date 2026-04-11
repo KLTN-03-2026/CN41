@@ -24,7 +24,10 @@
               @input="updateField('slug', $event)"
               type="text"
               class="input-field font-mono text-sm flex-1"
-              :class="{ 'input-error': errors.slug, 'opacity-60 cursor-not-allowed': isEdit && !slugUnlocked }"
+              :class="{
+                'input-error': errors.slug,
+                'opacity-60 cursor-not-allowed': isEdit && !slugUnlocked,
+              }"
               :disabled="isEdit && !slugUnlocked"
               placeholder="laravel-12-tu-co-ban-den-nang-cao"
             />
@@ -74,17 +77,19 @@
           <p v-if="errors.teacher_id" class="error-msg">{{ errors.teacher_id }}</p>
         </div>
         <div>
-          <label class="label-form">Danh mục</label>
+          <label class="label-form">Danh mục <span class="text-red-500">*</span></label>
           <select
             :value="form.category_id !== null ? form.category_id : ''"
             @change="updateFieldNumNull('category_id', $event)"
             class="input-field"
+            :class="{ 'input-error': errors.category_id }"
           >
             <option value="">— Chọn danh mục —</option>
             <option v-for="c in flatCategories" :key="c.id" :value="c.id">
               {{ '—'.repeat(c.depth) }} {{ c.name }}
             </option>
           </select>
+          <p v-if="errors.category_id" class="error-msg">{{ errors.category_id }}</p>
         </div>
         <div>
           <label class="label-form">Trình độ <span class="text-red-500">*</span></label>
@@ -154,7 +159,10 @@
     />
 
     <!-- Error chung -->
-    <p v-if="submitError" class="text-sm text-red-500 bg-red-50 dark:bg-red-500/10 px-4 py-3 rounded-lg">
+    <p
+      v-if="submitError"
+      class="text-sm text-red-500 bg-red-50 dark:bg-red-500/10 px-4 py-3 rounded-lg"
+    >
       {{ submitError }}
     </p>
 
@@ -170,9 +178,26 @@
         :disabled="submitting"
         class="px-5 py-2.5 text-sm rounded-lg bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50 flex items-center gap-2"
       >
-        <svg v-if="submitting" class="animate-spin w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+        <svg
+          v-if="submitting"
+          class="animate-spin w-4 h-4"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+        >
+          <circle
+            class="opacity-25"
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            stroke-width="4"
+          />
+          <path
+            class="opacity-75"
+            fill="currentColor"
+            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+          />
         </svg>
         {{ isEdit ? 'Cập nhật' : 'Tạo khóa học' }}
       </button>

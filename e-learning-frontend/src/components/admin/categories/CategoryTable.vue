@@ -100,27 +100,19 @@
         <template v-else> Tổng {{ allCategories.length }} danh mục </template>
       </p>
 
-      <div v-if="pagination && pagination.last_page > 1" class="flex gap-1">
-        <button
-          v-for="p in pagination.last_page"
-          :key="p"
-          @click="$emit('page-change', p)"
-          :class="
-            p === pagination.current_page
-              ? 'bg-blue-500 text-white border-blue-500'
-              : 'bg-white text-gray-600 dark:bg-white/5 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/10'
-          "
-          class="w-8 h-8 rounded-lg text-sm border border-gray-200 dark:border-gray-700 transition-colors"
-        >
-          {{ p }}
-        </button>
-      </div>
+      <PaginationBar
+        v-if="pagination && pagination.last_page > 1"
+        :current-page="pagination.current_page"
+        :last-page="pagination.last_page"
+        @change="$emit('page-change', $event)"
+      />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import CategoryTreeNode from '@/components/shared/admin/CategoryTreeNode.vue'
+import PaginationBar from '@/components/common/PaginationBar.vue'
 import type { AdminCategory } from '@/types/admin-category.types'
 
 defineProps<{

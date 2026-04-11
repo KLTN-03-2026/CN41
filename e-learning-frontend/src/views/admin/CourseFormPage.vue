@@ -7,12 +7,18 @@
         class="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg dark:hover:bg-white/10 transition-colors"
       >
         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
         </svg>
       </router-link>
       <div>
         <h2 class="text-lg font-semibold text-gray-800 dark:text-white/90">
-          {{ isEdit ? (activeTab === 'lessons' ? 'Nội dung khóa học' : 'Thông tin khóa học') : 'Thêm khóa học mới' }}
+          {{
+            isEdit
+              ? activeTab === 'lessons'
+                ? 'Nội dung khóa học'
+                : 'Thông tin khóa học'
+              : 'Thêm khóa học mới'
+          }}
         </h2>
         <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5" v-if="isEdit">
           {{ form.name || `ID: ${courseId}` }}
@@ -26,9 +32,11 @@
         v-for="tab in tabs"
         :key="tab.key"
         @click="activeTab = tab.key"
-        :class="activeTab === tab.key
-          ? 'bg-white dark:bg-gray-700 text-gray-800 dark:text-white/90 shadow-sm'
-          : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'"
+        :class="
+          activeTab === tab.key
+            ? 'bg-white dark:bg-gray-700 text-gray-800 dark:text-white/90 shadow-sm'
+            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+        "
         class="px-4 py-1.5 text-sm rounded-lg transition-all"
       >
         {{ tab.label }}
@@ -38,9 +46,25 @@
     <!-- Tab: Thông tin khóa học -->
     <div v-if="activeTab === 'info'">
       <div v-if="pageLoading" class="flex justify-center py-10">
-        <svg class="animate-spin w-6 h-6 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+        <svg
+          class="animate-spin w-6 h-6 text-blue-500"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+        >
+          <circle
+            class="opacity-25"
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            stroke-width="4"
+          />
+          <path
+            class="opacity-75"
+            fill="currentColor"
+            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+          />
         </svg>
       </div>
 
@@ -78,27 +102,25 @@ import SectionsLessonsManager from '@/components/shared/admin/SectionsLessonsMan
 import CourseInfoForm from '@/components/forms/CourseInfoForm.vue'
 import { useFormErrors } from '@/composables/useFormErrors'
 
-const route  = useRoute()
+const route = useRoute()
 const router = useRouter()
-const toast  = useToast()
+const toast = useToast()
 
-const courseId  = computed(() => route.params.id ? Number(route.params.id) : null)
-const isEdit    = computed(() => !!courseId.value)
+const courseId = computed(() => (route.params.id ? Number(route.params.id) : null))
+const isEdit = computed(() => !!courseId.value)
 const initialTab = route.query.tab === 'lessons' ? 'lessons' : 'info'
 const activeTab = ref<'info' | 'lessons'>(initialTab as 'info' | 'lessons')
 const tabs = [
-  { key: 'info' as const,    label: 'Thông tin' },
+  { key: 'info' as const, label: 'Thông tin' },
   { key: 'lessons' as const, label: 'Nội dung' },
 ]
 
 const pageLoading = ref(false)
-const submitting  = ref(false)
+const submitting = ref(false)
 const slugUnlocked = ref(false) // Slug bị khóa khi edit, admin phải bấm "Mở khóa" để sửa
 const { errors: formErrors, submitError, clearErrors, handleApiError } = useFormErrors()
 
-
-
-const teachers       = ref<{ id: number; name: string }[]>([])
+const teachers = ref<{ id: number; name: string }[]>([])
 const flatCategories = ref<{ id: number; name: string; depth: number }[]>([])
 
 const defaultForm = () => ({
@@ -188,6 +210,7 @@ async function submitForm() {
     formErrors.value.slug = 'Slug chỉ chứa chữ thường, số và dấu gạch ngang'
   }
   if (!form.value.teacher_id) formErrors.value.teacher_id = 'Vui lòng chọn giảng viên'
+  if (!form.value.category_id) formErrors.value.category_id = 'Vui lòng chọn danh mục'
   if (form.value.price < 0) formErrors.value.price = 'Giá không được âm'
   if (form.value.sale_price && form.value.sale_price < 0) {
     formErrors.value.sale_price = 'Giá khuyến mãi không được âm'

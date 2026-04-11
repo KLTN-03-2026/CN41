@@ -101,8 +101,13 @@
 
 | # | Hành động | Kết quả mong đợi |
 |---|-----------|------------------|
-| 1 | Xóa category đã được gán cho 1+ courses | Server xử lý: soft delete, courses giữ nguyên hoặc category_id=null |
-| 2 | Verify | Vào edit course → category dropdown không còn item đó |
+| 1 | Click xóa trên category leaf đang được gán cho 1+ courses | Confirm dialog hiện |
+| 2 | Xác nhận xóa | Toast **lỗi**: "Không thể xóa danh mục đang được dùng bởi N khóa học." |
+| 3 | Network | `DELETE /api/v1/admin/categories/{id}` → **400** |
+| 4 | Bảng | Row vẫn còn, không bị xóa |
+| 5 | Cách xử lý đúng | Vào edit từng course → đổi sang danh mục khác → quay lại xóa category |
+
+> **Lưu ý:** Bulk delete cũng áp dụng tương tự — các category đang có courses bị **skip** (không xóa), các category hợp lệ vẫn được xóa bình thường. Toast sẽ báo số lượng xóa được và message lỗi của item đầu tiên bị chặn.
 
 ## Test 3.13: Toggle Trạng thái
 
@@ -154,7 +159,7 @@
 | 3.9 Sửa slug trùng | ✅ | Catch duplicate entry |
 | 3.10 Xóa đơn | ✅ | SoftDelete verified |
 | 3.11 Xóa có con | ✅ | Đã chặn xóa và trả lỗi 400 |
-| 3.12 Xóa có course | ⬜ | DB constraint manual test needed |
+| 3.12 Xóa có course | ✅ | Bị chặn 400 "đang dùng bởi N khóa học", bulk delete skip item bị chặn |
 | 3.13 Toggle status | ✅ | Toggle 0/1 thành công |
 | 3.14 Phân trang | ✅ | Đã test per_page query |
 | 3.15 Search | ✅ | Đã test search query (name/slug) |

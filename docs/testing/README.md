@@ -30,12 +30,10 @@ Mỗi file test bao gồm:
 
 ## 📊 Báo cáo kiểm thử mới nhất (Hệ thống)
 
-| Module | Tài liệu báo cáo | Trạng thái |
-|---|---|---|
-| **Auth** | [test-auth-report.md](../report-testing/test-auth-report.md) | ✅ 100% |
-| **Categories** | [test-categories-report.md](../report-testing/test-categories-report.md) | ✅ Backend Verified |
-| **Courses (Admin)** | [test-courses-admin-report.md](../report-testing/test-courses-admin-report.md) | ✅ Backend Verified |
-| **Sections & Lessons** | [test-sections-lessons-report.md](../report-testing/test-sections-lessons-report.md) | ✅ 100% |
+| Module | Tài liệu báo cáo | Pass / Total | Cập nhật |
+|--------|-----------------|-------------|---------|
+| **Categories** | [test-categories-report.md](test-categories-report.md) | 14 / 16 | 2026-04-11 |
+| **Courses (Admin)** | [test-courses-admin-report.md](test-courses-admin-report.md) | 26 / 32 | 2026-04-11 |
 
 ---
 

@@ -4,21 +4,29 @@
     <div class="flex items-center gap-1 mb-4 p-1 bg-gray-100 dark:bg-white/5 rounded-xl w-fit">
       <button
         @click="$emit('switch-tab', false)"
-        :class="!isTrashed
-          ? 'bg-white dark:bg-gray-800 text-gray-800 dark:text-white shadow-sm'
-          : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'"
+        :class="
+          !isTrashed
+            ? 'bg-white dark:bg-gray-800 text-gray-800 dark:text-white shadow-sm'
+            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+        "
         class="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200"
       >
         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+          />
         </svg>
         Đang hoạt động
       </button>
       <button
         @click="$emit('switch-tab', true)"
-        :class="isTrashed
-          ? 'bg-white dark:bg-gray-800 text-red-600 dark:text-red-400 shadow-sm'
-          : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'"
+        :class="
+          isTrashed
+            ? 'bg-white dark:bg-gray-800 text-red-600 dark:text-red-400 shadow-sm'
+            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+        "
         class="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200"
       >
         <TrashIcon class="w-4 h-4" />
@@ -41,25 +49,27 @@
         placeholder="Tìm kiếm khóa học..."
         class="input-field w-64"
       />
-      <select
-        :value="status"
-        @change="onStatus"
-        class="input-field w-40"
-      >
+      <select :value="status" @change="onStatus" class="input-field w-40">
         <option value="">Tất cả trạng thái</option>
         <option value="1">Đã đăng</option>
         <option value="0">Nháp</option>
       </select>
-      <select
-        :value="level"
-        @change="onLevel"
-        class="input-field w-40"
-      >
+      <select :value="level" @change="onLevel" class="input-field w-40">
         <option value="">Tất cả trình độ</option>
         <option value="beginner">Cơ bản</option>
         <option value="intermediate">Trung cấp</option>
         <option value="advanced">Nâng cao</option>
       </select>
+      <button
+        v-if="hasActiveFilter"
+        @click="onClearFilters"
+        class="flex items-center gap-1.5 h-10 px-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm text-gray-500 dark:text-gray-400 hover:text-red-500 hover:border-red-400 dark:hover:text-red-400 dark:hover:border-red-500 transition-colors"
+      >
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+        Xóa filter
+      </button>
     </div>
 
     <!-- Trashed search -->
@@ -71,14 +81,25 @@
         placeholder="Tìm trong thùng rác..."
         class="input-field w-64"
       />
+      <button
+        v-if="trashedSearch"
+        @click="onClearTrashedSearch"
+        class="flex items-center gap-1.5 h-10 px-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm text-gray-500 dark:text-gray-400 hover:text-red-500 hover:border-red-400 dark:hover:text-red-400 dark:hover:border-red-500 transition-colors"
+      >
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+        Xóa filter
+      </button>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import { TrashIcon } from '@/components/icons'
 
-defineProps<{
+const props = defineProps<{
   isTrashed: boolean
   trashedCount: number
   search: string
@@ -97,6 +118,10 @@ const emit = defineEmits<{
   'filter-change': []
   'trashed-search-input': []
 }>()
+
+const hasActiveFilter = computed(
+  () => props.search !== '' || props.status !== '' || props.level !== '',
+)
 
 function getVal(e: Event) {
   return (e.target as HTMLInputElement).value
@@ -119,6 +144,18 @@ function onLevel(e: Event) {
 
 function onTrashedSearch(e: Event) {
   emit('update:trashedSearch', getVal(e))
+  emit('trashed-search-input')
+}
+
+function onClearFilters() {
+  emit('update:search', '')
+  emit('update:status', '')
+  emit('update:level', '')
+  emit('filter-change')
+}
+
+function onClearTrashedSearch() {
+  emit('update:trashedSearch', '')
   emit('trashed-search-input')
 }
 </script>

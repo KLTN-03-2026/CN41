@@ -1,32 +1,39 @@
 import type { AxiosResponse } from 'axios'
 import http from '@/plugins/axios'
-import type { ApiResponse, PaginatedResponse, Category } from '@/types'
+import type { ApiResponse, PaginatedResponse } from '@/types'
+import type { AdminCategory } from '@/types/admin-category.types'
+import type { Category } from '@/types/course.types'
 
 export const categoryService = {
   // ── Admin ──────────────────────────────────────────────────
   // NOTE: Categories module dùng prefix /api/v1/admin (có v1), khác với Courses/Lessons (/api/admin)
   /** GET /admin/categories?per_page=&page= */
-  index: (params: Record<string, unknown> = {}): Promise<AxiosResponse<PaginatedResponse<Category>>> =>
+  index: (
+    params: Record<string, unknown> = {},
+  ): Promise<AxiosResponse<PaginatedResponse<AdminCategory>>> =>
     http.get('/admin/categories', { params }),
 
   /** GET /admin/categories/tree */
-  tree: (): Promise<AxiosResponse<ApiResponse<Category[]>>> =>
+  tree: (): Promise<AxiosResponse<ApiResponse<AdminCategory[]>>> =>
     http.get('/admin/categories/tree'),
 
   /** GET /admin/categories/flat-tree */
-  flatTree: (): Promise<AxiosResponse<ApiResponse<Category[]>>> =>
+  flatTree: (): Promise<AxiosResponse<ApiResponse<AdminCategory[]>>> =>
     http.get('/admin/categories/flat-tree'),
 
   /** GET /admin/categories/{id} */
-  show: (id: number): Promise<AxiosResponse<ApiResponse<Category>>> =>
+  show: (id: number): Promise<AxiosResponse<ApiResponse<AdminCategory>>> =>
     http.get(`/admin/categories/${id}`),
 
   /** POST /admin/categories */
-  store: (data: Record<string, unknown>): Promise<AxiosResponse<ApiResponse<Category>>> =>
+  store: (data: Record<string, unknown>): Promise<AxiosResponse<ApiResponse<AdminCategory>>> =>
     http.post('/admin/categories', data),
 
   /** PUT /admin/categories/{id} */
-  update: (id: number, data: Record<string, unknown>): Promise<AxiosResponse<ApiResponse<Category>>> =>
+  update: (
+    id: number,
+    data: Record<string, unknown>,
+  ): Promise<AxiosResponse<ApiResponse<AdminCategory>>> =>
     http.put(`/admin/categories/${id}`, data),
 
   /** DELETE /admin/categories/{id} */
@@ -34,11 +41,13 @@ export const categoryService = {
     http.delete(`/admin/categories/${id}`),
 
   /** GET /admin/categories/trashed */
-  trashed: (params: Record<string, unknown> = {}): Promise<AxiosResponse<PaginatedResponse<Category>>> =>
+  trashed: (
+    params: Record<string, unknown> = {},
+  ): Promise<AxiosResponse<PaginatedResponse<AdminCategory>>> =>
     http.get('/admin/categories/trashed', { params }),
 
   /** POST /admin/categories/{id}/restore */
-  restore: (id: number): Promise<AxiosResponse<ApiResponse<Category>>> =>
+  restore: (id: number): Promise<AxiosResponse<ApiResponse<AdminCategory>>> =>
     http.post(`/admin/categories/${id}/restore`),
 
   /** DELETE /admin/categories/{id}/force-delete */
@@ -47,10 +56,8 @@ export const categoryService = {
 
   // ── Public ─────────────────────────────────────────────────
   /** GET /categories */
-  publicList: (): Promise<AxiosResponse<ApiResponse<Category[]>>> =>
-    http.get('/categories'),
+  publicList: (): Promise<AxiosResponse<ApiResponse<Category[]>>> => http.get('/categories'),
 
   /** GET /categories/tree */
-  publicTree: (): Promise<AxiosResponse<ApiResponse<Category[]>>> =>
-    http.get('/categories/tree'),
+  publicTree: (): Promise<AxiosResponse<ApiResponse<Category[]>>> => http.get('/categories/tree'),
 }

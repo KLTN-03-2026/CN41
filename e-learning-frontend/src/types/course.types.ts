@@ -50,8 +50,9 @@ export interface SectionForm {
 
 export interface Course {
   id: number
-  title: string
+  name: string
   slug: string
+  description?: string
   thumbnail?: string
   price: number
   sale_price?: number

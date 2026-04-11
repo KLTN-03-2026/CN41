@@ -253,16 +253,24 @@ export function useCategories() {
     bulkDeleting.value = true
     try {
       const ids = [...selectedIds]
-      await Promise.all(ids.map((id) => categoryService.destroy(id)))
-      toast.success(`Đã xóa ${ids.length} danh mục`)
-      clearSelection()
-      bulkActionsRef.value?.closeModal()
-      fetchCategories(pagination.value?.current_page || 1)
-      fetchFlatTree()
-      fetchTrashedCount()
-    } catch (err: unknown) {
-      const axiosError = err as { response?: { data?: { message?: string } } }
-      toast.error(axiosError.response?.data?.message || 'Xóa nhiều thất bại')
+      const results = await Promise.allSettled(ids.map((id) => categoryService.destroy(id)))
+
+      const succeeded = results.filter((r) => r.status === 'fulfilled').length
+      const failed = results.filter((r) => r.status === 'rejected')
+
+      if (succeeded > 0) {
+        toast.success(`Đã xóa ${succeeded} danh mục`)
+        clearSelection()
+        bulkActionsRef.value?.closeModal()
+        fetchCategories(pagination.value?.current_page || 1)
+        fetchFlatTree()
+        fetchTrashedCount()
+      }
+
+      if (failed.length > 0) {
+        const firstMsg = (failed[0] as PromiseRejectedResult).reason?.response?.data?.message
+        toast.error(firstMsg || `${failed.length} danh mục không thể xóa`)
+      }
     } finally {
       bulkDeleting.value = false
     }

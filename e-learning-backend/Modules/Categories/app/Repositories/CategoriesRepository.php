@@ -7,6 +7,7 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Modules\Categories\Models\Category;
+use Modules\Course\Models\Course;
 
 /**
  * Class CategoriesRepository
@@ -188,7 +189,9 @@ class CategoriesRepository extends BaseRepository implements CategoriesRepositor
 
     /**
      * {@inheritDoc}
-     * Không cho phép xóa danh mục nếu đang có danh mục con.
+     * Không cho phép xóa danh mục nếu:
+     *   1. Đang có danh mục con
+     *   2. Đang được dùng bởi ít nhất 1 khóa học
      */
     public function delete(int $id): bool
     {
@@ -198,7 +201,33 @@ class CategoriesRepository extends BaseRepository implements CategoriesRepositor
             throw new \RuntimeException('Không thể xóa danh mục đang có danh mục con.');
         }
 
+        $courseCount = Course::whereHas('categories', fn ($q) => $q->where('categories.id', $id))->count();
+        if ($courseCount > 0) {
+            throw new \RuntimeException("Không thể xóa danh mục đang được dùng bởi {$courseCount} khóa học.");
+        }
+
         return (bool) $category->delete();
+    }
+
+    /**
+     * {@inheritDoc}
+     * Override để kiểm tra từng category trước khi xóa hàng loạt.
+     */
+    public function deleteMany(array $ids): int
+    {
+        $count = 0;
+
+        foreach ($ids as $id) {
+            try {
+                if ($this->delete($id)) {
+                    $count++;
+                }
+            } catch (\RuntimeException) {
+                // Bỏ qua item không thỏa điều kiện, tiếp tục xóa các item còn lại
+            }
+        }
+
+        return $count;
     }
 
     /**
