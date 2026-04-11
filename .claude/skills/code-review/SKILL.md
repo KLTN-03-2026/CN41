@@ -59,6 +59,10 @@ Review code changes in this e-learning project against the established conventio
 - [ ] Using `http` from `@/plugins/axios` (not bare `axios`)
 - [ ] PATCH for partial updates (not PUT)
 
+**Linting**
+- [ ] ESLint config uses `eslint-plugin-oxlint` + `.oxlintrc.json` — do not duplicate oxlint rules in eslint config
+- [ ] No `@typescript-eslint/no-explicit-any` errors (warn is allowed, but prefer typed alternatives)
+
 **Router**
 - [ ] New protected page has correct `meta: { requiresAuth, guard }`
 - [ ] Page components are lazy-loaded (`() => import(...)`)
@@ -83,6 +87,9 @@ Review code changes in this e-learning project against the established conventio
 8. **Direct `axios` import** instead of `@/plugins/axios`
 9. **No `DB::transaction()`** on multi-table writes
 10. **Missing soft delete** on a model that should support trashing
+11. **`as` cast inside `<template>`** — Volar parse error, extract to a function in `<script setup>`
+12. **`putJson` in feature tests** — convention is PATCH; use `patchJson` for update tests
+13. **`--no-verify` on commit** — never skip husky hooks; fix the lint/format issue instead
 
 ## How to Give Feedback
 
