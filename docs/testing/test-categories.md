@@ -91,8 +91,11 @@
 
 | # | Hành động | Kết quả mong đợi |
 |---|-----------|------------------|
-| 1 | Xóa category cha có con | Server xử lý: hoặc xóa cascade, hoặc báo lỗi "Vui lòng xóa danh mục con trước" |
-| 2 | Kiểm tra | Behavior phải nhất quán, không gây orphan node |
+| 1 | Click icon xóa trên category cha đang có con | Confirm dialog hiện |
+| 2 | Xác nhận xóa | Toast **lỗi**: "Không thể xóa danh mục đang có danh mục con." |
+| 3 | Network | `DELETE /api/v1/admin/categories/{id}` → **400** |
+| 4 | Bảng | Row vẫn còn, không bị xóa |
+| 5 | Cách xử lý đúng | Xóa tất cả category con trước, rồi mới xóa category cha |
 
 ## Test 3.12: Xóa Category — Đang gắn với Course
 
@@ -126,6 +129,16 @@
 
 ---
 
+## Test 3.16: Khôi phục danh mục (Restore) — Strict Validation ✅
+
+| # | Hành động | Kết quả mong đợi |
+|---|-----------|------------------|
+| 1 | Khôi phục danh mục con khi **cha đang trong thùng rác** (soft-deleted) | Toast lỗi: "Vui lòng khôi phục danh mục cha trước." |
+| 2 | Khôi phục danh mục cha trước, sau đó khôi phục con | Toast thành công, danh mục hiện lại trong danh sách hoạt động |
+| 3 | Network | `POST /api/v1/admin/categories/{id}/restore` → **200** (thành công) hoặc **400** (kèm message lỗi) |
+
+---
+
 ## Checklist
 
 | Test | Kết quả | Ghi chú |
@@ -145,3 +158,4 @@
 | 3.13 Toggle status | ✅ | Toggle 0/1 thành công |
 | 3.14 Phân trang | ✅ | Đã test per_page query |
 | 3.15 Search | ✅ | Đã test search query (name/slug) |
+| 3.16 Khôi phục (Strict) | ✅ | Chặn khôi phục nếu cha chưa active |
