@@ -12,13 +12,27 @@
             @click="toggleAll"
             class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
           >
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path v-if="allExpanded" stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
-              <path v-else stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+            <svg
+              class="w-4 h-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                v-if="allExpanded"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M19 9l-7 7-7-7"
+              />
+              <path v-else stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
             </svg>
             {{ allExpanded ? 'Thu gọn tất cả' : 'Mở rộng tất cả' }}
           </button>
-          <button @click="openCreate" class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-colors">
+          <button
+            @click="openCreate"
+            class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-colors"
+          >
             <PlusIcon class="w-4 h-4" />
             Thêm danh mục
           </button>
@@ -35,8 +49,14 @@
       @switch-tab="switchTab"
       @update:searchQuery="searchQuery = $event"
       @clear-search="searchQuery = ''"
-      @trashedSearchInput="trashedSearchQuery = $event; debouncedFetchTrashed()"
-      @clear-trashed-search="trashedSearchQuery = ''; fetchTrashedCategories()"
+      @trashedSearchInput="
+        trashedSearchQuery = $event
+        debouncedFetchTrashed()
+      "
+      @clear-trashed-search="
+        trashedSearchQuery = ''
+        fetchTrashedCategories()
+      "
     />
 
     <!-- Active Table -->
@@ -55,11 +75,13 @@
       :has-children="hasChildren"
       :get-child-count="getChildCount"
       :is-last-child="(cat, idx) => isLastChild(cat, idx, visibleCategories)"
+      :pagination="pagination"
       @toggle-select-all="toggleSelectAll"
       @toggle-select="toggleSelect"
       @toggle-expand="toggleExpand"
       @edit="openEdit"
       @delete="softDelete.confirm"
+      @page-change="fetchCategories"
     />
 
     <!-- Trashed Table -->
@@ -106,8 +128,8 @@
     >
       <p>
         Bạn có chắc muốn xóa danh mục
-        <strong class="text-gray-800 dark:text-white/90">{{ softDelete.target.value?.name }}</strong>?
-        Các danh mục con cũng sẽ bị xóa.
+        <strong class="text-gray-800 dark:text-white/90">{{ softDelete.target.value?.name }}</strong
+        >? Các danh mục con cũng sẽ bị xóa.
         <span class="block mt-1 text-xs text-gray-400">Danh mục sẽ được chuyển vào thùng rác.</span>
       </p>
     </ConfirmModal>
@@ -126,7 +148,10 @@
     >
       <p>
         Bạn có chắc muốn xóa vĩnh viễn danh mục
-        <strong class="text-gray-800 dark:text-white/90">{{ forceDelete.target.value?.name }}</strong>?
+        <strong class="text-gray-800 dark:text-white/90">{{
+          forceDelete.target.value?.name
+        }}</strong
+        >?
       </p>
     </ConfirmModal>
 
@@ -162,35 +187,88 @@ import ConfirmModal from '@/components/common/ConfirmModal.vue'
 import BulkActions from '@/components/table/BulkActions.vue'
 
 const {
-  isTrashed, switchTab,
-  allCategories, flatTree, loading,
-  activeItems, fetchCategories, fetchFlatTree,
-  selectedIds, isAllSelected, isIndeterminate, toggleSelectAll, toggleSelect, clearSelection,
-  bulkDeleting, bulkUpdating, doBulkDelete, bulkToggleStatus,
-  trashedCategories, trashedPagination, trashedLoading, trashedCount,
-  trashedSearchQuery, restoringId,
-  fetchTrashedCategories, fetchTrashedCount, debouncedFetchTrashed, doRestoreCategory,
-  trashedSelectedIds, isTrashedAllSelected, isTrashedIndeterminate,
-  toggleTrashedSelectAll, toggleTrashedSelect, clearTrashedSelection,
-  bulkRestoring, bulkForceDeleting, doBulkRestoreCategories, doBulkForceDeleteCategories,
+  isTrashed,
+  switchTab,
+  allCategories,
+  pagination,
+  flatTree,
+  loading,
+  activeItems,
+  fetchCategories,
+  fetchFlatTree,
+  selectedIds,
+  isAllSelected,
+  isIndeterminate,
+  toggleSelectAll,
+  toggleSelect,
+  clearSelection,
+  bulkDeleting,
+  bulkUpdating,
+  doBulkDelete,
+  bulkToggleStatus,
+  trashedCategories,
+  trashedPagination,
+  trashedLoading,
+  trashedCount,
+  trashedSearchQuery,
+  restoringId,
+  fetchTrashedCategories,
+  fetchTrashedCount,
+  debouncedFetchTrashed,
+  doRestoreCategory,
+  trashedSelectedIds,
+  isTrashedAllSelected,
+  isTrashedIndeterminate,
+  toggleTrashedSelectAll,
+  toggleTrashedSelect,
+  clearTrashedSelection,
+  bulkRestoring,
+  bulkForceDeleting,
+  doBulkRestoreCategories,
+  doBulkForceDeleteCategories,
   bulkActionsRef,
-  showModal, editingId, submitting, formErrors, submitError, form,
-  autoSlug, openCreate, openEdit, closeModal, submitForm,
-  softDelete, forceDelete,
+  showModal,
+  editingId,
+  submitting,
+  formErrors,
+  submitError,
+  form,
+  autoSlug,
+  openCreate,
+  openEdit,
+  closeModal,
+  submitForm,
+  softDelete,
+  forceDelete,
 } = useCategories()
 
-const setBulkActionsRef = (el: { closeModal: () => void } | null) => { bulkActionsRef.value = el }
+const setBulkActionsRef = (el: { closeModal: () => void } | null) => {
+  bulkActionsRef.value = el
+}
 
 const {
-  expandedIds, allExpanded, searchQuery,
-  isSearching, matchCount, visibleCategories,
-  hasChildren, getChildCount, isLastChild,
-  toggleExpand, toggleAll,
+  expandedIds,
+  allExpanded,
+  searchQuery,
+  isSearching,
+  matchCount,
+  visibleCategories,
+  hasChildren,
+  getChildCount,
+  isLastChild,
+  toggleExpand,
+  toggleAll,
 } = useCategoryTree(allCategories)
 
 // Sync activeItems → useBulkSelect vẫn nhìn visibleCategories
 import { watch } from 'vue'
-watch(visibleCategories, (v) => { activeItems.value = v }, { immediate: true })
+watch(
+  visibleCategories,
+  (v) => {
+    activeItems.value = v
+  },
+  { immediate: true },
+)
 
 onMounted(() => {
   fetchCategories()

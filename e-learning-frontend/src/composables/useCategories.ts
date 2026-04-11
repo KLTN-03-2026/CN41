@@ -15,14 +15,17 @@ export function useCategories() {
 
   // ── Active ─────────────────────────────────────────────────────
   const allCategories = ref<AdminCategory[]>([])
+  const pagination = ref<import('@/types/common.types').Pagination | null>(null)
   const flatTree = ref<{ id: number; name: string; depth: number }[]>([])
   const loading = ref(true)
 
-  async function fetchCategories() {
+  async function fetchCategories(page = 1) {
     loading.value = true
     try {
-      const res = await categoryService.flatTree()
+      // Dùng index (phân trang) thay vì flatTree (lấy hết)
+      const res = await categoryService.index({ page, per_page: 5 })
       allCategories.value = res.data.data
+      pagination.value = res.data.pagination
     } catch {
       toast.error('Không thể tải danh mục')
     } finally {
@@ -188,7 +191,7 @@ export function useCategories() {
         toast.success('Tạo danh mục thành công')
       }
       closeModal()
-      fetchCategories()
+      fetchCategories(pagination.value?.current_page || 1)
       fetchFlatTree()
     } catch (err: unknown) {
       handleApiError(err)
@@ -203,7 +206,7 @@ export function useCategories() {
       try {
         await categoryService.destroy(cat.id)
         toast.success('Xóa danh mục thành công')
-        fetchCategories()
+        fetchCategories(pagination.value?.current_page || 1)
         fetchFlatTree()
         fetchTrashedCount()
       } catch (err: unknown) {
@@ -235,7 +238,7 @@ export function useCategories() {
       toast.success(`Đã khôi phục "${cat.name}"`)
       fetchTrashedCategories()
       fetchTrashedCount()
-      fetchCategories()
+      fetchCategories(pagination.value?.current_page || 1)
       fetchFlatTree()
     } catch (err: unknown) {
       const axiosError = err as { response?: { data?: { message?: string } } }
@@ -254,7 +257,7 @@ export function useCategories() {
       toast.success(`Đã xóa ${ids.length} danh mục`)
       clearSelection()
       bulkActionsRef.value?.closeModal()
-      fetchCategories()
+      fetchCategories(pagination.value?.current_page || 1)
       fetchFlatTree()
       fetchTrashedCount()
     } catch (err: unknown) {
@@ -273,7 +276,7 @@ export function useCategories() {
       toast.success(`Đã cập nhật ${ids.length} danh mục`)
       clearSelection()
       bulkActionsRef.value?.closeModal()
-      fetchCategories()
+      fetchCategories(pagination.value?.current_page || 1)
       fetchFlatTree()
     } catch {
       toast.error('Cập nhật trạng thái thất bại')
@@ -293,7 +296,7 @@ export function useCategories() {
       bulkActionsRef.value?.closeModal()
       fetchTrashedCategories()
       fetchTrashedCount()
-      fetchCategories()
+      fetchCategories(pagination.value?.current_page || 1)
       fetchFlatTree()
     } catch (err: unknown) {
       const axiosError = err as { response?: { data?: { message?: string } } }
@@ -327,6 +330,7 @@ export function useCategories() {
     switchTab,
     // active
     allCategories,
+    pagination,
     flatTree,
     loading,
     activeItems,
