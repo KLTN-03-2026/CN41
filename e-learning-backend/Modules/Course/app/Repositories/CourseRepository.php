@@ -3,8 +3,9 @@
 namespace Modules\Course\Repositories;
 
 use App\Repositories\BaseRepository;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
 use Modules\Categories\Models\Category;
 use Modules\Course\Models\Course;
 
@@ -33,8 +34,8 @@ class CourseRepository extends BaseRepository implements CourseRepositoryInterfa
             ->latest();
 
         // Filter theo tên
-        if (!empty($filters['search'])) {
-            $query->where('name', 'like', '%' . $filters['search'] . '%');
+        if (! empty($filters['search'])) {
+            $query->where('name', 'like', '%'.$filters['search'].'%');
         }
 
         // Filter theo status
@@ -43,12 +44,12 @@ class CourseRepository extends BaseRepository implements CourseRepositoryInterfa
         }
 
         // Filter theo teacher_id
-        if (!empty($filters['teacher_id'])) {
+        if (! empty($filters['teacher_id'])) {
             $query->where('teacher_id', (int) $filters['teacher_id']);
         }
 
         // Filter theo category_id (qua pivot, bao gồm cả con cháu)
-        if (!empty($filters['category_id'])) {
+        if (! empty($filters['category_id'])) {
             $category = Category::find((int) $filters['category_id']);
             if ($category) {
                 $categoryIds = $category->descendants()->pluck('id')->push($category->id)->toArray();
@@ -59,7 +60,7 @@ class CourseRepository extends BaseRepository implements CourseRepositoryInterfa
         }
 
         // Filter theo level
-        if (!empty($filters['level'])) {
+        if (! empty($filters['level'])) {
             $query->where('level', $filters['level']);
         }
 
@@ -79,12 +80,12 @@ class CourseRepository extends BaseRepository implements CourseRepositoryInterfa
             ->latest();
 
         // Tìm kiếm theo tên
-        if (!empty($filters['search'])) {
-            $query->where('name', 'like', '%' . $filters['search'] . '%');
+        if (! empty($filters['search'])) {
+            $query->where('name', 'like', '%'.$filters['search'].'%');
         }
 
         // Filter theo category_id (qua pivot, bao gồm cả con cháu)
-        if (!empty($filters['category_id'])) {
+        if (! empty($filters['category_id'])) {
             $category = Category::find((int) $filters['category_id']);
             if ($category) {
                 $categoryIds = $category->descendants()->pluck('id')->push($category->id)->toArray();
@@ -95,7 +96,7 @@ class CourseRepository extends BaseRepository implements CourseRepositoryInterfa
         }
 
         // Filter theo level
-        if (!empty($filters['level'])) {
+        if (! empty($filters['level'])) {
             $query->where('level', $filters['level']);
         }
 
@@ -178,7 +179,7 @@ class CourseRepository extends BaseRepository implements CourseRepositoryInterfa
         $perPage = max(1, min($perPage, static::MAX_PER_PAGE));
 
         return $this->model->newQuery()
-            ->whereHas('students', fn($q) => $q->where('students.id', $studentId))
+            ->whereHas('students', fn ($q) => $q->where('students.id', $studentId))
             ->with(['teacher', 'categories'])
             ->latest()
             ->paginate($perPage);
@@ -187,7 +188,7 @@ class CourseRepository extends BaseRepository implements CourseRepositoryInterfa
     /**
      * {@inheritDoc}
      */
-    public function findTrashed(int $id): \Illuminate\Database\Eloquent\Model
+    public function findTrashed(int $id): Model
     {
         return $this->model->newQuery()->withTrashed()->findOrFail($id);
     }
@@ -195,8 +196,30 @@ class CourseRepository extends BaseRepository implements CourseRepositoryInterfa
     /**
      * {@inheritDoc}
      */
-    public function findManyTrashed(array $ids): \Illuminate\Database\Eloquent\Collection
+    public function findManyTrashed(array $ids): Collection
     {
         return $this->model->newQuery()->withTrashed()->whereIn('id', $ids)->get();
+    }
+
+    /**
+     * Override restoreMany để trigger model events (restoring/restored)
+     * cho từng Course, từ đó cascade restore sections & lessons.
+     *
+     * BaseRepository dùng mass query .restore() — không trigger events.
+     */
+    public function restoreMany(array $ids): int
+    {
+        $count = 0;
+
+        $this->model->newQuery()
+            ->onlyTrashed()
+            ->whereIn('id', $ids)
+            ->each(function (Course $course) use (&$count) {
+                if ($course->restore()) {
+                    $count++;
+                }
+            });
+
+        return $count;
     }
 }
