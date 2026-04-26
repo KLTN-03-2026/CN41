@@ -39,6 +39,9 @@ class DatabaseSeeder extends Seeder
 
             // 8. Students + Enrollments
             \Modules\Students\Database\Seeders\StudentEnrollmentSeeder::class,
+
+            // 9. Orders (đơn hàng mẫu cho Dashboard)
+            \Modules\Payment\Database\Seeders\OrderSeeder::class,
         ]);
     }
 }

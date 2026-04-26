@@ -55,7 +55,7 @@ class DashboardController extends Controller
             ->whereHas('order', function ($query) {
                 $query->where('status', 'paid');
             })
-            ->with(['course:id,title,thumbnail,price'])
+            ->with(['course:id,name,thumbnail,price'])
             ->groupBy('course_id')
             ->orderBy('total_revenue', 'desc')
             ->take(5)
@@ -63,7 +63,7 @@ class DashboardController extends Controller
             ->map(function ($item) {
                 return [
                     'id' => $item->course_id,
-                    'title' => $item->course->title ?? 'Unknown',
+                    'title' => $item->course->name ?? 'Unknown',
                     'thumbnail' => $item->course->thumbnail ?? null,
                     'price' => $item->course->price ?? 0,
                     'sales_count' => $item->sales_count,
@@ -72,7 +72,7 @@ class DashboardController extends Controller
             });
 
         // 7. Recent orders
-        $recentOrders = Order::with(['student:id,name,email', 'items.course:id,title'])
+        $recentOrders = Order::with(['student:id,name,email', 'items.course:id,name'])
             ->orderBy('created_at', 'desc')
             ->take(5)
             ->get()
@@ -82,7 +82,7 @@ class DashboardController extends Controller
                     'order_code' => $order->order_code,
                     'student_name' => $order->student->name ?? 'Unknown',
                     'student_email' => $order->student->email ?? 'Unknown',
-                    'course_title' => $order->items->first()->course->title ?? 'N/A',
+                    'course_title' => $order->items->first()->course->name ?? 'N/A',
                     'amount' => (float) $order->total_amount,
                     'status' => $order->status,
                     'created_at' => $order->created_at->toIso8601String(),

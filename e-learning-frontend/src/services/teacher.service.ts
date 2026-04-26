@@ -44,6 +44,14 @@ export const teacherService = {
   bulkDelete: (ids: number[]): Promise<AxiosResponse<ApiResponse<null>>> =>
     http.delete('/admin/teachers/bulk-delete', { data: { ids } }),
 
+  /** POST /admin/teachers/bulk-restore */
+  bulkRestore: (ids: number[]): Promise<AxiosResponse<ApiResponse<null>>> =>
+    http.post('/admin/teachers/bulk-restore', { ids }),
+
+  /** DELETE /admin/teachers/bulk-force-delete */
+  bulkForceDelete: (ids: number[]): Promise<AxiosResponse<ApiResponse<null>>> =>
+    http.delete('/admin/teachers/bulk-force-delete', { data: { ids } }),
+
   // ── Public ─────────────────────────────────────────────────
   /** GET /teachers */
   publicList: (params: Record<string, unknown> = {}): Promise<AxiosResponse<PaginatedResponse<Teacher>>> =>

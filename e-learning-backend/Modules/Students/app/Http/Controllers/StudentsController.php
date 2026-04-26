@@ -48,11 +48,12 @@ class StudentsController extends Controller
     }
 
     /**
-     * Chi tiết Student.
+     * Chi tiết Student (kèm khóa học đã đăng ký).
      */
     public function show(int $id): JsonResponse
     {
         $student = $this->repository->findOrFail($id);
+        $student->load(['enrolledCourses:id,name,slug,thumbnail,price,sale_price', 'orders']);
 
         return $this->success(new StudentResource($student));
     }
