@@ -10,5 +10,6 @@
     "Lessons": true,
     "Payment": true,
     "Dashboard": true,
-    "Coupons": true
+    "Coupons": true,
+    "Posts": true
 }

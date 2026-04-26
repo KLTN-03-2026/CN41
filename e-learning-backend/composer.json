@@ -72,7 +72,10 @@
             "Modules\\Dashboard\\Database\\Seeders\\": "Modules/Dashboard/database/seeders/",
             "Modules\\Coupons\\": "Modules/Coupons/app/",
             "Modules\\Coupons\\Database\\Factories\\": "Modules/Coupons/database/factories/",
-            "Modules\\Coupons\\Database\\Seeders\\": "Modules/Coupons/database/seeders/"
+            "Modules\\Coupons\\Database\\Seeders\\": "Modules/Coupons/database/seeders/",
+            "Modules\\Posts\\": "Modules/Posts/app/",
+            "Modules\\Posts\\Database\\Factories\\": "Modules/Posts/database/factories/",
+            "Modules\\Posts\\Database\\Seeders\\": "Modules/Posts/database/seeders/"
         }
     },
     "autoload-dev": {
