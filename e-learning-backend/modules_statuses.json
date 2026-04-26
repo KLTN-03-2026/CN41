@@ -9,5 +9,6 @@
     "Upload": true,
     "Lessons": true,
     "Payment": true,
-    "Dashboard": true
+    "Dashboard": true,
+    "Coupons": true
 }
