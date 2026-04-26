@@ -9,9 +9,15 @@ export interface Category {
 export interface Teacher {
   id: number
   name: string
-  email: string
-  bio?: string
-  avatar?: string
+  slug: string
+  description?: string
+  exp?: string
+  email?: string
+  image?: string | null
+  status: number
+  courses_count?: number
+  created_at: string
+  updated_at: string
 }
 
 export interface Lesson {

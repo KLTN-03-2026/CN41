@@ -1,167 +1,106 @@
-# Test Module: Quản lý Học viên (Admin)
+# 👩‍🎓 Test Checklist — Quản Lý Học Viên (Admin)
 
-> **Route BE:** `/api/v1/admin/students`
-> **Page FE:** `/admin/students`
-> **Auth:** Admin (guard: admin)
-
----
-
-## QLCV — Việc cần làm
-
-### Backend
-- [ ] `index`: filter theo `search` (name/email), `status`, pagination
-- [ ] `show`: chi tiết student kèm danh sách khóa học đã enroll + progress
-- [ ] `store`: tạo student thủ công (không qua register flow) — hash password
-- [ ] `update`: sửa thông tin student, không bắt buộc đổi password
-- [ ] `destroy`: soft delete
-- [ ] `restore`, `forceDelete`, `bulkRestore`, `bulkDelete`, `bulkForceDelete`
-- [ ] Chưa có: API xem lịch sử đơn hàng của student
-
-### Frontend
-- [ ] `StudentsPage.vue`: bảng danh sách: avatar, tên, email, ngày đăng ký, số khóa đã enroll, trạng thái, actions
-- [ ] `StudentsPage.vue`: search, filter status, pagination
-- [ ] `StudentsPage.vue`: xem chi tiết student (drawer/modal) — khóa học đã enroll, progress
-- [ ] `StudentsPage.vue`: toggle trạng thái (active/banned)
-- [ ] `StudentsPage.vue`: tab "Thùng rác"
-- [ ] `StudentsPage.vue`: bulk actions
+## Chuẩn bị
+- [ ] Chạy `php artisan migrate:fresh --seed`
+- [ ] Backend chạy: `php artisan serve`
+- [ ] Frontend chạy: `npm run dev`
+- [ ] Đăng nhập tài khoản Admin
 
 ---
 
-## MODULE 1 — Danh sách học viên
+## 1. Danh sách học viên
 
-### Test 1.1: Load trang
+### 1.1 Hiển thị bảng
+- [ ] Truy cập `/admin/students` → Bảng danh sách hiển thị đúng
+- [ ] Các cột: Checkbox, Học viên (avatar + tên), Email, Ngày sinh, Xác minh, Ngày tạo, Thao tác
+- [ ] Avatar hiển thị chữ cái đầu tên nếu không có ảnh
+- [ ] Ngày sinh hiển thị định dạng `dd/mm/yyyy`, nếu trống hiện dấu `—`
+- [ ] Cột "Xác minh": icon ✅ xanh nếu đã verify, "Chưa" nếu chưa
 
-| # | Hành động | Kết quả mong đợi |
-|---|-----------|------------------|
-| 1 | Vào `/admin/students` | Bảng học viên load với các cột đầy đủ |
-| 2 | Network | `GET /api/v1/admin/students` → 200 |
+### 1.2 Loading skeleton
+- [ ] Khi đang tải dữ liệu → Hiện skeleton animation (5 dòng)
+- [ ] Sau khi tải xong → Skeleton biến mất, hiện data thực
 
-### Test 1.2: Tìm kiếm
-
-| # | Hành động | Kết quả mong đợi |
-|---|-----------|------------------|
-| 1 | Nhập tên hoặc email | Bảng lọc kết quả |
-| 2 | Không có kết quả | Hiện "Không tìm thấy học viên nào" |
-
-### Test 1.3: Filter trạng thái
-
-| # | Hành động | Kết quả mong đợi |
-|---|-----------|------------------|
-| 1 | Filter "Active" | Chỉ hiện học viên đang hoạt động |
-| 2 | Filter "Banned" | Chỉ hiện học viên bị khóa |
-
-### Test 1.4: Xem chi tiết học viên
-
-| # | Hành động | Kết quả mong đợi |
-|---|-----------|------------------|
-| 1 | Click vào tên/icon detail | Drawer/Modal hiện: avatar, tên, email, ngày đăng ký |
-| 2 | Tab "Khóa học" | Danh sách khóa học đã enroll kèm progress |
-| 3 | Network | `GET /api/v1/admin/students/{id}` → 200 |
+### 1.3 Empty state
+- [ ] Nếu chưa có học viên nào → Hiện "Chưa có học viên nào."
 
 ---
 
-## MODULE 2 — Thêm học viên (Admin tạo thủ công)
+## 2. Tìm kiếm
 
-### Test 2.1: Validation
-
-| # | Hành động | Kết quả mong đợi |
-|---|-----------|------------------|
-| 1 | Submit trống | Lỗi required cho tên, email, password |
-| 2 | Email không đúng format | Lỗi format |
-| 3 | Email đã tồn tại | Lỗi "Email đã được sử dụng" |
-| 4 | Password < 8 ký tự | Lỗi độ dài |
-
-### Test 2.2: Tạo thành công ✅
-
-| # | Hành động | Kết quả mong đợi |
-|---|-----------|------------------|
-| 1 | Điền đủ thông tin → Submit | Toast "Thêm học viên thành công" |
-| 2 | Network | `POST /api/v1/admin/students` → 201 |
-| 3 | Học viên có thể login | Dùng email/password vừa tạo → login thành công |
+- [ ] Nhập từ khoá vào ô tìm kiếm → Kết quả lọc đúng theo tên/email
+- [ ] Tìm kiếm có debounce (không gọi API mỗi ký tự)
+- [ ] Xoá ô tìm kiếm → Hiện lại toàn bộ danh sách
 
 ---
 
-## MODULE 3 — Sửa học viên
+## 3. Phân trang
 
-### Test 3.1: Sửa thông tin
-
-| # | Hành động | Kết quả mong đợi |
-|---|-----------|------------------|
-| 1 | Sửa tên → Save | Toast thành công, bảng cập nhật |
-| 2 | Network | `PUT /api/v1/admin/students/{id}` → 200 |
-
-### Test 3.2: Đổi password
-
-| # | Hành động | Kết quả mong đợi |
-|---|-----------|------------------|
-| 1 | Để trống password khi sửa | Password giữ nguyên không đổi |
-| 2 | Nhập password mới → Save | Password cập nhật, học viên login bằng password mới |
+- [ ] Có > 15 học viên → PaginationBar hiển thị
+- [ ] Click sang trang 2 → Dữ liệu tải đúng trang
+- [ ] Có ≤ 15 → Không hiện thanh phân trang
 
 ---
 
-## MODULE 4 — Khóa / Mở khóa tài khoản
+## 4. Thêm học viên
 
-### Test 4.1: Khóa học viên (Ban)
-
-| # | Hành động | Kết quả mong đợi |
-|---|-----------|------------------|
-| 1 | Toggle → Banned | Badge "Banned", học viên không thể login |
-| 2 | Học viên thử login | BE trả về 403 "Tài khoản đã bị khóa" |
-
-### Test 4.2: Mở khóa
-
-| # | Hành động | Kết quả mong đợi |
-|---|-----------|------------------|
-| 1 | Toggle lại → Active | Học viên login được bình thường |
+- [ ] Click **"Thêm học viên"** → Modal mở ra
+- [ ] Điền đầy đủ: Họ tên, Email, Mật khẩu → Click **"Lưu"** → Toast thành công, modal đóng, danh sách cập nhật
+- [ ] Bỏ trống trường bắt buộc → Trình duyệt chặn submit (HTML required)
+- [ ] Nhập email đã tồn tại → Hiện lỗi từ Backend (422)
+- [ ] Click **"Huỷ"** hoặc click ngoài modal → Modal đóng, không tạo
 
 ---
 
-## MODULE 5 — Xóa và Thùng rác
+## 5. Sửa học viên
 
-### Test 5.1: Soft delete
-
-| # | Hành động | Kết quả mong đợi |
-|---|-----------|------------------|
-| 1 | Xóa học viên → confirm | Biến khỏi bảng chính |
-| 2 | Network | `DELETE /api/v1/admin/students/{id}` → 200 |
-| 3 | Học viên thử login | Không thể login (account bị xóa mềm) |
-
-### Test 5.2: Restore
-
-| # | Hành động | Kết quả mong đợi |
-|---|-----------|------------------|
-| 1 | Thùng rác → Restore | Học viên về bảng chính, login được lại |
-
-### Test 5.3: Force delete
-
-| # | Hành động | Kết quả mong đợi |
-|---|-----------|------------------|
-| 1 | Thùng rác → Xóa vĩnh viễn | Xóa hoàn toàn, dữ liệu enroll/progress cũng mất |
-
-### Test 5.4: Bulk actions
-
-| # | Hành động | Kết quả mong đợi |
-|---|-----------|------------------|
-| 1 | Tick nhiều → Xóa hàng loạt | Tất cả vào thùng rác |
-| 2 | Tick nhiều ở thùng rác → Restore hàng loạt | Tất cả về bảng chính |
+- [ ] Click icon **bút chì** trên dòng → Modal mở, form đã điền sẵn thông tin
+- [ ] Trường mật khẩu **không hiển thị** (không bắt buộc khi sửa)
+- [ ] Sửa tên → Click **"Lưu"** → Toast thành công, danh sách cập nhật đúng
+- [ ] Sửa email sang email đã tồn tại → Hiện lỗi Backend
 
 ---
 
-## Checklist
+## 6. Xoá học viên (Soft Delete)
 
-| Test | Kết quả | Ghi chú |
-|------|---------|---------|
-| 1.1 Load trang | ⬜ | |
-| 1.2 Tìm kiếm | ⬜ | |
-| 1.3 Filter trạng thái | ⬜ | |
-| 1.4 Xem chi tiết | ⬜ | |
-| 2.1 Validation | ⬜ | |
-| 2.2 Tạo thành công | ⬜ | |
-| 3.1 Sửa thông tin | ⬜ | |
-| 3.2 Đổi password | ⬜ | |
-| 4.1 Khóa học viên | ⬜ | |
-| 4.2 Mở khóa | ⬜ | |
-| 5.1 Soft delete | ⬜ | |
-| 5.2 Restore | ⬜ | |
-| 5.3 Force delete | ⬜ | |
-| 5.4 Bulk actions | ⬜ | |
+- [ ] Click icon **thùng rác** → Modal xác nhận hiện lên
+- [ ] Modal hiện tên học viên + ghi chú "chuyển vào thùng rác"
+- [ ] Click **"Xoá"** → Toast thành công, học viên biến mất khỏi danh sách
+- [ ] Số đếm thùng rác cập nhật (+1)
+- [ ] Click **"Huỷ"** → Không xoá
+
+---
+
+## 7. Thùng rác
+
+- [ ] Click tab **"Thùng rác"** → Hiện danh sách học viên đã xoá
+- [ ] Nút "Thêm học viên" ẩn đi
+- [ ] Mỗi dòng có 2 nút: **Khôi phục** + **Xoá vĩnh viễn**
+
+### 7.1 Khôi phục
+- [ ] Click icon **khôi phục** → Toast thành công, học viên quay lại tab "Tất cả"
+
+### 7.2 Xoá vĩnh viễn
+- [ ] Click icon **thùng rác** → Modal xác nhận (cảnh báo đỏ)
+- [ ] Click **"Xoá"** → Học viên bị xoá hẳn, không thể khôi phục
+
+### 7.3 Empty state thùng rác
+- [ ] Thùng rác trống → Hiện "Thùng rác trống."
+
+---
+
+## 8. Bulk Actions (Thao tác hàng loạt)
+
+- [ ] Tick checkbox ở header → Chọn tất cả
+- [ ] Tick checkbox từng dòng → Thanh bulk action hiện ở dưới
+- [ ] Thanh hiện đúng số lượng đã chọn
+- [ ] Tab "Tất cả": Click **"Xoá"** → Xoá mềm tất cả đã chọn
+- [ ] Tab "Thùng rác": Click **"Khôi phục"** → Khôi phục tất cả đã chọn
+- [ ] Click **"Bỏ chọn"** → Bỏ chọn hết, thanh biến mất
+
+---
+
+## 9. Edge Cases
+
+- [ ] Student truy cập `/admin/students` → Redirect về login admin
+- [ ] Không có token → Redirect về login admin

@@ -42,13 +42,31 @@ class Student extends Authenticatable
 
     /**
      * Gửi notification đặt lại mật khẩu.
-     *
-     * Override để dùng custom notification thay vì
-     * notification mặc định (tránh lỗi Route [password.reset] not defined).
      */
     public function sendPasswordResetNotification($token): void
     {
         $this->notify(new StudentResetPasswordNotification($token));
+    }
+
+    /**
+     * Các khóa học đã đăng ký (qua bảng pivot students_course).
+     */
+    public function enrolledCourses()
+    {
+        return $this->belongsToMany(
+            \Modules\Course\Models\Course::class,
+            'students_course',
+            'student_id',
+            'course_id'
+        )->withPivot('enrolled_at')->withTimestamps();
+    }
+
+    /**
+     * Các đơn hàng của học viên.
+     */
+    public function orders()
+    {
+        return $this->hasMany(\Modules\Payment\Models\Order::class, 'student_id');
     }
 }
 
