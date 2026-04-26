@@ -9,6 +9,7 @@ class PostComment extends Model
     protected $fillable = [
         'post_id',
         'user_id',
+        'user_type',
         'content',
         'parent_id',
         'is_approved',
@@ -23,9 +24,9 @@ class PostComment extends Model
         return $this->belongsTo(Post::class);
     }
 
-    public function user()
+    public function commenter()
     {
-        return $this->belongsTo(\App\Models\User::class);
+        return $this->morphTo('commenter', 'user_type', 'user_id');
     }
 
     public function parent()
