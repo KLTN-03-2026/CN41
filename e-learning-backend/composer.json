@@ -69,7 +69,10 @@
             "Modules\\Payment\\Database\\Seeders\\": "Modules/Payment/database/seeders/",
             "Modules\\Dashboard\\": "Modules/Dashboard/app/",
             "Modules\\Dashboard\\Database\\Factories\\": "Modules/Dashboard/database/factories/",
-            "Modules\\Dashboard\\Database\\Seeders\\": "Modules/Dashboard/database/seeders/"
+            "Modules\\Dashboard\\Database\\Seeders\\": "Modules/Dashboard/database/seeders/",
+            "Modules\\Coupons\\": "Modules/Coupons/app/",
+            "Modules\\Coupons\\Database\\Factories\\": "Modules/Coupons/database/factories/",
+            "Modules\\Coupons\\Database\\Seeders\\": "Modules/Coupons/database/seeders/"
         }
     },
     "autoload-dev": {

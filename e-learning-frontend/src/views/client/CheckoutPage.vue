@@ -50,7 +50,47 @@
         </div>
 
         <!-- Right: Summary + Checkout -->
-        <div class="lg:sticky lg:top-6 h-fit">
+        <div class="lg:sticky lg:top-6 h-fit space-y-4">
+          <!-- Coupon block -->
+          <div class="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
+            <h2 class="font-semibold text-gray-900 mb-3">Mã giảm giá</h2>
+            
+            <div v-if="appliedCoupon" class="flex items-center justify-between p-3 bg-green-50 border border-green-100 rounded-xl">
+              <div>
+                <p class="text-sm font-medium text-green-800">Đã áp dụng: {{ appliedCoupon.code }}</p>
+                <p class="text-xs text-green-600 mt-0.5">{{ appliedCoupon.message }}</p>
+              </div>
+              <button @click="removeCoupon" class="p-1.5 hover:bg-green-100 rounded-lg text-green-700 transition-colors" title="Xoá mã">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            
+            <div v-else>
+              <div class="flex gap-2">
+                <input
+                  v-model="couponCode"
+                  @keyup.enter="applyCoupon"
+                  type="text"
+                  placeholder="Nhập mã giảm giá..."
+                  class="flex-1 px-3 py-2 border border-gray-200 rounded-xl text-sm font-mono uppercase focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                  :disabled="isValidating"
+                />
+                <button
+                  @click="applyCoupon"
+                  :disabled="isValidating || !couponCode.trim()"
+                  class="px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-xl hover:bg-gray-800 transition-colors disabled:opacity-50"
+                >
+                  <template v-if="isValidating">
+                    <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                  </template>
+                  <template v-else>Áp dụng</template>
+                </button>
+              </div>
+              <p v-if="couponError" class="text-xs text-red-500 mt-2">{{ couponError }}</p>
+            </div>
+          </div>
+
+          <!-- Total block -->
           <div class="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm space-y-4">
             <h2 class="font-semibold text-gray-900">Tổng thanh toán</h2>
 
@@ -60,8 +100,12 @@
                 <span class="text-gray-800">{{ formatCurrency(cartStore.originalTotal) }}</span>
               </div>
               <div v-if="totalDiscount > 0" class="flex justify-between">
-                <span class="text-gray-500">Giảm giá</span>
+                <span class="text-gray-500">Giảm giá khóa học</span>
                 <span class="text-green-600">-{{ formatCurrency(totalDiscount) }}</span>
+              </div>
+              <div v-if="appliedCoupon" class="flex justify-between">
+                <span class="text-gray-500">Mã giảm giá</span>
+                <span class="text-green-600">-{{ formatCurrency(appliedCoupon.discount_amount) }}</span>
               </div>
             </div>
 
@@ -69,7 +113,7 @@
 
             <div class="flex justify-between">
               <span class="font-semibold text-gray-900">Tổng cộng</span>
-              <span class="text-xl font-bold text-blue-600">{{ formatCurrency(cartStore.total) }}</span>
+              <span class="text-xl font-bold text-blue-600">{{ formatCurrency(finalTotal) }}</span>
             </div>
 
             <!-- Error message -->
@@ -112,6 +156,8 @@ import { useRouter } from 'vue-router'
 import { useToast } from 'vue-toastification'
 import { useCartStore } from '@/stores/cart.store'
 import { orderService } from '@/services/order.service'
+import { couponService } from '@/services/coupon.service'
+import type { CouponValidation } from '@/services/coupon.service'
 import { formatCurrency } from '@/utils/formatCurrency'
 import PaymentMethodSelector from '@/components/forms/PaymentMethodSelector.vue'
 
@@ -123,6 +169,12 @@ const paymentMethod = ref('vnpay')
 const isProcessing = ref(false)
 const errorMessage = ref('')
 
+// Coupon State
+const couponCode = ref('')
+const couponError = ref('')
+const isValidating = ref(false)
+const appliedCoupon = ref<CouponValidation | null>(null)
+
 const totalDiscount = computed(() => {
   return cartStore.items.reduce((sum, item) => {
     if (item.sale_price && item.sale_price < item.price) {
@@ -132,6 +184,39 @@ const totalDiscount = computed(() => {
   }, 0)
 })
 
+const finalTotal = computed(() => {
+  const discountFromCoupon = appliedCoupon.value?.discount_amount || 0
+  return Math.max(0, cartStore.total - discountFromCoupon)
+})
+
+async function applyCoupon() {
+  if (!couponCode.value.trim() || isValidating.value) return
+  
+  isValidating.value = true
+  couponError.value = ''
+  
+  try {
+    const res = await couponService.validate({
+      code: couponCode.value.trim(),
+      subtotal: cartStore.total
+    })
+    appliedCoupon.value = res.data.data
+    couponError.value = ''
+    toast.success('Áp dụng mã giảm giá thành công!')
+  } catch (err: any) {
+    couponError.value = err.response?.data?.message || 'Mã giảm giá không hợp lệ.'
+    appliedCoupon.value = null
+  } finally {
+    isValidating.value = false
+  }
+}
+
+function removeCoupon() {
+  appliedCoupon.value = null
+  couponCode.value = ''
+  couponError.value = ''
+}
+
 async function handleCheckout() {
   if (cartStore.count === 0) return
 
@@ -139,9 +224,15 @@ async function handleCheckout() {
   errorMessage.value = ''
 
   try {
-    const res = await orderService.createOrder({
+    const payload: Record<string, any> = {
       course_ids: cartStore.courseIds,
-    })
+    }
+    
+    if (appliedCoupon.value) {
+      payload.coupon_code = appliedCoupon.value.code
+    }
+
+    const res = await orderService.createOrder(payload)
 
     const { payment_url, order } = res.data.data
 
@@ -156,13 +247,17 @@ async function handleCheckout() {
       router.push(`/payment/result?order_code=${order.order_code}&status=success&message=Đăng+ký+thành+công`)
     }
   } catch (err: unknown) {
-    const axiosError = err as { response?: { data?: { message?: string; errors?: { course_ids?: string | string[] } } } }
+    const axiosError = err as { response?: { data?: { message?: string; errors?: { course_ids?: string | string[]; coupon_code?: string | string[] } } } }
     const data = axiosError.response?.data
     if (data?.errors?.course_ids) {
       // Student đã sở hữu khóa học
       errorMessage.value = Array.isArray(data.errors.course_ids) 
         ? data.errors.course_ids[0] 
         : data.errors.course_ids
+    } else if (data?.errors?.coupon_code) {
+      errorMessage.value = Array.isArray(data.errors.coupon_code) 
+        ? data.errors.coupon_code[0] 
+        : data.errors.coupon_code
     } else {
       errorMessage.value = data?.message || 'Có lỗi xảy ra khi tạo đơn hàng.'
     }
