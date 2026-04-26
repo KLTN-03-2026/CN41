@@ -20,7 +20,7 @@
 - [ ] Trường `summary.total_students`: Số lượng đếm chính xác (user có role student).
 - [ ] Trường `summary.total_courses`: Bằng số lượng khóa học có status = 1 (published).
 - [ ] Trường `summary.total_orders`: Bằng số đơn hàng có status = 'paid'.
-- [ ] Trường `summary.total_revenue`: Bằng tổng cột `total_price` của đơn 'paid'.
+- [ ] Trường `summary.total_revenue`: Bằng tổng cột `total_amount` của đơn 'paid'.
 - [ ] Trường `monthly_revenue`: Mảng 12 phần tử, tháng hiện tại có doanh thu khớp với Database.
 - [ ] Trường `top_courses`: Tối đa 5 khóa học bán chạy nhất, sắp xếp theo doanh thu giảm dần.
 - [ ] Trường `recent_orders`: Tối đa 5 đơn hàng mới nhất, sắp xếp theo ngày tạo (desc).

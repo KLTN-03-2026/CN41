@@ -98,9 +98,21 @@
 - [ ] Tab "Thùng rác": Click **"Khôi phục"** → Khôi phục tất cả đã chọn
 - [ ] Click **"Bỏ chọn"** → Bỏ chọn hết, thanh biến mất
 
+## 9. Xem chi tiết học viên
+
+- [ ] Click icon **con mắt** trên dòng → Modal chi tiết mở ra, nền phía sau tối đen + blur
+- [ ] Modal hiển thị đúng thông tin: tên, email, ngày sinh, xác minh email
+- [ ] Hiện đúng **Đơn hàng** (số lượng) và **Tổng chi tiêu** (format VNĐ)
+- [ ] Hiện danh sách **Khóa học đã đăng ký** kèm thumbnail, giá, ngày đăng ký
+- [ ] Thumbnail khóa học load đúng ảnh
+- [ ] Nếu chưa đăng ký khóa nào → Hiện "Chưa đăng ký khóa học nào."
+- [ ] Click nút **X** hoặc click ngoài modal → Modal đóng
+- [ ] Modal overlay phủ kín cả sidebar
+
 ---
 
-## 9. Edge Cases
+## 10. Edge Cases
 
 - [ ] Student truy cập `/admin/students` → Redirect về login admin
 - [ ] Không có token → Redirect về login admin
+
