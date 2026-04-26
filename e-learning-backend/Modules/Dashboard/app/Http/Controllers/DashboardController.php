@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\DB;
 use Modules\Course\Models\Course;
 use Modules\Payment\Models\Order;
 use Modules\Payment\Models\OrderItem;
-use Modules\Users\Models\User;
+use Modules\Students\Models\Student;
 
 class DashboardController extends Controller
 {
@@ -18,9 +18,7 @@ class DashboardController extends Controller
     public function getStats(): JsonResponse
     {
         // 1. Total students
-        $totalStudents = User::whereHas('roles', function ($query) {
-            $query->where('name', 'student');
-        })->count();
+        $totalStudents = Student::count();
 
         // 2. Total courses (published)
         $totalCourses = Course::where('status', 1)->count();
@@ -29,13 +27,13 @@ class DashboardController extends Controller
         $totalOrders = Order::where('status', 'paid')->count();
 
         // 4. Total revenue
-        $totalRevenue = Order::where('status', 'paid')->sum('total_price');
+        $totalRevenue = Order::where('status', 'paid')->sum('total_amount');
 
         // 5. Monthly revenue (current year)
         $currentYear = date('Y');
         $monthlyRevenueQuery = Order::select(
             DB::raw('MONTH(created_at) as month'),
-            DB::raw('SUM(total_price) as revenue')
+            DB::raw('SUM(total_amount) as revenue')
         )
             ->where('status', 'paid')
             ->whereYear('created_at', $currentYear)
@@ -74,7 +72,7 @@ class DashboardController extends Controller
             });
 
         // 7. Recent orders
-        $recentOrders = Order::with(['user:id,first_name,last_name,email', 'items.course:id,title'])
+        $recentOrders = Order::with(['student:id,name,email', 'items.course:id,title'])
             ->orderBy('created_at', 'desc')
             ->take(5)
             ->get()
@@ -82,10 +80,10 @@ class DashboardController extends Controller
                 return [
                     'id' => $order->id,
                     'order_code' => $order->order_code,
-                    'student_name' => $order->user ? $order->user->first_name.' '.$order->user->last_name : 'Unknown',
-                    'student_email' => $order->user->email ?? 'Unknown',
+                    'student_name' => $order->student->name ?? 'Unknown',
+                    'student_email' => $order->student->email ?? 'Unknown',
                     'course_title' => $order->items->first()->course->title ?? 'N/A',
-                    'amount' => (float) $order->total_price,
+                    'amount' => (float) $order->total_amount,
                     'status' => $order->status,
                     'created_at' => $order->created_at->toIso8601String(),
                 ];
