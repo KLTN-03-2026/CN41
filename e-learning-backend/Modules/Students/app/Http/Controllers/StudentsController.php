@@ -30,8 +30,15 @@ class StudentsController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $perPage = (int)$request->query('per_page', 15);
-        $data = $this->repository->paginate($perPage);
+        $request->validate([
+            'search'   => 'nullable|string|max:100',
+            'per_page' => 'nullable|integer|min:1|max:100',
+        ]);
+
+        $perPage = (int) $request->query('per_page', 15);
+        $filters = $request->only(['search']);
+
+        $data = $this->repository->getFiltered($filters, $perPage);
         $data->setCollection(StudentResource::collection($data->getCollection())->collection);
 
         return $this->paginated($data);
