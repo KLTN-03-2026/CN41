@@ -1,4 +1,4 @@
-# Test Module: Quản lý Giảng viên (Admin)
+# 👨‍🏫 Test Checklist — Quản Lý Giảng Viên (Admin)
 
 > **Route BE:** `/api/v1/admin/teachers`
 > **Page FE:** `/admin/teachers`
@@ -6,171 +6,146 @@
 
 ---
 
-## QLCV — Việc cần làm
-
-### Backend
-- [ ] `index`: filter theo `search` (name/email), `status`, pagination
-- [ ] `store`: validate unique email, upload ảnh đại diện (gọi upload API trước)
-- [ ] `update`: không bắt buộc đổi password
-- [ ] `toggleStatus`: active/inactive — inactive thì ẩn khỏi public listing
-- [ ] `trashed`: danh sách soft-deleted
-- [ ] `restore`, `forceDelete`, `bulkRestore`, `bulkDelete`, `bulkForceDelete`
-- [ ] Public routes: `publicIndex`, `publicShow` — chỉ trả teacher active
-
-### Frontend
-- [ ] `TeachersPage.vue`: bảng danh sách với cột: avatar, tên, email, số khóa học, trạng thái, actions
-- [ ] `TeachersPage.vue`: search, filter status, pagination
-- [ ] `TeachersPage.vue`: modal tạo/sửa giảng viên (form inline hoặc drawer)
-- [ ] `TeachersPage.vue`: upload ảnh đại diện với preview
-- [ ] `TeachersPage.vue`: toggle status (switch)
-- [ ] `TeachersPage.vue`: tab "Thùng rác" với restore/force-delete
-- [ ] `TeachersPage.vue`: checkbox bulk actions
+## Chuẩn bị
+- [ ] Chạy `php artisan migrate:fresh --seed`
+- [ ] Backend chạy: `php artisan serve`
+- [ ] Frontend chạy: `npm run dev`
+- [ ] Đăng nhập tài khoản Admin
 
 ---
 
-## MODULE 1 — Danh sách giảng viên
+## 1. Danh sách giảng viên
 
-### Test 1.1: Load trang
+### 1.1 Hiển thị bảng
+- [ ] Truy cập `/admin/teachers` → Bảng danh sách hiển thị đúng
+- [ ] Các cột: Checkbox, Giảng viên (avatar + tên + slug), Kinh nghiệm, Trạng thái (switch), Ngày tạo, Thao tác
+- [ ] Avatar hiển thị chữ cái đầu tên nếu không có ảnh
+- [ ] Kinh nghiệm hiện dấu `—` nếu trống
+- [ ] Network: `GET /api/v1/admin/teachers` → 200
 
-| # | Hành động | Kết quả mong đợi |
-|---|-----------|------------------|
-| 1 | Vào `/admin/teachers` | Bảng giảng viên load, có avatar, tên, email, số khóa học, status |
-| 2 | Network | `GET /api/v1/admin/teachers` → 200 |
+### 1.2 Loading skeleton
+- [ ] Khi đang tải dữ liệu → Hiện skeleton animation (5 dòng)
+- [ ] Sau khi tải xong → Skeleton biến mất, hiện data thực
 
-### Test 1.2: Tìm kiếm
-
-| # | Hành động | Kết quả mong đợi |
-|---|-----------|------------------|
-| 1 | Nhập tên giảng viên | Bảng lọc theo tên |
-| 2 | Nhập email | Lọc theo email |
-| 3 | Không có kết quả | Hiện "Không tìm thấy" |
-
-### Test 1.3: Filter trạng thái
-
-| # | Hành động | Kết quả mong đợi |
-|---|-----------|------------------|
-| 1 | Filter "Active" | Chỉ hiện giảng viên đang hoạt động |
-| 2 | Filter "Inactive" | Chỉ hiện giảng viên bị ẩn |
+### 1.3 Empty state
+- [ ] Nếu chưa có giảng viên nào → Hiện "Chưa có giảng viên nào."
 
 ---
 
-## MODULE 2 — Thêm giảng viên
+## 2. Tìm kiếm & Lọc
 
-### Test 2.1: Form trống
+### 2.1 Tìm kiếm
+- [ ] Nhập từ khoá vào ô tìm kiếm → Kết quả lọc đúng theo tên
+- [ ] Tìm kiếm có debounce (không gọi API mỗi ký tự)
+- [ ] Xoá ô tìm kiếm → Hiện lại toàn bộ danh sách
 
-| # | Hành động | Kết quả mong đợi |
-|---|-----------|------------------|
-| 1 | Click "Thêm giảng viên" → Submit trống | Lỗi: "Tên không được để trống", "Email không được để trống" |
-
-### Test 2.2: Email đã tồn tại
-
-| # | Hành động | Kết quả mong đợi |
-|---|-----------|------------------|
-| 1 | Nhập email đã có trong hệ thống | Lỗi: "Email đã được sử dụng" |
-
-### Test 2.3: Tạo thành công ✅
-
-| # | Hành động | Kết quả mong đợi |
-|---|-----------|------------------|
-| 1 | Điền đầy đủ: tên, email, bio, upload ảnh → Submit | Toast "Thêm giảng viên thành công" |
-| 2 | Network | `POST /api/v1/admin/teachers` → 201 |
-| 3 | Bảng | Giảng viên mới xuất hiện |
-| 4 | Ảnh | Hiện đúng ảnh đã upload |
-
-### Test 2.4: Upload ảnh đại diện
-
-| # | Hành động | Kết quả mong đợi |
-|---|-----------|------------------|
-| 1 | Click upload → chọn file ảnh | Preview ảnh hiện trước khi submit |
-| 2 | Upload file không phải ảnh (PDF) | Lỗi: "Chỉ chấp nhận file ảnh" |
-| 3 | Upload ảnh quá lớn (>2MB) | Lỗi kích thước |
+### 2.2 Lọc trạng thái
+- [ ] Chọn "Đang hoạt động" → Chỉ hiện giảng viên status = 1
+- [ ] Chọn "Vô hiệu hoá" → Chỉ hiện giảng viên status = 0
+- [ ] Chọn "Tất cả trạng thái" → Hiện tất cả
 
 ---
 
-## MODULE 3 — Sửa giảng viên
+## 3. Phân trang
 
-### Test 3.1: Sửa thông tin cơ bản
-
-| # | Hành động | Kết quả mong đợi |
-|---|-----------|------------------|
-| 1 | Click edit → sửa tên → Save | Toast thành công, bảng cập nhật |
-| 2 | Network | `PUT /api/v1/admin/teachers/{id}` → 200 |
-
-### Test 3.2: Đổi ảnh đại diện
-
-| # | Hành động | Kết quả mong đợi |
-|---|-----------|------------------|
-| 1 | Upload ảnh mới → Save | Ảnh cũ bị xóa, ảnh mới hiện |
+- [ ] Có > 15 giảng viên → PaginationBar hiển thị
+- [ ] Click sang trang 2 → Dữ liệu tải đúng trang
+- [ ] Có ≤ 15 → Không hiện thanh phân trang
 
 ---
 
-## MODULE 4 — Toggle trạng thái
+## 4. Thêm giảng viên
 
-### Test 4.1: Ẩn giảng viên
-
-| # | Hành động | Kết quả mong đợi |
-|---|-----------|------------------|
-| 1 | Toggle status → Inactive | Badge đổi thành "Inactive" |
-| 2 | Network | `PATCH /api/v1/admin/teachers/{id}/toggle-status` → 200 |
-| 3 | Public `/teachers` | Giảng viên không còn hiện |
-
-### Test 4.2: Kích hoạt lại
-
-| # | Hành động | Kết quả mong đợi |
-|---|-----------|------------------|
-| 1 | Toggle lại → Active | Badge "Active", hiện lại trên public |
+- [ ] Click **"Thêm giảng viên"** → Modal mở ra
+- [ ] Điền đầy đủ: Tên, Mô tả, Kinh nghiệm → Click **"Lưu"** → Toast thành công, modal đóng, danh sách cập nhật
+- [ ] Bỏ trống tên → Trình duyệt chặn submit (HTML required)
+- [ ] Network: `POST /api/v1/admin/teachers` → 201
+- [ ] Click **"Huỷ"** hoặc click ngoài modal → Modal đóng, không tạo
 
 ---
 
-## MODULE 5 — Xóa và Thùng rác
+## 5. Sửa giảng viên
 
-### Test 5.1: Soft delete
-
-| # | Hành động | Kết quả mong đợi |
-|---|-----------|------------------|
-| 1 | Click xóa → confirm | Giảng viên biến khỏi bảng chính |
-| 2 | Network | `DELETE /api/v1/admin/teachers/{id}` → 200 |
-| 3 | Tab "Thùng rác" | Giảng viên xuất hiện ở đây |
-
-### Test 5.2: Restore
-
-| # | Hành động | Kết quả mong đợi |
-|---|-----------|------------------|
-| 1 | Trong thùng rác → Restore | Giảng viên về lại bảng chính |
-| 2 | Network | `POST /api/v1/admin/teachers/{id}/restore` → 200 |
-
-### Test 5.3: Force delete
-
-| # | Hành động | Kết quả mong đợi |
-|---|-----------|------------------|
-| 1 | Trong thùng rác → Xóa vĩnh viễn → confirm | Xóa hoàn toàn khỏi DB |
-| 2 | Network | `DELETE /api/v1/admin/teachers/{id}/force-delete` → 200 |
-
-### Test 5.4: Bulk actions
-
-| # | Hành động | Kết quả mong đợi |
-|---|-----------|------------------|
-| 1 | Tick nhiều giảng viên → Xóa hàng loạt | Tất cả vào thùng rác |
-| 2 | Trong thùng rác: tick nhiều → Restore hàng loạt | Tất cả về bảng chính |
+- [ ] Click icon **bút chì** trên dòng → Modal mở, form đã điền sẵn thông tin (tên, mô tả, kinh nghiệm)
+- [ ] Sửa tên → Click **"Lưu"** → Toast thành công, danh sách cập nhật đúng
+- [ ] Network: `PUT /api/v1/admin/teachers/{id}` → 200
 
 ---
 
-## Checklist
+## 6. Toggle trạng thái
+
+- [ ] Click nút **switch** trên dòng → Trạng thái đổi (Active ↔ Inactive)
+- [ ] Toast hiện thông báo thành công
+- [ ] Network: `PATCH /api/v1/admin/teachers/{id}/toggle-status` → 200
+- [ ] Switch disabled trong khi đang gọi API
+
+---
+
+## 7. Xoá giảng viên (Soft Delete)
+
+- [ ] Click icon **thùng rác** → Modal xác nhận hiện lên
+- [ ] Modal hiện tên giảng viên + ghi chú "chuyển vào thùng rác"
+- [ ] Click **"Xoá"** → Toast thành công, giảng viên biến mất khỏi danh sách
+- [ ] Số đếm thùng rác cập nhật (+1)
+- [ ] Click **"Huỷ"** → Không xoá
+
+---
+
+## 8. Thùng rác
+
+- [ ] Click tab **"Thùng rác"** → Hiện danh sách giảng viên đã xoá
+- [ ] Nút "Thêm giảng viên" ẩn đi
+- [ ] Bộ lọc trạng thái ẩn đi
+- [ ] Mỗi dòng có 2 nút: **Khôi phục** + **Xoá vĩnh viễn**
+
+### 8.1 Khôi phục
+- [ ] Click icon **khôi phục** → Toast thành công, giảng viên quay lại tab "Tất cả"
+- [ ] Network: `POST /api/v1/admin/teachers/{id}/restore` → 200
+
+### 8.2 Xoá vĩnh viễn
+- [ ] Click icon **thùng rác** → Modal xác nhận (cảnh báo đỏ "không thể hoàn tác")
+- [ ] Click **"Xoá vĩnh viễn"** → Giảng viên bị xoá hẳn, không thể khôi phục
+- [ ] Network: `DELETE /api/v1/admin/teachers/{id}/force-delete` → 200
+
+### 8.3 Empty state thùng rác
+- [ ] Thùng rác trống → Hiện "Thùng rác trống."
+
+---
+
+## 9. Bulk Actions (Thao tác hàng loạt)
+
+- [ ] Tick checkbox ở header → Chọn tất cả trang hiện tại
+- [ ] Tick checkbox từng dòng → Thanh bulk action hiện ở dưới
+- [ ] Thanh hiện đúng số lượng đã chọn
+- [ ] Tab "Tất cả": Click **"Xoá"** → Xoá mềm tất cả đã chọn
+- [ ] Tab "Thùng rác": Click **"Khôi phục"** → Khôi phục tất cả đã chọn
+- [ ] Click **"Bỏ chọn"** → Bỏ chọn hết, thanh biến mất
+- [ ] Modal overlay phủ kín cả sidebar
+
+---
+
+## 10. Edge Cases
+
+- [ ] Student truy cập `/admin/teachers` → Redirect về login admin
+- [ ] Không có token → Redirect về login admin
+
+---
+
+## Checklist Tổng Hợp
 
 | Test | Kết quả | Ghi chú |
 |------|---------|---------|
 | 1.1 Load trang | ⬜ | |
-| 1.2 Tìm kiếm | ⬜ | |
-| 1.3 Filter trạng thái | ⬜ | |
-| 2.1 Form trống | ⬜ | |
-| 2.2 Email trùng | ⬜ | |
-| 2.3 Tạo thành công | ⬜ | |
-| 2.4 Upload ảnh | ⬜ | |
-| 3.1 Sửa thông tin | ⬜ | |
-| 3.2 Đổi ảnh | ⬜ | |
-| 4.1 Ẩn giảng viên | ⬜ | |
-| 4.2 Kích hoạt lại | ⬜ | |
-| 5.1 Soft delete | ⬜ | |
-| 5.2 Restore | ⬜ | |
-| 5.3 Force delete | ⬜ | |
-| 5.4 Bulk actions | ⬜ | |
+| 1.2 Skeleton | ⬜ | |
+| 1.3 Empty state | ⬜ | |
+| 2.1 Tìm kiếm | ⬜ | |
+| 2.2 Lọc trạng thái | ⬜ | |
+| 3. Phân trang | ⬜ | |
+| 4. Thêm giảng viên | ⬜ | |
+| 5. Sửa giảng viên | ⬜ | |
+| 6. Toggle status | ⬜ | |
+| 7. Xoá (Soft Delete) | ⬜ | |
+| 8.1 Restore | ⬜ | |
+| 8.2 Force delete | ⬜ | |
+| 9. Bulk actions | ⬜ | |
+| 10. Edge cases | ⬜ | |
