@@ -67,18 +67,40 @@ class OrderController extends Controller
             $subtotal += $finalPrice;
         }
 
-        $discountAmount = 0; // Phase sau: tính coupon
-        $totalAmount    = max(0, $subtotal - $discountAmount);
+        $couponCode = $request->input('coupon_code');
+        $coupon = null;
+        $discountAmount = 0;
+
+        if ($couponCode) {
+            $coupon = \Modules\Coupons\Models\Coupon::where('code', $couponCode)->first();
+
+            if (!$coupon) {
+                return $this->error('Mã giảm giá không tồn tại.', 404);
+            }
+
+            if (!$coupon->isValid()) {
+                return $this->error('Mã giảm giá không hợp lệ hoặc đã hết hạn.', 422);
+            }
+
+            if ($coupon->min_order_value && $subtotal < $coupon->min_order_value) {
+                return $this->error("Mã giảm giá yêu cầu đơn hàng tối thiểu " . number_format($coupon->min_order_value) . "đ.", 422);
+            }
+
+            $discountAmount = $coupon->calculateDiscount($subtotal);
+        }
+
+        $totalAmount = max(0, $subtotal - $discountAmount);
 
         // Tạo order_code: ORD-YYYYMMDD-XXXXX
-        $orderCode = 'ORD-' . now()->format('Ymd') . '-' . strtoupper(Str::random(5));
+        $orderCodeStr = 'ORD-' . now()->format('Ymd') . '-' . strtoupper(Str::random(5));
 
-        $order = DB::transaction(function () use ($studentId, $orderCode, $subtotal, $discountAmount, $totalAmount, $items) {
+        $order = DB::transaction(function () use ($studentId, $orderCodeStr, $subtotal, $discountAmount, $totalAmount, $items, $couponCode, $coupon) {
             $order = $this->repository->createWithItems([
-                'order_code'      => $orderCode,
+                'order_code'      => $orderCodeStr,
                 'student_id'      => $studentId,
                 'subtotal'        => $subtotal,
                 'discount_amount' => $discountAmount,
+                'coupon_code'     => $couponCode,
                 'total_amount'    => $totalAmount,
                 'status'          => 'pending',
                 'payment_method'  => $totalAmount > 0 ? 'vnpay' : 'free',
@@ -92,6 +114,11 @@ class OrderController extends Controller
                     'amount'   => $totalAmount,
                     'status'   => 'pending',
                 ]);
+            }
+
+            // Tăng số lần sử dụng của coupon
+            if ($coupon) {
+                $coupon->increment('used_count');
             }
 
             return $order;
