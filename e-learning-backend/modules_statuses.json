@@ -8,5 +8,6 @@
     "Course": true,
     "Upload": true,
     "Lessons": true,
-    "Payment": true
+    "Payment": true,
+    "Dashboard": true
 }
