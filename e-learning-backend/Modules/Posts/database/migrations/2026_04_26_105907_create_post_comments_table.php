@@ -14,7 +14,8 @@ return new class extends Migration
         Schema::create('post_comments', function (Blueprint $table) {
             $table->id();
             $table->foreignId('post_id')->constrained()->onDelete('cascade');
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->unsignedBigInteger('user_id');
+            $table->string('user_type'); // 'student' or 'admin'
             $table->text('content');
             $table->foreignId('parent_id')->nullable()->constrained('post_comments')->onDelete('cascade');
             $table->boolean('is_approved')->default(true);

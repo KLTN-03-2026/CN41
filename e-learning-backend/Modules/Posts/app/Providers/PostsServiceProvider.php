@@ -36,6 +36,26 @@ class PostsServiceProvider extends ServiceProvider
     {
         $this->app->register(EventServiceProvider::class);
         $this->app->register(RouteServiceProvider::class);
+
+        $this->app->bind(
+            \Modules\Posts\Repositories\PostCategoryRepositoryInterface::class,
+            \Modules\Posts\Repositories\PostCategoryRepository::class
+        );
+
+        $this->app->bind(
+            \Modules\Posts\Repositories\TagRepositoryInterface::class,
+            \Modules\Posts\Repositories\TagRepository::class
+        );
+
+        $this->app->bind(
+            \Modules\Posts\Repositories\PostRepositoryInterface::class,
+            \Modules\Posts\Repositories\PostRepository::class
+        );
+
+        $this->app->bind(
+            \Modules\Posts\Repositories\CommentRepositoryInterface::class,
+            \Modules\Posts\Repositories\CommentRepository::class
+        );
     }
 
     /**
