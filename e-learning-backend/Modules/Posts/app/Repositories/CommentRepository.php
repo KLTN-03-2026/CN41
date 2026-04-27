@@ -19,18 +19,18 @@ class CommentRepository extends BaseRepository implements CommentRepositoryInter
         $perPage = max(1, min($perPage, static::MAX_PER_PAGE));
 
         $query = $this->model->newQuery()
-            ->with(['post', 'commenter', 'parent'])
+            ->with(['post', 'adminUser', 'student', 'parent'])
             ->latest();
 
-        if (!empty($filters['search'])) {
-            $query->where('content', 'like', '%' . $filters['search'] . '%');
+        if (! empty($filters['search'])) {
+            $query->where('content', 'like', '%'.$filters['search'].'%');
         }
 
         if (isset($filters['is_approved']) && $filters['is_approved'] !== '') {
-            $query->where('is_approved', (bool)$filters['is_approved']);
+            $query->where('is_approved', (bool) $filters['is_approved']);
         }
 
-        if (!empty($filters['post_id'])) {
+        if (! empty($filters['post_id'])) {
             $query->where('post_id', $filters['post_id']);
         }
 
@@ -40,8 +40,9 @@ class CommentRepository extends BaseRepository implements CommentRepositoryInter
     public function toggleApproval(int $id): Model
     {
         $comment = $this->findOrFail($id);
-        $comment->is_approved = !$comment->is_approved;
+        $comment->is_approved = ! $comment->is_approved;
         $comment->save();
+
         return $comment;
     }
 }

@@ -13,16 +13,16 @@ class PostCommentResource extends JsonResource
             'id' => $this->id,
             'content' => $this->content,
             'is_approved' => $this->is_approved,
-            'commenter' => [
+            'commenter' => $this->commenter ? [
                 'id' => $this->commenter->id,
                 'name' => $this->commenter->name,
                 'avatar' => $this->commenter->avatar_url ?? ($this->commenter->avatar ?? null),
                 'type' => $this->user_type,
-            ],
-            'post' => [
+            ] : null,
+            'post' => $this->whenLoaded('post', fn () => [
                 'id' => $this->post->id,
                 'title' => $this->post->title,
-            ],
+            ]),
             'parent_id' => $this->parent_id,
             'replies' => PostCommentResource::collection($this->whenLoaded('replies')),
             'created_at' => $this->created_at,

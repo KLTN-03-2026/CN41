@@ -15,13 +15,14 @@ class PostResource extends JsonResource
             'slug' => $this->slug,
             'content' => $this->content,
             'thumbnail' => $this->thumbnail,
-            'thumbnail_url' => $this->thumbnail ? asset('storage/' . $this->thumbnail) : null, // Giả sử dùng storage local
+            'thumbnail_url' => $this->thumbnail ? asset('storage/'.$this->thumbnail) : null, // Giả sử dùng storage local
             'author' => [
                 'id' => $this->author->id,
                 'name' => $this->author->name,
             ],
             'category' => new PostCategoryResource($this->whenLoaded('category')),
             'tags' => TagResource::collection($this->whenLoaded('tags')),
+            'comments' => PostCommentResource::collection($this->whenLoaded('comments')),
             'is_published' => $this->is_published,
             'published_at' => $this->published_at,
             'views' => $this->views,

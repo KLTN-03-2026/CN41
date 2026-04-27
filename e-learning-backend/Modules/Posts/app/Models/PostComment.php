@@ -2,7 +2,9 @@
 
 namespace Modules\Posts\Models;
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
+use Modules\Students\Models\Student;
 
 class PostComment extends Model
 {
@@ -24,9 +26,32 @@ class PostComment extends Model
         return $this->belongsTo(Post::class);
     }
 
-    public function commenter()
+    /**
+     * Lấy user (admin) nếu user_type = 'admin'
+     */
+    public function adminUser()
     {
-        return $this->morphTo('commenter', 'user_type', 'user_id');
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    /**
+     * Lấy student nếu user_type = 'student'
+     */
+    public function student()
+    {
+        return $this->belongsTo(Student::class, 'user_id');
+    }
+
+    /**
+     * Accessor: trả về commenter dù là admin hay student
+     */
+    public function getCommenterAttribute()
+    {
+        if ($this->user_type === 'student') {
+            return $this->student;
+        }
+
+        return $this->adminUser;
     }
 
     public function parent()

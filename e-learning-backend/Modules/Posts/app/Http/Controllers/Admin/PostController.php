@@ -35,14 +35,14 @@ class PostController extends Controller
     {
         $data = $request->validated();
         $data['author_id'] = auth()->id();
-        
-        if (!empty($data['is_published'])) {
+
+        if (! empty($data['is_published'])) {
             $data['published_at'] = now();
         }
 
         $post = $this->repository->create($data);
 
-        if (!empty($data['tag_ids'])) {
+        if (! empty($data['tag_ids'])) {
             $post->tags()->sync($data['tag_ids']);
         }
 
@@ -69,7 +69,7 @@ class PostController extends Controller
         $data = $request->validated();
         $post = $this->repository->findOrFail($id);
 
-        if (isset($data['is_published']) && $data['is_published'] && !$post->is_published && !$post->published_at) {
+        if (isset($data['is_published']) && $data['is_published'] && ! $post->is_published && ! $post->published_at) {
             $data['published_at'] = now();
         }
 
@@ -100,5 +100,17 @@ class PostController extends Controller
             new PostResource($post->load(['author', 'category', 'tags'])),
             'Thay đổi trạng thái xuất bản thành công.'
         );
+    }
+
+    public function bulkDelete(Request $request): JsonResponse
+    {
+        $ids = $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'integer|exists:posts,id',
+        ])['ids'];
+
+        $this->repository->getModel()->whereIn('id', $ids)->delete();
+
+        return $this->success(null, 'Xóa các bài viết đã chọn thành công.');
     }
 }
