@@ -11,7 +11,7 @@ const router = createRouter({
     {
       path: '/admin/login',
       component: () => import('@/views/auth/AdminLoginPage.vue'),
-      meta: { requiresGuest: true, guard: 'admin' }
+      meta: { requiresGuest: true, guard: 'admin' },
     },
     {
       path: '/admin',
@@ -29,8 +29,16 @@ const router = createRouter({
         { path: 'students', component: () => import('@/views/admin/StudentsPage.vue') },
         { path: 'orders', component: () => import('@/views/admin/OrdersPage.vue') },
         { path: 'posts', component: () => import('@/views/admin/PostsPage.vue') },
+        { path: 'posts/create', component: () => import('@/views/admin/PostFormPage.vue') },
+        { path: 'posts/:id/edit', component: () => import('@/views/admin/PostFormPage.vue') },
+        {
+          path: 'post-categories',
+          component: () => import('@/views/admin/PostCategoriesPage.vue'),
+        },
+        { path: 'tags', component: () => import('@/views/admin/TagsPage.vue') },
+        { path: 'post-comments', component: () => import('@/views/admin/CommentsPage.vue') },
         { path: 'coupons', component: () => import('@/views/admin/CouponsPage.vue') },
-      ]
+      ],
     },
 
     // ── CLIENT ─────────────────────────────────────────────
@@ -41,28 +49,29 @@ const router = createRouter({
         { path: '', component: () => import('@/views/client/HomePage.vue') },
         { path: 'courses', component: () => import('@/views/client/CoursesPage.vue') },
         { path: 'courses/:slug', component: () => import('@/views/client/CourseDetailPage.vue') },
-        { path: 'posts', component: () => import('@/views/client/PostsPage.vue') },
+        { path: 'posts', component: () => import('@/views/client/BlogPage.vue') },
+        { path: 'posts/:slug', component: () => import('@/views/client/PostDetailPage.vue') },
         // Cần auth
         {
           path: 'my-courses',
           component: () => import('@/views/client/MyCoursesPage.vue'),
-          meta: { requiresAuth: true, guard: 'student' }
+          meta: { requiresAuth: true, guard: 'student' },
         },
         {
           path: 'my-orders',
           component: () => import('@/views/client/MyOrdersPage.vue'),
-          meta: { requiresAuth: true, guard: 'student' }
+          meta: { requiresAuth: true, guard: 'student' },
         },
         // LearnPage → đã chuyển ra ngoài ClientLayout (fullscreen)
         {
           path: 'cart',
           component: () => import('@/views/client/CartPage.vue'),
-          meta: { requiresAuth: true, guard: 'student' }
+          meta: { requiresAuth: true, guard: 'student' },
         },
         {
           path: 'checkout',
           component: () => import('@/views/client/CheckoutPage.vue'),
-          meta: { requiresAuth: true, guard: 'student' }
+          meta: { requiresAuth: true, guard: 'student' },
         },
         {
           path: 'payment/result',
@@ -71,9 +80,9 @@ const router = createRouter({
         {
           path: 'profile',
           component: () => import('@/views/client/ProfilePage.vue'),
-          meta: { requiresAuth: true, guard: 'student' }
+          meta: { requiresAuth: true, guard: 'student' },
         },
-      ]
+      ],
     },
 
     // ── LEARN PAGE (fullscreen, no layout) ───────────────────
@@ -86,17 +95,17 @@ const router = createRouter({
     {
       path: '/login',
       component: () => import('@/views/auth/LoginPage.vue'),
-      meta: { requiresGuest: true, guard: 'student' }
+      meta: { requiresGuest: true, guard: 'student' },
     },
     {
       path: '/register',
       component: () => import('@/views/auth/RegisterPage.vue'),
-      meta: { requiresGuest: true, guard: 'student' }
+      meta: { requiresGuest: true, guard: 'student' },
     },
     {
       path: '/verify-email',
       component: () => import('@/views/auth/VerifyEmailPage.vue'),
-      meta: { requiresAuth: true, guard: 'student' }
+      meta: { requiresAuth: true, guard: 'student' },
     },
     {
       path: '/verify-email/result',
@@ -105,18 +114,18 @@ const router = createRouter({
     {
       path: '/forgot-password',
       component: () => import('@/views/auth/ForgotPasswordPage.vue'),
-      meta: { requiresGuest: true, guard: 'student' }
+      meta: { requiresGuest: true, guard: 'student' },
     },
     {
       path: '/reset-password',
       component: () => import('@/views/auth/ResetPasswordPage.vue'),
-      meta: { requiresGuest: true, guard: 'student' }
+      meta: { requiresGuest: true, guard: 'student' },
     },
 
     // ── ERROR PAGES ────────────────────────────────────────
     { path: '/403', component: () => import('@/views/ForbiddenPage.vue') },
     { path: '/:pathMatch(.*)*', component: () => import('@/views/NotFoundPage.vue') },
-  ]
+  ],
 })
 
 function getToken(key) {

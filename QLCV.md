@@ -1,13 +1,13 @@
 # Bảng Theo Dõi Tiến Độ — E-Learning Marketplace
 
-> Cập nhật lần cuối: 26/04/2026 | Deadline: 15/05/2026
+> Cập nhật lần cuối: 27/04/2026 | Deadline: 15/05/2026
 
 ---
 
 ## Tiến Độ Tổng Quan
 
 ```
-Tổng thể: ████████████████████░░░░░░░  72%
+Tổng thể: ██████████████████████░░░░░  78%
 ```
 
 ---
@@ -180,16 +180,26 @@ Còn lại:
 
 ---
 
+### 13. Quản Lý Bài Viết (Posts)
+| Tầng | Trạng thái | Ghi chú |
+|------|-----------|---------|
+| BE | ✅ Hoàn thành | Đã tạo module Posts; Migration & Models cho Categories, Tags, Posts, Comments (Polymorphic); Repositories; Admin & Client API đầy đủ |
+| FE | ✅ Hoàn thành | Đã hoàn thành cả Admin UI (Quản lý) và Client UI (BlogPage, PostDetailPage). |
+
+**Hoàn thành: 100%**
+
+---
+
 ## Tiến Độ Theo Tầng
 
 | Tầng | Tiến độ | Thanh tiến độ |
 |------|---------|--------------|
-| **Backend** | **92%** | `█████████████████████████░░` |
+| **Backend** | **94%** | `██████████████████████████░░` |
 | **Frontend** | **88%** | `████████████████████████░░░` |
 
 ### Chi tiết Backend:
-- ✅ Hoàn thành: Auth, Course, Categories, Lessons/Sections, Students, Teachers, Users, Upload, Payment/VNPAY, Enrollment, Dashboard, **Coupons**, 113 Feature Tests passed (13/14 module)
-- ⬜ Chưa làm: AI Quiz, Notifications (2/14 thiếu phần lớn)
+- ✅ Hoàn thành: Auth, Course, Categories, Lessons/Sections, Students, Teachers, Users, Upload, Payment/VNPAY, Enrollment, Dashboard, Coupons, **Posts**, 113 Feature Tests passed (13/15 module)
+- ⬜ Chưa làm: AI Quiz, Notifications (2/15 thiếu phần lớn)
 
 ### Chi tiết Frontend:
 - ✅ Hoàn thành: Auth pages, Course pages, Category pages, Lessons manager, Student/Teacher/Coupon pages (CRUD đầy đủ), Upload UI, Enrollment flow, Payment FE, Dashboard charts thực
