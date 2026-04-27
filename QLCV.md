@@ -1,6 +1,6 @@
 # Bảng Theo Dõi Tiến Độ — E-Learning Marketplace
 
-> Cập nhật lần cuối: 26/04/2026 | Deadline: 15/05/2026
+> Cập nhật lần cuối: 27/04/2026 | Deadline: 15/05/2026
 
 ---
 
@@ -184,9 +184,9 @@ Còn lại:
 | Tầng | Trạng thái | Ghi chú |
 |------|-----------|---------|
 | BE | ✅ Hoàn thành | Đã tạo module Posts; Migration & Models cho Categories, Tags, Posts, Comments (Polymorphic); Repositories; Admin & Client API đầy đủ |
-| FE | ⬜ Chưa làm | Chưa tạo giao diện Admin (PostsPage, CategoriesPage, TagPage) và Client (BlogPage, PostDetail) |
+| FE | ✅ Hoàn thành | Đã hoàn thành cả Admin UI (Quản lý) và Client UI (BlogPage, PostDetailPage). |
 
-**Hoàn thành: 50%**
+**Hoàn thành: 100%**
 
 ---
 
