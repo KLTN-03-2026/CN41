@@ -154,10 +154,7 @@
             <ul class="space-y-3">
               <li v-for="cat in categories" :key="cat.id">
                 <button
-                  @click="
-                    categoryFilter = categoryFilter === cat.id ? '' : cat.id
-                    fetchPosts(1)
-                  "
+                  @click="toggleCategory(cat.id)"
                   class="w-full text-left px-4 py-2 rounded-xl text-sm transition-all flex items-center justify-between"
                   :class="
                     categoryFilter === cat.id
@@ -239,6 +236,11 @@ async function fetchPosts(page = 1) {
   } finally {
     loading.value = false
   }
+}
+
+function toggleCategory(id: any) {
+  categoryFilter.value = categoryFilter.value === id ? '' : id
+  fetchPosts(1)
 }
 
 async function fetchSidebarData() {
