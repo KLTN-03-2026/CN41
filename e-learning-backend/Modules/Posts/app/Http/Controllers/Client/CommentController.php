@@ -28,7 +28,7 @@ class CommentController extends Controller
         $comment = $this->repository->create($data);
 
         return $this->success(
-            new PostCommentResource($comment->load('user')),
+            new PostCommentResource($comment->load('student')),
             'Đăng bình luận thành công.',
             201
         );

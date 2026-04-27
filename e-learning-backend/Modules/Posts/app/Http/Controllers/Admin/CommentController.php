@@ -24,7 +24,7 @@ class CommentController extends Controller
             $request->get('per_page', 15)
         );
 
-        $comments->setCollection(PostCommentResource::collection($comments->load(['commenter', 'post']))->collection);
+        $comments->setCollection(PostCommentResource::collection($comments->load(['adminUser', 'student', 'post']))->collection);
 
         return $this->paginated($comments, 'Lấy danh sách bình luận thành công.');
     }
@@ -34,7 +34,7 @@ class CommentController extends Controller
         $comment = $this->repository->toggleApproval($id);
 
         return $this->success(
-            new PostCommentResource($comment->load(['post', 'commenter'])),
+            new PostCommentResource($comment->load(['post', 'adminUser', 'student'])),
             'Thay đổi trạng thái duyệt bình luận thành công.'
         );
     }
@@ -44,5 +44,17 @@ class CommentController extends Controller
         $this->repository->delete($id);
 
         return $this->success(null, 'Xóa bình luận thành công.');
+    }
+
+    public function bulkDelete(Request $request): JsonResponse
+    {
+        $ids = $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'integer|exists:post_comments,id',
+        ])['ids'];
+
+        $this->repository->getModel()->whereIn('id', $ids)->delete();
+
+        return $this->success(null, 'Xóa các bình luận đã chọn thành công.');
     }
 }
