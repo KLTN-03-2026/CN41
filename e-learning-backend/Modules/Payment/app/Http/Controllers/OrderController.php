@@ -8,6 +8,8 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Modules\Coupons\Models\Coupon;
+use Modules\Course\Models\Course;
 use Modules\Payment\Http\Requests\CreateOrderRequest;
 use Modules\Payment\Http\Resources\OrderResource;
 use Modules\Payment\Models\Order;
@@ -40,7 +42,7 @@ class OrderController extends Controller
         $studentId = auth('api')->id();
 
         // Lấy thông tin courses kèm giá
-        $courses = \Modules\Course\Models\Course::whereIn('id', $courseIds)
+        $courses = Course::whereIn('id', $courseIds)
             ->published()
             ->get();
 
@@ -53,14 +55,14 @@ class OrderController extends Controller
         $subtotal = 0;
 
         foreach ($courses as $course) {
-            $price      = (float) $course->price;
-            $salePrice  = $course->sale_price ? (float) $course->sale_price : null;
+            $price = (float) $course->price;
+            $salePrice = $course->sale_price ? (float) $course->sale_price : null;
             $finalPrice = $salePrice ?? $price;
 
             $items[] = [
-                'course_id'   => $course->id,
-                'price'       => $price,
-                'sale_price'  => $salePrice,
+                'course_id' => $course->id,
+                'price' => $price,
+                'sale_price' => $salePrice,
                 'final_price' => $finalPrice,
             ];
 
@@ -68,68 +70,82 @@ class OrderController extends Controller
         }
 
         $couponCode = $request->input('coupon_code');
-        $coupon = null;
-        $discountAmount = 0;
-
-        if ($couponCode) {
-            $coupon = \Modules\Coupons\Models\Coupon::where('code', $couponCode)->first();
-
-            if (!$coupon) {
-                return $this->error('Mã giảm giá không tồn tại.', 404);
-            }
-
-            if (!$coupon->isValid()) {
-                return $this->error('Mã giảm giá không hợp lệ hoặc đã hết hạn.', 422);
-            }
-
-            if ($coupon->min_order_value && $subtotal < $coupon->min_order_value) {
-                return $this->error("Mã giảm giá yêu cầu đơn hàng tối thiểu " . number_format($coupon->min_order_value) . "đ.", 422);
-            }
-
-            $discountAmount = $coupon->calculateDiscount($subtotal);
-        }
-
-        $totalAmount = max(0, $subtotal - $discountAmount);
 
         // Tạo order_code: ORD-YYYYMMDD-XXXXX
-        $orderCodeStr = 'ORD-' . now()->format('Ymd') . '-' . strtoupper(Str::random(5));
+        $orderCodeStr = 'ORD-'.now()->format('Ymd').'-'.strtoupper(Str::random(5));
 
-        $order = DB::transaction(function () use ($studentId, $orderCodeStr, $subtotal, $discountAmount, $totalAmount, $items, $couponCode, $coupon) {
-            $order = $this->repository->createWithItems([
-                'order_code'      => $orderCodeStr,
-                'student_id'      => $studentId,
-                'subtotal'        => $subtotal,
-                'discount_amount' => $discountAmount,
-                'coupon_code'     => $couponCode,
-                'total_amount'    => $totalAmount,
-                'status'          => 'pending',
-                'payment_method'  => $totalAmount > 0 ? 'vnpay' : 'free',
-            ], $items);
+        try {
+            $result = DB::transaction(function () use ($studentId, $orderCodeStr, $subtotal, $items, $couponCode) {
+                $discountAmount = 0;
+                $coupon = null;
 
-            // Tạo transaction pending
-            if ($totalAmount > 0) {
-                Transaction::create([
-                    'order_id' => $order->id,
-                    'gateway'  => 'vnpay',
-                    'amount'   => $totalAmount,
-                    'status'   => 'pending',
-                ]);
-            }
+                if ($couponCode) {
+                    // Lock coupon row để tránh race condition khi nhiều người cùng dùng mã cuối cùng
+                    $coupon = Coupon::where('code', $couponCode)
+                        ->lockForUpdate()
+                        ->first();
 
-            // Tăng số lần sử dụng của coupon
-            if ($coupon) {
-                $coupon->increment('used_count');
-            }
+                    if (! $coupon) {
+                        throw new \Exception('Mã giảm giá không tồn tại.', 404);
+                    }
 
-            return $order;
-        });
+                    if (! $coupon->isValid()) {
+                        throw new \Exception('Mã giảm giá không hợp lệ hoặc đã hết hạn.', 422);
+                    }
+
+                    if ($coupon->min_order_value && $subtotal < $coupon->min_order_value) {
+                        throw new \Exception('Mã giảm giá yêu cầu đơn hàng tối thiểu '.number_format($coupon->min_order_value).'đ.', 422);
+                    }
+
+                    $discountAmount = $coupon->calculateDiscount($subtotal);
+                }
+
+                $totalAmount = max(0, $subtotal - $discountAmount);
+
+                $order = $this->repository->createWithItems([
+                    'order_code' => $orderCodeStr,
+                    'student_id' => $studentId,
+                    'subtotal' => $subtotal,
+                    'discount_amount' => $discountAmount,
+                    'coupon_code' => $couponCode,
+                    'total_amount' => $totalAmount,
+                    'status' => 'pending',
+                    'payment_method' => $totalAmount > 0 ? 'vnpay' : 'free',
+                ], $items);
+
+                // Tạo transaction pending
+                if ($totalAmount > 0) {
+                    Transaction::create([
+                        'order_id' => $order->id,
+                        'gateway' => 'vnpay',
+                        'amount' => $totalAmount,
+                        'status' => 'pending',
+                    ]);
+                }
+
+                // Tăng số lần sử dụng của coupon
+                if ($coupon) {
+                    $coupon->increment('used_count');
+                }
+
+                return [
+                    'order' => $order,
+                    'totalAmount' => $totalAmount,
+                ];
+            });
+
+            $order = $result['order'];
+            $totalAmount = $result['totalAmount'];
+        } catch (\Exception $e) {
+            return $this->error($e->getMessage(), $e->getCode() ?: 422);
+        }
 
         // Xử lý đơn hàng giá = 0 (free sau coupon)
         if ($totalAmount <= 0) {
             $order->update([
-                'status'         => 'paid',
+                'status' => 'paid',
                 'payment_method' => 'free',
-                'paid_at'        => now(),
+                'paid_at' => now(),
             ]);
 
             // Enroll ngay
@@ -144,16 +160,16 @@ class OrderController extends Controller
                     ->where('course_id', $item['course_id'])
                     ->exists();
 
-                if (!$exists) {
+                if (! $exists) {
                     DB::table('students_course')->insert([
-                        'student_id'  => $studentId,
-                        'course_id'   => $item['course_id'],
+                        'student_id' => $studentId,
+                        'course_id' => $item['course_id'],
                         'enrolled_at' => now(),
-                        'created_at'  => now(),
-                        'updated_at'  => now(),
+                        'created_at' => now(),
+                        'updated_at' => now(),
                     ]);
 
-                    \Modules\Course\Models\Course::where('id', $item['course_id'])
+                    Course::where('id', $item['course_id'])
                         ->increment('total_students');
                 }
             }
@@ -162,7 +178,7 @@ class OrderController extends Controller
             $order->load(['items.course']);
 
             return $this->success([
-                'order'       => new OrderResource($order),
+                'order' => new OrderResource($order),
                 'payment_url' => null,
             ], 'Đơn hàng miễn phí đã được xử lý. Bạn có thể vào học ngay!', 201);
         }
@@ -173,7 +189,7 @@ class OrderController extends Controller
         $order->load(['items.course']);
 
         return $this->success([
-            'order'       => new OrderResource($order),
+            'order' => new OrderResource($order),
             'payment_url' => $paymentUrl,
         ], 'Đơn hàng đã được tạo. Vui lòng thanh toán.', 201);
     }
@@ -185,10 +201,10 @@ class OrderController extends Controller
     {
         $request->validate([
             'per_page' => 'nullable|integer|min:1|max:100',
-            'status'   => 'nullable|string|in:pending,paid,failed,cancelled,refunded',
+            'status' => 'nullable|string|in:pending,paid,failed,cancelled,refunded',
         ]);
 
-        $perPage   = (int) $request->query('per_page', 15);
+        $perPage = (int) $request->query('per_page', 15);
         $studentId = auth('api')->id();
 
         $data = $this->repository->getByStudent($studentId, $perPage);
@@ -205,7 +221,7 @@ class OrderController extends Controller
     {
         $order = $this->repository->findByOrderCode($orderCode);
 
-        if (!$order) {
+        if (! $order) {
             return $this->error('Đơn hàng không tồn tại.', 404);
         }
 
@@ -224,7 +240,7 @@ class OrderController extends Controller
     {
         $order = $this->repository->findByOrderCode($orderCode);
 
-        if (!$order) {
+        if (! $order) {
             return $this->error('Đơn hàng không tồn tại.', 404);
         }
 
@@ -232,7 +248,7 @@ class OrderController extends Controller
             return $this->error('Bạn không có quyền thực hiện thao tác này.', 403);
         }
 
-        if (!$order->isPending() && !$order->isFailed()) {
+        if (! $order->isPending() && ! $order->isFailed()) {
             return $this->error('Chỉ đơn hàng đang chờ hoặc thất bại mới có thể thanh toán lại.', 422);
         }
 
@@ -244,15 +260,15 @@ class OrderController extends Controller
         // Tạo transaction mới
         Transaction::create([
             'order_id' => $order->id,
-            'gateway'  => 'vnpay',
-            'amount'   => $order->total_amount,
-            'status'   => 'pending',
+            'gateway' => 'vnpay',
+            'amount' => $order->total_amount,
+            'status' => 'pending',
         ]);
 
         $paymentUrl = $this->vnpayService->createPaymentUrl($order, $request->ip());
 
         return $this->success([
-            'order_code'  => $order->order_code,
+            'order_code' => $order->order_code,
             'payment_url' => $paymentUrl,
         ], 'Đã tạo liên kết thanh toán mới.');
     }
