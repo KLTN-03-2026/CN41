@@ -794,8 +794,18 @@ import { PlusIcon } from '@/components/icons'
 import PaginationBar from '@/components/common/PaginationBar.vue'
 import ConfirmModal from '@/components/common/ConfirmModal.vue'
 import { useToast } from 'vue-toastification'
+import { useAdminAuthStore } from '@/stores/adminAuth.store'
 
 const toast = useToast()
+const authStore = useAdminAuthStore()
+
+// Kiểm tra xem người dùng hiện tại có phải super-admin không
+const isSuperAdmin = computed(() => {
+  return authStore.user?.roles?.includes('super-admin') || false
+})
+
+// Các role được phép quản lý (cho non-super-admin)
+const ALLOWED_ROLES = ['student', 'teacher']
 
 // ── State ──
 const users = ref<AdminUser[]>([])
@@ -864,7 +874,14 @@ const debouncedFetch = () => {
 async function fetchRoles() {
   try {
     const res = await userService.getRoles()
-    roles.value = res.data.data
+    const allRoles = res.data.data as { id: number; name: string }[]
+
+    // Nếu không phải super-admin, chỉ hiển thị role student và teacher
+    if (isSuperAdmin.value) {
+      roles.value = allRoles
+    } else {
+      roles.value = allRoles.filter((r) => ALLOWED_ROLES.includes(r.name))
+    }
   } catch (err) {
     console.error('Failed to load roles', err)
   }
@@ -875,7 +892,7 @@ async function loadPage(page = 1) {
   selectedIds.value.clear()
   try {
     const fn = isTrashed.value ? userService.trashed : userService.index
-    const params: any = { page, per_page: pagination.per_page }
+    const params: Record<string, unknown> = { page, per_page: pagination.per_page }
     if (search.value) params.search = search.value
     if (roleFilter.value) params.role = roleFilter.value
     if (statusFilter.value) params.status = statusFilter.value
@@ -942,7 +959,7 @@ async function submitForm() {
   formError.value = ''
   formErrors.value = {}
   try {
-    const data: Record<string, any> = { name: form.name, email: form.email }
+    const data: Record<string, unknown> = { name: form.name, email: form.email }
     if (form.role) data.role = form.role
     if (!editingUser.value && form.password) data.password = form.password
 
@@ -956,11 +973,12 @@ async function submitForm() {
     showModal.value = false
     loadPage(pagination.current_page)
     fetchTrashedCount()
-  } catch (err: any) {
-    if (err.response?.status === 422 && err.response.data?.errors) {
-      formErrors.value = err.response.data.errors
+  } catch (err: unknown) {
+    const error = err as any
+    if (error.response?.status === 422 && error.response.data?.errors) {
+      formErrors.value = error.response.data.errors
     } else {
-      formError.value = err.response?.data?.message || 'Có lỗi xảy ra.'
+      formError.value = error.response?.data?.message || 'Có lỗi xảy ra.'
     }
   } finally {
     submitting.value = false
@@ -995,8 +1013,9 @@ async function submitResetPassword() {
     await userService.update(resetTarget.value!.id, { password: resetPasswordForm.password })
     toast.success('Đã đổi mật khẩu thành công!')
     showResetModal.value = false
-  } catch (err: any) {
-    resetPasswordError.value = err.response?.data?.message || 'Đổi mật khẩu thất bại.'
+  } catch (err: unknown) {
+    const error = err as any
+    resetPasswordError.value = error.response?.data?.message || 'Đổi mật khẩu thất bại.'
   } finally {
     resetting.value = false
   }
@@ -1027,8 +1046,9 @@ async function doDelete() {
     showDeleteModal.value = false
     loadPage(pagination.current_page)
     fetchTrashedCount()
-  } catch (err: any) {
-    toast.error(err.response?.data?.message || 'Xoá thất bại.')
+  } catch (err: unknown) {
+    const error = err as any
+    toast.error(error.response?.data?.message || 'Xoá thất bại.')
   } finally {
     deleteLoading.value = false
   }

@@ -24,6 +24,8 @@ interface UsersRepositoryInterface extends RepositoryInterface
 
     /**
      * Lấy danh sách users kèm filter.
+     *
+     * @param  array|null  $allowedRoles  Nếu không null, chỉ trả về user có role trong danh sách này.
      */
-    public function paginateFiltered(array $filters, int $perPage = 15, bool $trashed = false): LengthAwarePaginator;
+    public function paginateFiltered(array $filters, int $perPage = 15, bool $trashed = false, ?array $allowedRoles = null): LengthAwarePaginator;
 }

@@ -31,7 +31,12 @@ class UsersRepository extends BaseRepository implements UsersRepositoryInterface
         return $users->count();
     }
 
-    public function paginateFiltered(array $filters, int $perPage = 15, bool $trashed = false): LengthAwarePaginator
+    /**
+     * Paginate + filter users.
+     *
+     * @param  array|null  $allowedRoles  Nếu không null, chỉ trả về user có role trong danh sách này.
+     */
+    public function paginateFiltered(array $filters, int $perPage = 15, bool $trashed = false, ?array $allowedRoles = null): LengthAwarePaginator
     {
         $perPage = max(1, min($perPage, static::MAX_PER_PAGE));
         $query = $this->model->newQuery();
@@ -42,6 +47,13 @@ class UsersRepository extends BaseRepository implements UsersRepositoryInterface
 
         $query->with(['roles']);
 
+        // Giới hạn chỉ thấy user thuộc các role được phép (ví dụ: student, teacher)
+        if (! is_null($allowedRoles)) {
+            $query->whereHas('roles', function ($q) use ($allowedRoles) {
+                $q->whereIn('name', $allowedRoles);
+            });
+        }
+
         // Filter: search by name/email
         if (! empty($filters['search'])) {
             $search = '%'.$filters['search'].'%';
@@ -51,7 +63,7 @@ class UsersRepository extends BaseRepository implements UsersRepositoryInterface
             });
         }
 
-        // Filter: role
+        // Filter: role (chỉ trong phạm vi allowedRoles nếu có)
         if (! empty($filters['role'])) {
             $query->whereHas('roles', function ($q) use ($filters) {
                 $q->where('name', $filters['role']);
