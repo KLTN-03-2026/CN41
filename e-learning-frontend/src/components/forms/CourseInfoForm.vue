@@ -63,7 +63,7 @@
     <div class="card-box">
       <h3 class="section-title">Phân loại</h3>
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
+        <div v-if="!isTeacherOnly">
           <label class="label-form">Giảng viên <span class="text-red-500">*</span></label>
           <select
             :value="form.teacher_id !== null ? form.teacher_id : ''"
@@ -206,8 +206,16 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import type { AdminCourseForm } from '@/types/course.types'
 import ThumbnailUpload from '@/components/forms/ThumbnailUpload.vue'
+import { useAdminAuthStore } from '@/stores/adminAuth.store'
+
+const authStore = useAdminAuthStore()
+const isTeacherOnly = computed(() => {
+  const roles = authStore.user?.roles || []
+  return roles.includes('teacher') && !roles.includes('super-admin')
+})
 
 const props = defineProps<{
   form: AdminCourseForm

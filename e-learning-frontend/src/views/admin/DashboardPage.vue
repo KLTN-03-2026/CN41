@@ -263,26 +263,6 @@ interface StatItem {
   changePositive: boolean
 }
 
-interface RevenueItem {
-  month: string
-  value: number
-}
-
-interface CourseItem {
-  id: number
-  title: string
-  enrolled: number
-  revenue: number
-}
-
-interface OrderItem {
-  id: number
-  student_name: string
-  course_title: string
-  amount: number
-  status: string
-}
-
 const MONTHS = ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12']
 
 const loading = ref(true)

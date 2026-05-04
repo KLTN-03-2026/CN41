@@ -13,8 +13,10 @@ interface ActionResult {
  * Lấy token từ localStorage (remember) hoặc sessionStorage (session-only).
  */
 function getStoredToken(): string | null {
-  return localStorage.getItem(STORAGE_KEYS.ADMIN_TOKEN)
-    || sessionStorage.getItem(STORAGE_KEYS.ADMIN_TOKEN)
+  return (
+    localStorage.getItem(STORAGE_KEYS.ADMIN_TOKEN) ||
+    sessionStorage.getItem(STORAGE_KEYS.ADMIN_TOKEN)
+  )
 }
 
 export const useAdminAuthStore = defineStore('adminAuth', {
@@ -27,6 +29,18 @@ export const useAdminAuthStore = defineStore('adminAuth', {
   getters: {
     isLoggedIn: (state): boolean => !!state.token,
     userName: (state): string => state.user?.name || '',
+
+    /**
+     * Kiểm tra user có quyền cụ thể không
+     */
+    hasPermission: (state) => {
+      return (permission: string): boolean => {
+        // Super admin luôn có quyền
+        if (state.user?.roles?.includes('super-admin')) return true
+        // Nếu không, kiểm tra trong mảng permissions
+        return state.user?.permissions?.includes(permission) || false
+      }
+    },
   },
 
   actions: {
@@ -49,7 +63,9 @@ export const useAdminAuthStore = defineStore('adminAuth', {
 
         return { success: true }
       } catch (err: unknown) {
-        const e = err as { response?: { data?: { message?: string; errors?: Record<string, string[]> } } }
+        const e = err as {
+          response?: { data?: { message?: string; errors?: Record<string, string[]> } }
+        }
         return {
           success: false,
           message: e.response?.data?.message || 'Login failed',

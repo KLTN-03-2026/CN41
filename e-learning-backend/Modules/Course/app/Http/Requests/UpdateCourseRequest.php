@@ -2,8 +2,8 @@
 
 namespace Modules\Course\Http\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
 class UpdateCourseRequest extends FormRequest
@@ -17,6 +17,19 @@ class UpdateCourseRequest extends FormRequest
     }
 
     /**
+     * Chuẩn bị dữ liệu trước khi validate.
+     */
+    protected function prepareForValidation(): void
+    {
+        // Tự động gán teacher_id nếu là teacher đang thao tác
+        if (auth('admin')->check() && auth('admin')->user()->hasRole('teacher') && auth('admin')->user()->teacher) {
+            $this->merge([
+                'teacher_id' => auth('admin')->user()->teacher->id,
+            ]);
+        }
+    }
+
+    /**
      * Validation rules cho việc cập nhật Course.
      * Tất cả fields đều sometimes (chỉ validate khi gửi lên).
      */
@@ -25,18 +38,18 @@ class UpdateCourseRequest extends FormRequest
         $courseId = $this->route('course');
 
         return [
-            'name'           => 'sometimes|required|string|max:255',
-            'slug'           => 'sometimes|required|string|max:255|regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/|unique:courses,slug,' . $courseId,
-            'teacher_id'     => 'sometimes|required|integer|exists:teachers,id',
-            'category_id'    => 'nullable|integer|exists:categories,id',
-            'category_ids'   => 'nullable|array',
+            'name' => 'sometimes|required|string|max:255',
+            'slug' => 'sometimes|required|string|max:255|regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/|unique:courses,slug,'.$courseId,
+            'teacher_id' => 'sometimes|required|integer|exists:teachers,id',
+            'category_id' => 'nullable|integer|exists:categories,id',
+            'category_ids' => 'nullable|array',
             'category_ids.*' => 'integer|exists:categories,id',
-            'description'    => 'nullable|string|max:10000',
-            'thumbnail'      => 'nullable|string|max:2048',
-            'price'          => 'sometimes|required|numeric|min:0',
-            'sale_price'     => 'nullable|numeric|min:0|lte:price',
-            'level'          => 'sometimes|required|in:beginner,intermediate,advanced',
-            'status'         => 'nullable|in:0,1',
+            'description' => 'nullable|string|max:10000',
+            'thumbnail' => 'nullable|string|max:2048',
+            'price' => 'sometimes|required|numeric|min:0',
+            'sale_price' => 'nullable|numeric|min:0|lte:price',
+            'level' => 'sometimes|required|in:beginner,intermediate,advanced',
+            'status' => 'nullable|in:0,1',
         ];
     }
 
@@ -46,27 +59,27 @@ class UpdateCourseRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'name.required'           => 'Tên khóa học là bắt buộc.',
-            'name.max'                => 'Tên khóa học tối đa 255 ký tự.',
-            'slug.required'           => 'Slug là bắt buộc.',
-            'slug.unique'             => 'Slug đã tồn tại.',
-            'slug.regex'              => 'Slug chỉ chứa chữ thường, số và dấu gạch ngang.',
-            'teacher_id.required'     => 'Giảng viên là bắt buộc.',
-            'teacher_id.exists'       => 'Giảng viên không tồn tại.',
-            'category_id.exists'      => 'Danh mục không tồn tại.',
-            'category_ids.array'      => 'Danh sách danh mục phải là mảng.',
-            'category_ids.*.exists'   => 'Một hoặc nhiều danh mục không tồn tại.',
-            'description.max'         => 'Mô tả tối đa 10000 ký tự.',
-            'thumbnail.url'           => 'Thumbnail phải là URL hợp lệ.',
-            'price.required'          => 'Giá là bắt buộc.',
-            'price.numeric'           => 'Giá phải là số.',
-            'price.min'               => 'Giá không được nhỏ hơn 0.',
-            'sale_price.numeric'      => 'Giá khuyến mãi phải là số.',
-            'sale_price.min'          => 'Giá khuyến mãi không được nhỏ hơn 0.',
-            'sale_price.lte'          => 'Giá khuyến mãi phải nhỏ hơn hoặc bằng giá gốc.',
-            'level.required'          => 'Trình độ là bắt buộc.',
-            'level.in'                => 'Trình độ phải là: beginner, intermediate, hoặc advanced.',
-            'status.in'               => 'Trạng thái chỉ có thể là 0 hoặc 1.',
+            'name.required' => 'Tên khóa học là bắt buộc.',
+            'name.max' => 'Tên khóa học tối đa 255 ký tự.',
+            'slug.required' => 'Slug là bắt buộc.',
+            'slug.unique' => 'Slug đã tồn tại.',
+            'slug.regex' => 'Slug chỉ chứa chữ thường, số và dấu gạch ngang.',
+            'teacher_id.required' => 'Giảng viên là bắt buộc.',
+            'teacher_id.exists' => 'Giảng viên không tồn tại.',
+            'category_id.exists' => 'Danh mục không tồn tại.',
+            'category_ids.array' => 'Danh sách danh mục phải là mảng.',
+            'category_ids.*.exists' => 'Một hoặc nhiều danh mục không tồn tại.',
+            'description.max' => 'Mô tả tối đa 10000 ký tự.',
+            'thumbnail.url' => 'Thumbnail phải là URL hợp lệ.',
+            'price.required' => 'Giá là bắt buộc.',
+            'price.numeric' => 'Giá phải là số.',
+            'price.min' => 'Giá không được nhỏ hơn 0.',
+            'sale_price.numeric' => 'Giá khuyến mãi phải là số.',
+            'sale_price.min' => 'Giá khuyến mãi không được nhỏ hơn 0.',
+            'sale_price.lte' => 'Giá khuyến mãi phải nhỏ hơn hoặc bằng giá gốc.',
+            'level.required' => 'Trình độ là bắt buộc.',
+            'level.in' => 'Trình độ phải là: beginner, intermediate, hoặc advanced.',
+            'status.in' => 'Trạng thái chỉ có thể là 0 hoặc 1.',
         ];
     }
 
@@ -78,7 +91,7 @@ class UpdateCourseRequest extends FormRequest
         throw new HttpResponseException(response()->json([
             'success' => false,
             'message' => 'Dữ liệu không hợp lệ.',
-            'errors'  => $validator->errors(),
+            'errors' => $validator->errors(),
         ], 422));
     }
 }

@@ -2,13 +2,16 @@
 
 namespace Modules\Lessons\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use App\Traits\ScopesToTeacher;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Modules\Course\Models\Course;
+use Modules\Upload\Models\MediaFile;
 
 class Lesson extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, ScopesToTeacher, SoftDeletes;
 
     /**
      * Bảng tương ứng trong database.
@@ -38,17 +41,17 @@ class Lesson extends Model
      * Các cột cần cast kiểu dữ liệu.
      */
     protected $casts = [
-        'is_preview'  => 'boolean',
-        'status'      => 'integer',
-        'order'       => 'integer',
-        'duration'    => 'integer',
-        'course_id'   => 'integer',
-        'section_id'  => 'integer',
-        'video_id'    => 'integer',
+        'is_preview' => 'boolean',
+        'status' => 'integer',
+        'order' => 'integer',
+        'duration' => 'integer',
+        'course_id' => 'integer',
+        'section_id' => 'integer',
+        'video_id' => 'integer',
         'document_id' => 'integer',
-        'created_at'  => 'datetime',
-        'updated_at'  => 'datetime',
-        'deleted_at'  => 'datetime',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+        'deleted_at' => 'datetime',
     ];
 
     // ── Scopes ──
@@ -76,7 +79,7 @@ class Lesson extends Model
      */
     public function course()
     {
-        return $this->belongsTo(\Modules\Course\Models\Course::class, 'course_id');
+        return $this->belongsTo(Course::class, 'course_id');
     }
 
     public function section()
@@ -97,7 +100,7 @@ class Lesson extends Model
      */
     public function video()
     {
-        return $this->belongsTo(\Modules\Upload\Models\MediaFile::class, 'video_id');
+        return $this->belongsTo(MediaFile::class, 'video_id');
     }
 
     /**
@@ -105,6 +108,6 @@ class Lesson extends Model
      */
     public function document()
     {
-        return $this->belongsTo(\Modules\Upload\Models\MediaFile::class, 'document_id');
+        return $this->belongsTo(MediaFile::class, 'document_id');
     }
 }

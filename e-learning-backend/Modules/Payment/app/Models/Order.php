@@ -2,12 +2,14 @@
 
 namespace Modules\Payment\Models;
 
+use App\Traits\HasActivityLog;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Modules\Students\Models\Student;
 
 class Order extends Model
 {
-    use SoftDeletes;
+    use HasActivityLog, SoftDeletes;
 
     protected $table = 'orders';
 
@@ -25,14 +27,14 @@ class Order extends Model
     ];
 
     protected $casts = [
-        'subtotal'        => 'decimal:2',
+        'subtotal' => 'decimal:2',
         'discount_amount' => 'decimal:2',
-        'total_amount'    => 'decimal:2',
-        'student_id'      => 'integer',
-        'paid_at'         => 'datetime',
-        'created_at'      => 'datetime',
-        'updated_at'      => 'datetime',
-        'deleted_at'      => 'datetime',
+        'total_amount' => 'decimal:2',
+        'student_id' => 'integer',
+        'paid_at' => 'datetime',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+        'deleted_at' => 'datetime',
     ];
 
     // ── Relationships ──
@@ -42,7 +44,7 @@ class Order extends Model
      */
     public function student()
     {
-        return $this->belongsTo(\Modules\Students\Models\Student::class, 'student_id');
+        return $this->belongsTo(Student::class, 'student_id');
     }
 
     /**

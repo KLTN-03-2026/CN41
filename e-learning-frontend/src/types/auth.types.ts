@@ -13,7 +13,8 @@ export interface AdminUser {
   avatar: string | null
   email_verified_at?: string | null
   status?: number
-  roles?: { id: number; name: string }[]
+  roles?: string[] | { id: number; name: string }[]
+  permissions?: string[]
   created_at?: string
   updated_at?: string
   deleted_at?: string | null
