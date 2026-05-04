@@ -4,26 +4,13 @@ namespace Tests\Feature\Admin;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Modules\Students\Models\Student;
-use Modules\Users\Models\User;
 use Tests\TestCase;
 
 class StudentTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshDatabase, \Tests\Traits\HasAdminUser;
 
     private string $baseUrl = '/api/v1/admin/students';
-
-    protected function setupAdmin()
-    {
-        $admin = User::forceCreate([
-            'name' => 'Admin Test',
-            'email' => 'admin_student_test@test.com',
-            'password' => 'password123',
-        ]);
-        
-        $this->actingAs($admin, 'admin');
-        return $admin;
-    }
 
     public function test_students_index_returns_success()
     {
@@ -35,7 +22,7 @@ class StudentTest extends TestCase
         $response = $this->getJson($this->baseUrl);
 
         $response->assertStatus(200)
-                 ->assertJsonCount(3, 'data');
+            ->assertJsonCount(3, 'data');
     }
 
     public function test_students_index_requires_admin()
@@ -53,15 +40,15 @@ class StudentTest extends TestCase
             'email' => 'student_test@gmail.com',
             'password' => 'password123',
             'password_confirmation' => 'password123',
-            'date_of_birth' => '2000-01-01'
+            'date_of_birth' => '2000-01-01',
         ]);
 
         $response->assertStatus(201)
-                 ->assertJsonPath('success', true);
+            ->assertJsonPath('success', true);
 
         $this->assertDatabaseHas('students', [
             'email' => 'student_test@gmail.com',
-            'name' => 'Student Test'
+            'name' => 'Student Test',
         ]);
     }
 
@@ -72,7 +59,7 @@ class StudentTest extends TestCase
         $response = $this->postJson($this->baseUrl, []);
 
         $response->assertStatus(422)
-                 ->assertJsonValidationErrors(['name', 'email', 'password']);
+            ->assertJsonValidationErrors(['name', 'email', 'password']);
     }
 
     public function test_create_student_fails_duplicate_email()
@@ -81,17 +68,17 @@ class StudentTest extends TestCase
         Student::create([
             'name' => 'Existing',
             'email' => 'duplicate@test.com',
-            'password' => 'password'
+            'password' => 'password',
         ]);
 
         $response = $this->postJson($this->baseUrl, [
             'name' => 'New',
             'email' => 'duplicate@test.com',
-            'password' => 'password'
+            'password' => 'password',
         ]);
 
         $response->assertStatus(422)
-                 ->assertJsonValidationErrors(['email']);
+            ->assertJsonValidationErrors(['email']);
     }
 
     public function test_show_student_returns_success()
@@ -100,14 +87,14 @@ class StudentTest extends TestCase
         $student = Student::create([
             'name' => 'Show Test',
             'email' => 'show@test.com',
-            'password' => 'password'
+            'password' => 'password',
         ]);
 
-        $response = $this->getJson($this->baseUrl . '/' . $student->id);
+        $response = $this->getJson($this->baseUrl.'/'.$student->id);
 
         $response->assertStatus(200)
-                 ->assertJsonPath('data.name', 'Show Test')
-                 ->assertJsonStructure(['data' => ['enrolled_courses', 'orders_count', 'total_spent']]);
+            ->assertJsonPath('data.name', 'Show Test')
+            ->assertJsonStructure(['data' => ['enrolled_courses', 'orders_count', 'total_spent']]);
     }
 
     public function test_update_student_success()
@@ -116,19 +103,19 @@ class StudentTest extends TestCase
         $student = Student::create([
             'name' => 'Old Name',
             'email' => 'old@test.com',
-            'password' => 'password'
+            'password' => 'password',
         ]);
 
-        $response = $this->putJson($this->baseUrl . '/' . $student->id, [
+        $response = $this->putJson($this->baseUrl.'/'.$student->id, [
             'name' => 'New Name',
             'email' => 'old@test.com',
-            'date_of_birth' => '1995-05-05'
+            'date_of_birth' => '1995-05-05',
         ]);
 
         $response->assertStatus(200);
         $this->assertDatabaseHas('students', [
             'id' => $student->id,
-            'name' => 'New Name'
+            'name' => 'New Name',
         ]);
     }
 
@@ -138,10 +125,10 @@ class StudentTest extends TestCase
         $student = Student::create([
             'name' => 'Delete Me',
             'email' => 'delete@test.com',
-            'password' => 'password'
+            'password' => 'password',
         ]);
 
-        $response = $this->deleteJson($this->baseUrl . '/' . $student->id);
+        $response = $this->deleteJson($this->baseUrl.'/'.$student->id);
 
         $response->assertStatus(200);
         $this->assertSoftDeleted('students', ['id' => $student->id]);
@@ -153,10 +140,10 @@ class StudentTest extends TestCase
         $student = Student::create(['name' => 'Trashed', 'email' => 'trashed@test.com', 'password' => 'password']);
         $student->delete();
 
-        $response = $this->getJson($this->baseUrl . '/trashed');
+        $response = $this->getJson($this->baseUrl.'/trashed');
 
         $response->assertStatus(200)
-                 ->assertJsonFragment(['name' => 'Trashed']);
+            ->assertJsonFragment(['name' => 'Trashed']);
     }
 
     public function test_restore_student_success()
@@ -165,7 +152,7 @@ class StudentTest extends TestCase
         $student = Student::create(['name' => 'Restored', 'email' => 'restored@test.com', 'password' => 'password']);
         $student->delete();
 
-        $response = $this->postJson($this->baseUrl . '/' . $student->id . '/restore');
+        $response = $this->postJson($this->baseUrl.'/'.$student->id.'/restore');
 
         $response->assertStatus(200);
         $this->assertDatabaseHas('students', ['id' => $student->id, 'deleted_at' => null]);
@@ -177,7 +164,7 @@ class StudentTest extends TestCase
         $student = Student::create(['name' => 'Force', 'email' => 'force@test.com', 'password' => 'password']);
         $student->delete();
 
-        $response = $this->deleteJson($this->baseUrl . '/' . $student->id . '/force-delete');
+        $response = $this->deleteJson($this->baseUrl.'/'.$student->id.'/force-delete');
 
         $response->assertStatus(200);
         $this->assertDatabaseMissing('students', ['id' => $student->id]);
@@ -189,8 +176,8 @@ class StudentTest extends TestCase
         $s1 = Student::create(['name' => 'S1', 'email' => 's1@test.com', 'password' => 'password']);
         $s2 = Student::create(['name' => 'S2', 'email' => 's2@test.com', 'password' => 'password']);
 
-        $response = $this->deleteJson($this->baseUrl . '/bulk-delete', [
-            'ids' => [$s1->id, $s2->id]
+        $response = $this->deleteJson($this->baseUrl.'/bulk-delete', [
+            'ids' => [$s1->id, $s2->id],
         ]);
 
         $response->assertStatus(200);
@@ -206,8 +193,8 @@ class StudentTest extends TestCase
         $s1->delete();
         $s2->delete();
 
-        $response = $this->postJson($this->baseUrl . '/bulk-restore', [
-            'ids' => [$s1->id, $s2->id]
+        $response = $this->postJson($this->baseUrl.'/bulk-restore', [
+            'ids' => [$s1->id, $s2->id],
         ]);
 
         $response->assertStatus(200);
@@ -221,8 +208,8 @@ class StudentTest extends TestCase
         $s1 = Student::create(['name' => 'S1', 'email' => 's1@test.com', 'password' => 'password']);
         $s1->delete();
 
-        $response = $this->deleteJson($this->baseUrl . '/bulk-force-delete', [
-            'ids' => [$s1->id]
+        $response = $this->deleteJson($this->baseUrl.'/bulk-force-delete', [
+            'ids' => [$s1->id],
         ]);
 
         $response->assertStatus(200);
@@ -235,11 +222,11 @@ class StudentTest extends TestCase
         Student::create(['name' => 'John Doe', 'email' => 'john@test.com', 'password' => 'password']);
         Student::create(['name' => 'Jane Smith', 'email' => 'jane@test.com', 'password' => 'password']);
 
-        $response = $this->getJson($this->baseUrl . '?search=John');
+        $response = $this->getJson($this->baseUrl.'?search=John');
 
         $response->assertStatus(200)
-                 ->assertJsonFragment(['name' => 'John Doe'])
-                 ->assertJsonMissing(['name' => 'Jane Smith']);
+            ->assertJsonFragment(['name' => 'John Doe'])
+            ->assertJsonMissing(['name' => 'Jane Smith']);
     }
 
     public function test_students_pagination()
@@ -249,10 +236,10 @@ class StudentTest extends TestCase
             Student::create(['name' => "S $i", 'email' => "s$i@test.com", 'password' => 'password']);
         }
 
-        $response = $this->getJson($this->baseUrl . '?per_page=10');
+        $response = $this->getJson($this->baseUrl.'?per_page=10');
 
         $response->assertStatus(200)
-                 ->assertJsonPath('pagination.per_page', 10)
-                 ->assertJsonPath('pagination.total', 20);
+            ->assertJsonPath('pagination.per_page', 10)
+            ->assertJsonPath('pagination.total', 20);
     }
 }

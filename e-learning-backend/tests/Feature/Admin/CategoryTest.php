@@ -4,27 +4,13 @@ namespace Tests\Feature\Admin;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Modules\Categories\Models\Category;
-use Modules\Users\Models\User;
 use Tests\TestCase;
 
 class CategoryTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshDatabase, \Tests\Traits\HasAdminUser;
 
     private string $baseUrl = '/api/v1/admin/categories';
-
-    protected function setupAdmin()
-    {
-        $admin = User::forceCreate([
-            'name' => 'Admin Test',
-            'email' => 'admin_cat_test@test.com',
-            'password' => 'password123',
-        ]);
-
-        $this->actingAs($admin, 'admin');
-
-        return $admin;
-    }
 
     public function test_categories_index_returns_success()
     {

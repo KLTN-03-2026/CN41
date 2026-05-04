@@ -19,6 +19,7 @@ Mỗi file test bao gồm:
 - [test-teachers-admin.md](test-teachers-admin.md) — Quản lý giảng viên
 - [test-students-admin.md](test-students-admin.md) — Quản lý học viên
 - [test-upload.md](test-upload.md) — Upload video, tài liệu, ảnh; stream video
+- [test-roles-permissions.md](test-roles-permissions.md) — Quản lý vai trò & Quyền hạn (ACL)
 
 ### Client (Học viên)
 - [test-courses-client.md](test-courses-client.md) — Xem danh sách, chi tiết, enroll khóa học
@@ -34,6 +35,7 @@ Mỗi file test bao gồm:
 |--------|-----------------|-------------|---------|
 | **Categories** | [test-categories-report.md](test-categories-report.md) | 14 / 16 | 2026-04-11 |
 | **Courses (Admin)** | [test-courses-admin-report.md](test-courses-admin-report.md) | 26 / 32 | 2026-04-11 |
+| **Security Hardening** | [report-security-hardening.md](report-security-hardening.md) | ✅ 100% | 2026-05-04 |
 
 ---
 
