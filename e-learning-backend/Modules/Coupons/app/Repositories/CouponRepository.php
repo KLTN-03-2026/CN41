@@ -3,8 +3,9 @@
 namespace Modules\Coupons\Repositories;
 
 use App\Repositories\BaseRepository;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 use Modules\Coupons\Models\Coupon;
 
 class CouponRepository extends BaseRepository implements CouponRepositoryInterface
@@ -24,11 +25,11 @@ class CouponRepository extends BaseRepository implements CouponRepositoryInterfa
         $query = $this->model->newQuery()->latest();
 
         // Filter theo code
-        if (!empty($filters['search'])) {
+        if (! empty($filters['search'])) {
             $search = $filters['search'];
             $query->where(function ($q) use ($search) {
-                $q->where('code', 'like', '%' . $search . '%')
-                  ->orWhere('description', 'like', '%' . $search . '%');
+                $q->where('code', 'like', '%'.$search.'%')
+                    ->orWhere('description', 'like', '%'.$search.'%');
             });
         }
 
@@ -38,11 +39,24 @@ class CouponRepository extends BaseRepository implements CouponRepositoryInterfa
         }
 
         // Filter theo type
-        if (!empty($filters['type'])) {
+        if (! empty($filters['type'])) {
             $query->where('type', $filters['type']);
         }
 
         return $query->paginate($perPage);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getAvailable(): Collection
+    {
+        return $this->model->newQuery()
+            ->valid()
+            ->orderByRaw('end_date IS NULL ASC') // mã có hạn hiển thị trước
+            ->orderBy('end_date', 'asc')
+            ->limit(20)
+            ->get();
     }
 
     /**

@@ -3,8 +3,9 @@
 namespace Modules\Coupons\Repositories;
 
 use App\Repositories\RepositoryInterface;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 
 interface CouponRepositoryInterface extends RepositoryInterface
 {
@@ -12,6 +13,11 @@ interface CouponRepositoryInterface extends RepositoryInterface
      * Danh sách coupons (phân trang) có filter theo code, status, type (Admin).
      */
     public function getFiltered(array $filters = [], int $perPage = 15): LengthAwarePaginator;
+
+    /**
+     * Danh sách mã giảm giá còn hiệu lực (public, cho student xem).
+     */
+    public function getAvailable(): Collection;
 
     /**
      * Tìm coupon theo code.
