@@ -55,7 +55,7 @@
 | 3 | Toast | "Đã đăng khóa học" |
 | 4 | Click lại | Đổi về "Nháp" |
 
-## Test 4.7: Tạo khóa học — Thành công ✅
+## Test 4.7: Tạo khóa học — Thành công ⬜
 
 | # | Hành động | Kết quả mong đợi |
 |---|-----------|------------------|
@@ -95,7 +95,7 @@
 | 1 | Price: `0`, Sale price: để trống | Thành công |
 | 2 | Danh sách | Hiện badge "Miễn phí" hoặc giá "0 ₫" |
 
-## Test 4.12: Thumbnail Upload — Thành công ✅
+## Test 4.12: Thumbnail Upload — Thành công ⬜
 
 | # | Hành động | Kết quả mong đợi |
 |---|-----------|------------------|
@@ -270,32 +270,32 @@
 
 | Test | Kết quả | Ghi chú |
 |------|---------|---------|
-| 4.1 Load trang | ✅ | Đã test index API |
-| 4.2 Search | ✅ | API Search OK |
-| 4.3 Filter Level | ✅ | API Filter Level OK |
-| 4.4 Filter Status | ✅ | API Filter Status OK |
-| 4.5 Kết hợp | ✅ | API Composite Filter OK |
-| 4.6 Toggle Status | ✅ | API toggle status OK |
-| 4.7 Tạo mới | ✅ | API create OK |
-| 4.8 Thiếu field | ✅ | Validation schema backend OK |
-| 4.9 Slug trùng | ✅ | Validation backend slug unique OK |
-| 4.10 Sale > Price | ✅ | Đã chặn validation lte:price |
-| 4.11 Miễn phí | ✅ | Price=0 support |
+| 4.1 Load trang | ⬜ | Đã test index API |
+| 4.2 Search | ⬜ | API Search OK |
+| 4.3 Filter Level | ⬜ | API Filter Level OK |
+| 4.4 Filter Status | ⬜ | API Filter Status OK |
+| 4.5 Kết hợp | ⬜ | API Composite Filter OK |
+| 4.6 Toggle Status | ⬜ | API toggle status OK |
+| 4.7 Tạo mới | ⬜ | API create OK |
+| 4.8 Thiếu field | ⬜ | Validation schema backend OK |
+| 4.9 Slug trùng | ⬜ | Validation backend slug unique OK |
+| 4.10 Sale > Price | ⬜ | Đã chặn validation lte:price |
+| 4.11 Miễn phí | ⬜ | Price=0 support |
 | 4.12 Upload ảnh | ⬜ | Upload service test |
 | 4.13 File quá lớn | ⬜ | Backend/Frontend limit |
 | 4.14 Sai định dạng | ⬜ | Mime type validation |
 | 4.15 Drag & Drop | ⬜ | UI interaction |
-| 4.16 Edit load data | ✅ | API show data OK |
-| 4.17 Edit category | ✅ | API update category OK |
+| 4.16 Edit load data | ⬜ | API show data OK |
+| 4.17 Edit category | ⬜ | API update category OK |
 | 4.18 Mở khóa slug | ⬜ | UI implementation |
 | 4.19-4.20 Tab nội dung | ⬜ | UI Layout |
-| 4.21 Soft delete | ✅ | API delete OK |
-| 4.22 Tab thùng rác | ✅ | API trashed OK |
-| 4.23 Restore | ✅ | API restore OK |
-| 4.24 Force delete | ✅ | API force delete OK |
+| 4.21 Soft delete | ⬜ | API delete OK |
+| 4.22 Tab thùng rác | ⬜ | API trashed OK |
+| 4.23 Restore | ⬜ | API restore OK |
+| 4.24 Force delete | ⬜ | API force delete OK |
 | 4.25-4.26 Bulk select | ⬜ | UI Logic |
-| 4.27-4.28 Bulk status | ✅ | API bulk status OK |
-| 4.29 Bulk delete | ✅ | API bulk delete OK |
-| 4.30 Bulk restore | ✅ | API bulk restore OK |
-| 4.31 Bulk force delete | ✅ | API bulk force OK |
-| 4.32 Phân trang | ✅ | API pagination OK |
+| 4.27-4.28 Bulk status | ⬜ | API bulk status OK |
+| 4.29 Bulk delete | ⬜ | API bulk delete OK |
+| 4.30 Bulk restore | ⬜ | API bulk restore OK |
+| 4.31 Bulk force delete | ⬜ | API bulk force OK |
+| 4.32 Phân trang | ⬜ | API pagination OK |

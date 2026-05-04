@@ -55,7 +55,7 @@
 - [ ] Trên VNPAY sandbox, chọn ngân hàng NCB
 - [ ] Số thẻ: `9704198526191432198` | Tên: `NGUYEN VAN A` | Ngày: `07/15` | OTP: `123456`
 - [ ] Sau khi thanh toán → Redirect về `/payment/result?status=success&order_code=ORD-...`
-- [ ] Trang kết quả hiện ✅ **"Thanh toán thành công!"** với mã đơn hàng
+- [ ] Trang kết quả hiện ⬜ **"Thanh toán thành công!"** với mã đơn hàng
 - [ ] Nút **"Vào học ngay"** và **"Xem đơn hàng"** hoạt động
 
 ### 3.2 Thanh toán thất bại

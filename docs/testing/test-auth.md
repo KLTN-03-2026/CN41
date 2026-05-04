@@ -54,7 +54,7 @@
 | 1 | `admin@elearning.com` / `12345` | Lỗi client: "Mật khẩu phải có ít nhất 6 ký tự" |
 | 2 | Network | Không có request |
 
-### Test 1.6: Đăng nhập thành công ✅
+### Test 1.6: Đăng nhập thành công ⬜
 
 | # | Hành động | Kết quả mong đợi |
 |---|-----------|------------------|
@@ -144,7 +144,7 @@
 | 1 | Password: `12345678`, Confirm: `12345679` | Lỗi: "Mật khẩu xác nhận không khớp" |
 | 2 | Confirm đúng | Không lỗi |
 
-### Test 2.6: Đăng ký thành công ✅
+### Test 2.6: Đăng ký thành công ⬜
 
 | # | Hành động | Kết quả mong đợi |
 |---|-----------|------------------|
@@ -180,7 +180,7 @@
 | 2 | `student@elearning.com` / `wrongpass` | Alert: "Email hoặc mật khẩu không đúng." |
 | 3 | Network | `POST /api/v1/auth/login` → **401** |
 
-### Test 2.10: Đăng nhập thành công ✅
+### Test 2.10: Đăng nhập thành công ⬜
 
 | # | Hành động | Kết quả mong đợi |
 |---|-----------|------------------|
@@ -265,7 +265,7 @@
 | 1 | Nhập `notexist@test.com` → Submit | Hiện thông báo thành công chung chung (bảo mật, không tiết lộ email có tồn tại không) |
 | 2 | Network | `POST /api/v1/auth/forgot-password` → **200** (hoặc **404** tùy design) |
 
-### Test 3.5: Gửi link reset thành công ✅
+### Test 3.5: Gửi link reset thành công ⬜
 
 | # | Hành động | Kết quả mong đợi |
 |---|-----------|------------------|
@@ -302,7 +302,7 @@
 | 2 | Password khác Confirm | Lỗi: "Mật khẩu xác nhận không khớp" |
 | 3 | Network | Không có request |
 
-### Test 3.10: Đặt lại mật khẩu thành công ✅
+### Test 3.10: Đặt lại mật khẩu thành công ⬜
 
 | # | Hành động | Kết quả mong đợi |
 |---|-----------|------------------|
@@ -347,7 +347,7 @@
 |---|-----------|------------------|
 | 1 | Click "Gửi lại" nhiều lần liên tiếp | Sau N lần → lỗi 429 hoặc nút disable tạm thời |
 
-### Test 4.5: Click link xác nhận — Hợp lệ ✅
+### Test 4.5: Click link xác nhận — Hợp lệ ⬜
 
 | # | Hành động | Kết quả mong đợi |
 |---|-----------|------------------|
@@ -389,7 +389,7 @@
 | 1 | Login thành công, không tick Remember Me | `studentToken` lưu vào `sessionStorage` hoặc token có thời hạn ngắn |
 | 2 | Đóng tab → mở lại | Phải đăng nhập lại (session không persist) |
 
-### Test 5.3: Đăng nhập có tick Remember Me ✅
+### Test 5.3: Đăng nhập có tick Remember Me ⬜
 
 | # | Hành động | Kết quả mong đợi |
 |---|-----------|------------------|
@@ -425,39 +425,39 @@
 
 | Test | Kết quả | Ghi chú |
 |------|---------|---------|
-| 1.1 Form trống | ✅ | |
-| 1.2 Email sai format | ✅ | |
-| 1.3 Sai mật khẩu | ✅ | |
-| 1.4 Email không tồn tại | ✅ | |
-| 1.5 Password quá ngắn | ✅ | |
-| 1.6 Đăng nhập thành công | ✅ | |
-| 1.7 Session persist | ✅ | |
-| 1.8 Route guard | ✅ | |
-| 1.9 Đã login → login page | ✅ | |
-| 1.10 Logout | ✅ | |
-| 1.11 Token hết hạn | ✅ | |
-| 2.1-2.8 Register | ✅ | Đã fix lỗi validation persist và bổ sung báo lỗi 422 |
-| 2.9-2.15 Student Login | ✅ | Đã sửa fallback đăng nhập kép (admin fallback) giải quyết 429 quá tải |
-| 3.1 Trang forgot password | ✅ | Đã tạo ForgotPasswordPage.vue |
-| 3.2 Email trống | ✅ | |
-| 3.3 Email sai format | ✅ | |
-| 3.4 Email không tồn tại | ✅ | |
-| 3.5 Gửi link thành công | ✅ | Đã tích hợp auth.service |
-| 3.6 Rate limit gửi lại | ✅ | Cooldown bằng Throttle middleware backend HTTP |
-| 3.7 Form reset — token hợp lệ | ✅ | Đã tạo ResetPasswordPage.vue |
-| 3.8 Token không hợp lệ/hết hạn | ✅ | Backend chặn |
-| 3.9 Validation mật khẩu mới | ✅ | Trùng khớp password confirmation hoạt động tốt |
-| 3.10 Đặt lại mật khẩu thành công | ✅ | Backend xử lý hoàn tất |
-| 4.1 Trạng thái chưa verify | ✅ | |
-| 4.2 Chặn tính năng chưa verify | ✅ | Route guard router.beforeEach chặn |
-| 4.3 Gửi lại email xác nhận | ✅ | Xác nhận logic qua VerifyEmailPage.vue |
-| 4.4 Rate limit gửi lại | ✅ | Đã sử dụng throttle |
-| 4.5 Xác nhận email thành công | ✅ | Hoạt động qua GET API endpoint backend |
-| 4.6 Link hết hạn / đã dùng | ✅ | Backend validation trả đúng response codes |
-| 4.7 Tài khoản đã verify | ✅ | Route global fetchMe() fetch latest user info success |
-| 5.1 Checkbox hiển thị | ✅ | Đã thêm vào Student, Admin |
-| 5.2 Login không remember | ✅ | Dùng sessionStorage |
-| 5.3 Login có remember | ✅ | Dùng localStorage |
-| 5.4 Thời hạn token | ✅ | Backend JWT xử lý |
-| 5.5 Logout với remember | ✅ | Đã xóa đồng thời sessionStorage và localStorage |
-| 5.6 Admin remember me | ✅ | Đã thêm checkbox tại AdminLoginPage.vue |
+| 1.1 Form trống | ⬜ | |
+| 1.2 Email sai format | ⬜ | |
+| 1.3 Sai mật khẩu | ⬜ | |
+| 1.4 Email không tồn tại | ⬜ | |
+| 1.5 Password quá ngắn | ⬜ | |
+| 1.6 Đăng nhập thành công | ⬜ | |
+| 1.7 Session persist | ⬜ | |
+| 1.8 Route guard | ⬜ | |
+| 1.9 Đã login → login page | ⬜ | |
+| 1.10 Logout | ⬜ | |
+| 1.11 Token hết hạn | ⬜ | |
+| 2.1-2.8 Register | ⬜ | |
+| 2.9-2.15 Student Login | ⬜ | |
+| 3.1 Trang forgot password | ⬜ | |
+| 3.2 Email trống | ⬜ | |
+| 3.3 Email sai format | ⬜ | |
+| 3.4 Email không tồn tại | ⬜ | |
+| 3.5 Gửi link thành công | ⬜ | |
+| 3.6 Rate limit gửi lại | ⬜ | |
+| 3.7 Form reset — token hợp lệ | ⬜ | |
+| 3.8 Token không hợp lệ/hết hạn | ⬜ | |
+| 3.9 Validation mật khẩu mới | ⬜ | |
+| 3.10 Đặt lại mật khẩu thành công | ⬜ | |
+| 4.1 Trạng thái chưa verify | ⬜ | |
+| 4.2 Chặn tính năng chưa verify | ⬜ | |
+| 4.3 Gửi lại email xác nhận | ⬜ | |
+| 4.4 Rate limit gửi lại | ⬜ | |
+| 4.5 Xác nhận email thành công | ⬜ | |
+| 4.6 Link hết hạn / đã dùng | ⬜ | |
+| 4.7 Tài khoản đã verify | ⬜ | |
+| 5.1 Checkbox hiển thị | ⬜ | |
+| 5.2 Login không remember | ⬜ | |
+| 5.3 Login có remember | ⬜ | |
+| 5.4 Thời hạn token | ⬜ | |
+| 5.5 Logout với remember | ⬜ | |
+| 5.6 Admin remember me | ⬜ | |

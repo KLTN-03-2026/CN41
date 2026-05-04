@@ -23,7 +23,7 @@
 | 2 | Header stat | "N chương · M bài giảng" |
 | 3 | Mặc định | Tất cả chương tự động mở rộng |
 
-## Test 5.3: Thêm chương — Thành công ✅
+## Test 5.3: Thêm chương — Thành công ⬜
 
 | # | Hành động | Kết quả mong đợi |
 |---|-----------|------------------|
@@ -93,7 +93,7 @@
 | 5 | Chương đầu | Không có nút ▲ |
 | 6 | Chương cuối | Không có nút ▼ |
 
-## Test 5.11: Thêm bài giảng — Vào chương cụ thể ✅
+## Test 5.11: Thêm bài giảng — Vào chương cụ thể ⬜
 
 | # | Hành động | Kết quả mong đợi |
 |---|-----------|------------------|
@@ -223,28 +223,28 @@
 
 | Test | Kết quả | Ghi chú |
 |------|---------|---------|
-| 5.1 Load trống | ✅ | Trả về empty array OK |
-| 5.2 Load có data | ✅ | Trả về đúng structure OK |
-| 5.3 Thêm chương | ✅ | POST 201 verified |
-| 5.4 Thiếu tiêu đề | ✅ | Validation OK |
-| 5.5 Sửa chương | ✅ | PUT 200 verified |
-| 5.6 Toggle status | ✅ | PATCH toggle OK |
+| 5.1 Load trống | ⬜ | Trả về empty array OK |
+| 5.2 Load có data | ⬜ | Trả về đúng structure OK |
+| 5.3 Thêm chương | ⬜ | POST 201 verified |
+| 5.4 Thiếu tiêu đề | ⬜ | Validation OK |
+| 5.5 Sửa chương | ⬜ | PUT 200 verified |
+| 5.6 Toggle status | ⬜ | PATCH toggle OK |
 | 5.7 Expand/Collapse | ⬜ | FE UI interaction |
-| 5.8 Xóa trống | ✅ | DELETE 200 verified |
-| 5.9 Xóa có bài | ✅ | SectionId -> null OK |
-| 5.10 Reorder section | ✅ | API reorder OK |
-| 5.11 Thêm bài vào chương | ✅ | POST 201 with section_id |
-| 5.12 Thêm bài chưa gán | ✅ | section_id: null OK |
-| 5.13 Thiếu tiêu đề | ✅ | Validation OK |
-| 5.14 Các loại type | ✅ | video/document/text support |
-| 5.15 Preview checkbox | ✅ | boolean is_preview OK |
-| 5.16 Duration format | ✅ | Store seconds in DB OK |
-| 5.17 Sửa bài | ✅ | PUT update OK |
-| 5.18 Chuyển chương | ✅ | Update section_id OK |
-| 5.19 Toggle status bài | ✅ | PATCH toggle status OK |
-| 5.20 Xóa bài | ✅ | SoftDelete + decrement count |
-| 5.21 Reorder bài | ✅ | API reorder lessons OK |
-| 5.22 Nhóm chưa phân | ✅ | filter section_id null OK |
-| 5.23 Preview admin | ✅ | API returns video/doc url |
-| 5.24 Bulk assign | ✅ | bulk-action: assign-section |
-| 5.25 Bulk bỏ gán | ✅ | section_id: null in bulk |
+| 5.8 Xóa trống | ⬜ | DELETE 200 verified |
+| 5.9 Xóa có bài | ⬜ | SectionId -> null OK |
+| 5.10 Reorder section | ⬜ | API reorder OK |
+| 5.11 Thêm bài vào chương | ⬜ | POST 201 with section_id |
+| 5.12 Thêm bài chưa gán | ⬜ | section_id: null OK |
+| 5.13 Thiếu tiêu đề | ⬜ | Validation OK |
+| 5.14 Các loại type | ⬜ | video/document/text support |
+| 5.15 Preview checkbox | ⬜ | boolean is_preview OK |
+| 5.16 Duration format | ⬜ | Store seconds in DB OK |
+| 5.17 Sửa bài | ⬜ | PUT update OK |
+| 5.18 Chuyển chương | ⬜ | Update section_id OK |
+| 5.19 Toggle status bài | ⬜ | PATCH toggle status OK |
+| 5.20 Xóa bài | ⬜ | SoftDelete + decrement count |
+| 5.21 Reorder bài | ⬜ | API reorder lessons OK |
+| 5.22 Nhóm chưa phân | ⬜ | filter section_id null OK |
+| 5.23 Preview admin | ⬜ | API returns video/doc url |
+| 5.24 Bulk assign | ⬜ | bulk-action: assign-section |
+| 5.25 Bulk bỏ gán | ⬜ | section_id: null in bulk |

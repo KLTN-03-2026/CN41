@@ -4,6 +4,8 @@ namespace Modules\Teachers\Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Modules\Teachers\Models\Teachers;
+use Modules\Users\Models\User;
+use Spatie\Permission\Models\Role;
 
 class TeachersDatabaseSeeder extends Seeder
 {
@@ -105,10 +107,34 @@ class TeachersDatabaseSeeder extends Seeder
             ],
         ];
 
-        foreach ($teachers as $teacher) {
+        // Đảm bảo role teacher tồn tại cho guard admin
+        $teacherRole = Role::where('name', 'teacher')->where('guard_name', 'admin')->first();
+        if (! $teacherRole) {
+            $teacherRole = Role::create(['name' => 'teacher', 'guard_name' => 'admin']);
+        }
+
+        foreach ($teachers as $teacherData) {
+            // 1. Tạo hoặc lấy User dựa trên email giả định từ slug
+            $email = $teacherData['slug'].'@elearning.com';
+            $user = User::updateOrCreate(
+                ['email' => $email],
+                [
+                    'name' => $teacherData['name'],
+                    'password' => bcrypt('password'), // Mật khẩu mặc định
+                    'email_verified_at' => now(),
+                    'status' => 1,
+                ]
+            );
+
+            // 2. Gán role teacher
+            $user->assignRole($teacherRole);
+
+            // 3. Tạo/Cập nhật bản ghi Teachers kèm user_id
+            $teacherData['user_id'] = $user->id;
+
             Teachers::updateOrCreate(
-            ['slug' => $teacher['slug']],
-                $teacher
+                ['slug' => $teacherData['slug']],
+                $teacherData
             );
         }
     }

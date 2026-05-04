@@ -24,5 +24,8 @@ class AppServiceProvider extends ServiceProvider
         Gate::before(function ($user, $ability) {
             return $user->hasRole('super-admin') ? true : null;
         });
+
+        // Register Activity Log Listener (Laravel 11 tự động discovery nếu để trong App/Listeners)
+        // \Illuminate\Support\Facades\Event::subscribe(\App\Listeners\LogActivityListener::class);
     }
 }

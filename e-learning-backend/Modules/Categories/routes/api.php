@@ -10,8 +10,8 @@ use Modules\Categories\Http\Controllers\CategoriesController;
 */
 Route::middleware(['auth:admin'])->prefix('admin')->group(function () {
     // Nested set routes (đặt TRƯỚC apiResource để tránh bị match bởi {category})
-    Route::get('categories/tree', [CategoriesController::class, 'tree'])->middleware('permission:categories.view');
-    Route::get('categories/flat-tree', [CategoriesController::class, 'flatTree'])->middleware('permission:categories.view');
+    Route::get('categories/tree', [CategoriesController::class, 'tree'])->middleware('permission:categories.view|courses.view');
+    Route::get('categories/flat-tree', [CategoriesController::class, 'flatTree'])->middleware('permission:categories.view|courses.view');
     Route::get('categories/trashed', [CategoriesController::class, 'trashed'])->middleware('permission:categories.view');
 
     // Bulk routes

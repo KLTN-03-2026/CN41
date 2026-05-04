@@ -29,7 +29,7 @@
 
 ## MODULE 1 — Upload Video
 
-### Test 1.1: Upload video hợp lệ ✅
+### Test 1.1: Upload video hợp lệ ⬜
 
 | # | Hành động | Kết quả mong đợi |
 |---|-----------|------------------|
@@ -61,7 +61,7 @@
 
 ## MODULE 2 — Upload Tài liệu (PDF/Doc)
 
-### Test 2.1: Upload PDF hợp lệ ✅
+### Test 2.1: Upload PDF hợp lệ ⬜
 
 | # | Hành động | Kết quả mong đợi |
 |---|-----------|------------------|
@@ -85,7 +85,7 @@
 
 ## MODULE 3 — Upload Ảnh (Thumbnail / Avatar)
 
-### Test 3.1: Upload ảnh thumbnail khóa học ✅
+### Test 3.1: Upload ảnh thumbnail khóa học ⬜
 
 | # | Hành động | Kết quả mong đợi |
 |---|-----------|------------------|
