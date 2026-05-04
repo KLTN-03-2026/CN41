@@ -14,6 +14,7 @@ use Modules\Users\Http\Requests\BulkRestoreUsersRequest;
 use Modules\Users\Http\Requests\StoreUsersRequest;
 use Modules\Users\Http\Requests\UpdateUsersRequest;
 use Modules\Users\Repositories\UsersRepositoryInterface;
+use Spatie\Permission\Models\Role;
 
 class UsersController extends Controller
 {
@@ -31,8 +32,10 @@ class UsersController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $perPage = (int)$request->query('per_page', 15);
-        $data = $this->repository->paginate($perPage);
+        $perPage = (int) $request->query('per_page', 15);
+        $filters = $request->only(['search', 'role', 'status']);
+
+        $data = $this->repository->paginateFiltered($filters, $perPage, false);
 
         return $this->paginated($data);
     }
@@ -130,7 +133,7 @@ class UsersController extends Controller
         $deleted = $this->repository->deleteMany($request->ids);
 
         return $this->success(
-        ['deleted_count' => $deleted, 'deleted_ids' => $request->ids],
+            ['deleted_count' => $deleted, 'deleted_ids' => $request->ids],
             "Đã xoá {$deleted} user thành công."
         );
     }
@@ -143,7 +146,7 @@ class UsersController extends Controller
         $affected = $this->repository->actionMany($request->ids, $request->action);
 
         return $this->success(
-        ['affected_count' => $affected, 'affected_ids' => $request->ids],
+            ['affected_count' => $affected, 'affected_ids' => $request->ids],
             "Đã thực hiện '{$request->action}' cho {$affected} user thành công."
         );
     }
@@ -153,8 +156,10 @@ class UsersController extends Controller
      */
     public function trashed(Request $request): JsonResponse
     {
-        $perPage = (int)$request->query('per_page', 15);
-        $data = $this->repository->paginateTrashed($perPage, ['*'], ['roles']);
+        $perPage = (int) $request->query('per_page', 15);
+        $filters = $request->only(['search', 'role', 'status']);
+
+        $data = $this->repository->paginateFiltered($filters, $perPage, true);
 
         return $this->paginated($data);
     }
@@ -177,7 +182,7 @@ class UsersController extends Controller
         $restored = $this->repository->restoreMany($request->ids);
 
         return $this->success(
-        ['restored_count' => $restored, 'restored_ids' => $request->ids],
+            ['restored_count' => $restored, 'restored_ids' => $request->ids],
             "Đã khôi phục {$restored} user thành công."
         );
     }
@@ -200,7 +205,7 @@ class UsersController extends Controller
         $deleted = $this->repository->forceDeleteMany($request->ids);
 
         return $this->success(
-        ['deleted_count' => $deleted, 'deleted_ids' => $request->ids],
+            ['deleted_count' => $deleted, 'deleted_ids' => $request->ids],
             "Đã xoá vĩnh viễn {$deleted} user."
         );
     }
@@ -213,8 +218,19 @@ class UsersController extends Controller
         $affected = $this->repository->assignRoleMany($request->ids, $request->role);
 
         return $this->success(
-        ['affected_count' => $affected],
+            ['affected_count' => $affected],
             "Đã gán role '{$request->role}' cho {$affected} user thành công."
         );
+    }
+
+    /**
+     * Lấy danh sách tất cả các role hiện có.
+     */
+    public function getRoles(): JsonResponse
+    {
+        // Sử dụng Spatie Role model
+        $roles = Role::all();
+
+        return $this->success($roles);
     }
 }

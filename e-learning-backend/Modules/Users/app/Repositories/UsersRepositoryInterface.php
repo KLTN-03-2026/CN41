@@ -3,6 +3,7 @@
 namespace Modules\Users\Repositories;
 
 use App\Repositories\RepositoryInterface;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 /**
  * Interface UsersRepositoryInterface
@@ -17,8 +18,12 @@ interface UsersRepositoryInterface extends RepositoryInterface
      * Gán role cho nhiều users cùng lúc.
      *
      * @param  array<int>  $ids
-     * @param  string      $role
-     * @return int  Số lượng user được cập nhật
+     * @return int Số lượng user được cập nhật
      */
     public function assignRoleMany(array $ids, string $role): int;
+
+    /**
+     * Lấy danh sách users kèm filter.
+     */
+    public function paginateFiltered(array $filters, int $perPage = 15, bool $trashed = false): LengthAwarePaginator;
 }

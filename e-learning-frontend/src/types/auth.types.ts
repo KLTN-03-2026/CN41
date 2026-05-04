@@ -10,7 +10,13 @@ export interface AdminUser {
   id: number
   name: string
   email: string
-  role?: string
+  avatar: string | null
+  email_verified_at?: string | null
+  status?: number
+  roles?: { id: number; name: string }[]
+  created_at?: string
+  updated_at?: string
+  deleted_at?: string | null
 }
 
 export interface LoginResponse {
