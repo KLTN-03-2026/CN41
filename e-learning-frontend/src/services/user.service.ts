@@ -41,27 +41,27 @@ export const userService = {
     http.post(`/admin/users/${id}/restore`),
 
   /** DELETE /admin/users/bulk-delete */
-  bulkDelete: (ids: number[]): Promise<AxiosResponse<ApiResponse<any>>> =>
+  bulkDelete: (ids: number[]): Promise<AxiosResponse<ApiResponse<null>>> =>
     http.delete('/admin/users/bulk-delete', { data: { ids } }),
 
   /** POST /admin/users/bulk-restore */
-  bulkRestore: (ids: number[]): Promise<AxiosResponse<ApiResponse<any>>> =>
+  bulkRestore: (ids: number[]): Promise<AxiosResponse<ApiResponse<null>>> =>
     http.post('/admin/users/bulk-restore', { ids }),
 
   /** DELETE /admin/users/bulk-force-delete */
-  bulkForceDelete: (ids: number[]): Promise<AxiosResponse<ApiResponse<any>>> =>
+  bulkForceDelete: (ids: number[]): Promise<AxiosResponse<ApiResponse<null>>> =>
     http.delete('/admin/users/bulk-force-delete', { data: { ids } }),
 
   /** POST /admin/users/bulk-action */
-  bulkAction: (ids: number[], action: string): Promise<AxiosResponse<ApiResponse<any>>> =>
+  bulkAction: (ids: number[], action: string): Promise<AxiosResponse<ApiResponse<null>>> =>
     http.post('/admin/users/bulk-action', { ids, action }),
 
   /** POST /admin/users/bulk-assign-role */
-  bulkAssignRole: (ids: number[], role: string): Promise<AxiosResponse<ApiResponse<any>>> =>
+  bulkAssignRole: (ids: number[], role: string): Promise<AxiosResponse<ApiResponse<null>>> =>
     http.post('/admin/users/bulk-assign-role', { ids, role }),
 
   /** POST /admin/users/{id}/assign-role */
-  assignRole: (id: number, role: string): Promise<AxiosResponse<ApiResponse<any>>> =>
+  assignRole: (id: number, role: string): Promise<AxiosResponse<ApiResponse<null>>> =>
     http.post(`/admin/users/${id}/assign-role`, { role }),
 
   /** GET /admin/users/roles */
