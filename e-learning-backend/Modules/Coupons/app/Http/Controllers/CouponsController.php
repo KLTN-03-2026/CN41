@@ -33,9 +33,9 @@ class CouponsController extends Controller
     public function index(Request $request): JsonResponse
     {
         $request->validate([
-            'search'   => 'nullable|string|max:100',
-            'status'   => 'nullable|integer|in:0,1',
-            'type'     => 'nullable|string|in:fixed,percentage',
+            'search' => 'nullable|string|max:100',
+            'status' => 'nullable|integer|in:0,1',
+            'type' => 'nullable|string|in:fixed,percentage',
             'per_page' => 'nullable|integer|min:1|max:100',
         ]);
 
@@ -167,13 +167,38 @@ class CouponsController extends Controller
     // ── Public API (Student) ──
 
     /**
+     * Danh sách mã giảm giá đang còn hiệu lực (public, cho student xem).
+     */
+    public function listAvailable(): JsonResponse
+    {
+        $coupons = $this->repository->getAvailable();
+
+        $data = $coupons->map(function ($coupon) {
+            return [
+                'code' => $coupon->code,
+                'type' => $coupon->type,
+                'value' => $coupon->value,
+                'min_order_value' => $coupon->min_order_value,
+                'max_discount' => $coupon->max_discount,
+                'end_date' => $coupon->end_date?->toISOString(),
+                'description' => $coupon->description,
+                'remaining' => $coupon->usage_limit !== null
+                                        ? max(0, $coupon->usage_limit - $coupon->used_count)
+                                        : null,
+            ];
+        });
+
+        return $this->success($data, 'Danh sách mã giảm giá có sẵn.');
+    }
+
+    /**
      * Validate coupon code và trả về thông tin giảm giá.
      * Dùng cho Checkout page.
      */
     public function validateCoupon(Request $request): JsonResponse
     {
         $request->validate([
-            'code'     => 'required|string|max:50',
+            'code' => 'required|string|max:50',
             'subtotal' => 'required|numeric|min:0',
         ]);
 
@@ -182,23 +207,24 @@ class CouponsController extends Controller
 
         $coupon = $this->repository->findByCode($code);
 
-        if (!$coupon) {
+        if (! $coupon) {
             return $this->error('Mã giảm giá không tồn tại.', 422);
         }
 
-        if (!$coupon->isValid()) {
+        if (! $coupon->isValid()) {
             if ($coupon->end_date && $coupon->end_date->isPast()) {
                 return $this->error('Mã giảm giá đã hết hạn.', 422);
             }
             if ($coupon->usage_limit !== null && $coupon->used_count >= $coupon->usage_limit) {
                 return $this->error('Mã giảm giá đã hết lượt sử dụng.', 422);
             }
+
             return $this->error('Mã giảm giá không hợp lệ.', 422);
         }
 
         if ($coupon->min_order_value && $subtotal < (float) $coupon->min_order_value) {
             return $this->error(
-                'Đơn hàng tối thiểu ' . number_format($coupon->min_order_value) . '₫ để sử dụng mã này.',
+                'Đơn hàng tối thiểu '.number_format($coupon->min_order_value).'₫ để sử dụng mã này.',
                 422
             );
         }
@@ -206,15 +232,15 @@ class CouponsController extends Controller
         $discount = $coupon->calculateDiscount($subtotal);
 
         return $this->success([
-            'valid'           => true,
-            'code'            => $coupon->code,
-            'type'            => $coupon->type,
-            'value'           => $coupon->value,
+            'valid' => true,
+            'code' => $coupon->code,
+            'type' => $coupon->type,
+            'value' => $coupon->value,
             'discount_amount' => round($discount, 2),
-            'new_total'       => round($subtotal - $discount, 2),
-            'message'         => $coupon->type === 'fixed'
-                ? "Giảm " . number_format($coupon->value) . "₫"
-                : "Giảm {$coupon->value}%" . ($coupon->max_discount ? " (tối đa " . number_format($coupon->max_discount) . "₫)" : ""),
+            'new_total' => round($subtotal - $discount, 2),
+            'message' => $coupon->type === 'fixed'
+                ? 'Giảm '.number_format($coupon->value).'₫'
+                : "Giảm {$coupon->value}%".($coupon->max_discount ? ' (tối đa '.number_format($coupon->max_discount).'₫)' : ''),
         ], 'Mã giảm giá hợp lệ!');
     }
 }

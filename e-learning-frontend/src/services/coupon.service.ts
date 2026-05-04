@@ -32,11 +32,23 @@ export interface CouponValidation {
   message: string
 }
 
+export interface PublicCoupon {
+  code: string
+  type: 'fixed' | 'percentage'
+  value: string | number
+  min_order_value: string | number | null
+  max_discount: string | number | null
+  end_date: string | null
+  description: string | null
+  remaining: number | null
+}
+
 export const couponService = {
   // ── Admin ──────────────────────────────────────────────────
   /** GET /admin/coupons */
-  index: (params: Record<string, unknown> = {}): Promise<AxiosResponse<PaginatedResponse<Coupon>>> =>
-    http.get('/admin/coupons', { params }),
+  index: (
+    params: Record<string, unknown> = {},
+  ): Promise<AxiosResponse<PaginatedResponse<Coupon>>> => http.get('/admin/coupons', { params }),
 
   /** POST /admin/coupons */
   store: (data: Record<string, unknown>): Promise<AxiosResponse<ApiResponse<Coupon>>> =>
@@ -47,8 +59,10 @@ export const couponService = {
     http.get(`/admin/coupons/${id}`),
 
   /** PUT /admin/coupons/{id} */
-  update: (id: number, data: Record<string, unknown>): Promise<AxiosResponse<ApiResponse<Coupon>>> =>
-    http.put(`/admin/coupons/${id}`, data),
+  update: (
+    id: number,
+    data: Record<string, unknown>,
+  ): Promise<AxiosResponse<ApiResponse<Coupon>>> => http.put(`/admin/coupons/${id}`, data),
 
   /** DELETE /admin/coupons/{id} (soft delete) */
   destroy: (id: number): Promise<AxiosResponse<ApiResponse<null>>> =>
@@ -59,7 +73,9 @@ export const couponService = {
     http.patch(`/admin/coupons/${id}/toggle-status`),
 
   /** GET /admin/coupons/trashed */
-  trashed: (params: Record<string, unknown> = {}): Promise<AxiosResponse<PaginatedResponse<Coupon>>> =>
+  trashed: (
+    params: Record<string, unknown> = {},
+  ): Promise<AxiosResponse<PaginatedResponse<Coupon>>> =>
     http.get('/admin/coupons/trashed', { params }),
 
   /** POST /admin/coupons/{id}/restore */
@@ -79,7 +95,13 @@ export const couponService = {
     http.post('/admin/coupons/bulk-restore', { ids }),
 
   // ── Public (Student) ──────────────────────────────────────
+  /** GET /coupons/available — Danh sách mã đang còn hiệu lực */
+  getAvailable: (): Promise<AxiosResponse<ApiResponse<PublicCoupon[]>>> =>
+    http.get('/coupons/available'),
+
   /** POST /coupons/validate */
-  validate: (data: { code: string; subtotal: number }): Promise<AxiosResponse<ApiResponse<CouponValidation>>> =>
-    http.post('/coupons/validate', data),
+  validate: (data: {
+    code: string
+    subtotal: number
+  }): Promise<AxiosResponse<ApiResponse<CouponValidation>>> => http.post('/coupons/validate', data),
 }
