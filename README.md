@@ -26,7 +26,8 @@
 - 💳 **Giỏ hàng & Thanh toán trực tuyến** — Tích hợp VNPAY/MoMo, xử lý giao dịch an toàn
 - 🤖 **AI Auto-Quiz** — Tự động sinh câu hỏi trắc nghiệm từ tài liệu PDF/TXT (OpenAI GPT-4o-mini)
 - 📊 **Dashboard thống kê** — Theo dõi doanh thu, tiến độ học tập
-- 🔐 **Phân quyền đa vai trò** — Admin / Giảng viên / Học viên
+- 🔐 **Bảo mật & Phân quyền nâng cao** — RBAC chuyên sâu, Role-scoping (Admin chỉ quản lý Student/Teacher), chặn leo thang đặc quyền (Anti-Privilege Escalation)
+- 🧪 **Kiểm thử tự động** — Hệ thống Feature Tests đạt độ ổn định cao (126/126 passed)
 - 🏷️ **Mã giảm giá (Coupon)** và thông báo real-time
 
 ---
@@ -146,6 +147,8 @@ npm run dev
 - **SQL Injection Prevention** — Eloquent ORM & Query Builder
 - **XSS Protection** — Blade Template tự động escape output
 - **Authentication & Authorization** — Laravel Sanctum + Spatie Permission (RBAC)
+- **Anti-Privilege Escalation** — Ngăn chặn Admin thường can thiệp vào tài khoản Super Admin hoặc tự nâng quyền
+- **Role-Scoping** — Tự động giới hạn phạm vi truy cập dữ liệu người dùng theo chức năng quản lý
 
 ---
 

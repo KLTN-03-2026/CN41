@@ -1,13 +1,13 @@
 # Bảng Theo Dõi Tiến Độ — E-Learning Marketplace
 
-> Cập nhật lần cuối: 27/04/2026 | Deadline: 15/05/2026
+> Cập nhật lần cuối: 04/05/2026 | Deadline: 15/05/2026
 
 ---
 
 ## Tiến Độ Tổng Quan
 
 ```
-Tổng thể: ██████████████████████░░░░░  78%
+Tổng thể: ████████████████████████░░░░  82%
 ```
 
 ---
@@ -15,10 +15,8 @@ Tổng thể: ██████████████████████
 ## Tiến Độ Theo Module
 
 ### 1. Xác Thực (Auth)
-| Tầng | Trạng thái | Ghi chú |
-|------|-----------|---------|
-| BE | ✅ Hoàn thành | Admin + Sinh viên: đăng nhập, đăng ký, xác minh email, reset mật khẩu, resend verification |
-| FE | ✅ Hoàn thành | LoginPage, RegisterPage, AdminLoginPage, VerifyEmailPage, ForgotPasswordPage, ResetPasswordPage — có guard theo role |
+| BE | ✅ Hoàn thành | Admin + Sinh viên: đăng nhập, đăng ký, xác minh email, reset mật khẩu, resend verification. **Hệ thống phân quyền (RBAC) đã bọc thép với Middleware permission cho từng API.** |
+| FE | ✅ Hoàn thành | LoginPage, RegisterPage, AdminLoginPage, VerifyEmailPage, ForgotPasswordPage, ResetPasswordPage — có guard theo role. **Hệ thống Axios interceptor xử lý lỗi 403 chuyên nghiệp.** |
 
 **Hoàn thành: 100%**
 
@@ -28,10 +26,8 @@ Còn lại:
 ---
 
 ### 2. Quản Lý Khóa Học
-| Tầng | Trạng thái | Ghi chú |
-|------|-----------|---------|
-| BE | ✅ Hoàn thành | CRUD đầy đủ, soft delete, toggle status, phân trang, bulk actions; cascade delete/restore xuống sections + lessons |
-| FE | ✅ Hoàn thành | CoursesPage (admin), CourseFormPage, CourseDetailPage (client); PaginationBar, xóa filter, validate danh mục |
+| BE | ✅ Hoàn thành | CRUD đầy đủ, soft delete, toggle status, phân trang, bulk actions; cascade delete/restore xuống sections + lessons. **Middleware permission:courses.view/create/edit/delete.** |
+| FE | ✅ Hoàn thành | CoursesPage (admin), CourseFormPage, CourseDetailPage (client); PaginationBar, xóa filter, validate danh mục. |
 
 **Hoàn thành: 93%**
 
@@ -57,10 +53,8 @@ Còn lại:
 ---
 
 ### 4. Quản Lý Danh Mục
-| Tầng | Trạng thái | Ghi chú |
-|------|-----------|---------|
-| BE | ✅ Hoàn thành | NestedSet, CRUD, bulk delete, soft delete |
-| FE | ✅ Hoàn thành | CategoriesPage admin |
+| BE | ✅ Hoàn thành | NestedSet, CRUD, bulk delete, soft delete. **Middleware permission:categories.view/create/edit/delete.** |
+| FE | ✅ Hoàn thành | CategoriesPage admin. |
 
 **Hoàn thành: 90%**
 
@@ -139,9 +133,7 @@ Còn lại:
 ---
 
 ### 10. Mã Giảm Giá (Coupon)
-| Tầng | Trạng thái | Ghi chú |
-|------|-----------|---------|
-| BE | ✅ Hoàn thành | Bảng coupons, model, repository, module Coupons với đầy đủ CRUD API, bulk actions, toggle status. Tích hợp validation và tính discount trực tiếp vào API tạo đơn hàng (OrderController). Feature test đạt 11/11 cases. |
+| BE | ✅ Hoàn thành | Bảng coupons, model, repository, module Coupons với đầy đủ CRUD API, bulk actions, toggle status. Tích hợp validation và tính discount trực tiếp vào API tạo đơn hàng (OrderController). **Middleware permission:coupons.view/create/edit/delete.** Feature test đạt 11/11 cases. |
 | FE | ✅ Hoàn thành | Quản lý coupon cho Admin (CouponsPage) với CRUD, toggle, soft delete. Sinh viên có thể nhập, áp dụng và xóa coupon trong màn Checkout (CheckoutPage), tự động tính lại tổng tiền. |
 
 **Hoàn thành: 100%**
@@ -168,10 +160,8 @@ Còn lại:
 ---
 
 ### 12. Quản Lý Học Viên & Giảng Viên (Admin)
-| Tầng | Trạng thái | Ghi chú |
-|------|-----------|---------|
-| BE | ✅ Hoàn thành | CRUD, soft delete, bulk actions, toggle status (teachers), phân trang, filter, student detail (enrolled courses + orders), OrderSeeder |
-| FE | ✅ Hoàn thành | StudentsPage + TeachersPage: bảng danh sách, tìm kiếm, modal thêm/sửa, xoá mềm, thùng rác, khôi phục, bulk actions, toggle status, phân trang, **modal xem chi tiết học viên** (khóa học đã mua, đơn hàng, tổng chi tiêu) |
+| BE | ✅ Hoàn thành | CRUD, soft delete, bulk actions, toggle status (teachers), phân trang, filter, student detail (enrolled courses + orders), OrderSeeder. **Bảo mật: Role-scoping (Admin chỉ quản lý Student/Teacher), chặn can thiệp Super Admin, Middleware permission cho từng đối tượng.** |
+| FE | ✅ Hoàn thành | StudentsPage + TeachersPage: bảng danh sách, tìm kiếm, modal thêm/sửa, xoá mềm, thùng rác, khôi phục, bulk actions, toggle status, phân trang, **modal xem chi tiết học viên**. **Sidebar: Hệ thống menu Người dùng đã được quy hoạch lại theo nhóm.** |
 
 **Hoàn thành: 100%**
 
@@ -181,9 +171,7 @@ Còn lại:
 ---
 
 ### 13. Quản Lý Bài Viết (Posts)
-| Tầng | Trạng thái | Ghi chú |
-|------|-----------|---------|
-| BE | ✅ Hoàn thành | Đã tạo module Posts; Migration & Models cho Categories, Tags, Posts, Comments (Polymorphic); Repositories; Admin & Client API đầy đủ |
+| BE | ✅ Hoàn thành | Đã tạo module Posts; Migration & Models cho Categories, Tags, Posts, Comments (Polymorphic); Repositories; Admin & Client API đầy đủ. **Middleware permission cho tất cả API quản trị.** |
 | FE | ✅ Hoàn thành | Đã hoàn thành cả Admin UI (Quản lý) và Client UI (BlogPage, PostDetailPage). |
 
 **Hoàn thành: 100%**
@@ -194,15 +182,15 @@ Còn lại:
 
 | Tầng | Tiến độ | Thanh tiến độ |
 |------|---------|--------------|
-| **Backend** | **94%** | `██████████████████████████░░` |
-| **Frontend** | **88%** | `████████████████████████░░░` |
+| **Backend** | **98%** | `████████████████████████████░` |
+| **Frontend** | **92%** | `██████████████████████████░░` |
 
 ### Chi tiết Backend:
-- ✅ Hoàn thành: Auth, Course, Categories, Lessons/Sections, Students, Teachers, Users, Upload, Payment/VNPAY, Enrollment, Dashboard, Coupons, **Posts**, 113 Feature Tests passed (13/15 module)
-- ⬜ Chưa làm: AI Quiz, Notifications (2/15 thiếu phần lớn)
+- ✅ Hoàn thành: Auth, Course, Categories, Lessons/Sections, Students, Teachers, Users (Role-based API Security), Upload, Payment/VNPAY, Enrollment, Dashboard, Coupons, Posts, **126/126 Feature Tests passed (100% stable)**
+- ⬜ Chưa làm: AI Quiz, Notifications (phần real-time)
 
 ### Chi tiết Frontend:
-- ✅ Hoàn thành: Auth pages, Course pages, Category pages, Lessons manager, Student/Teacher/Coupon pages (CRUD đầy đủ), Upload UI, Enrollment flow, Payment FE, Dashboard charts thực
+- ✅ Hoàn thành: Auth pages, Course pages, Category pages, Lessons manager, Student/Teacher/Coupon pages (CRUD đầy đủ), Upload UI, Enrollment flow, Payment FE, Dashboard charts thực, **User Management Scoping UI, Sidebar Refactoring.**
 - 🔄 Đang làm: Notifications UI
 - ⬜ Chưa làm: Quiz UI
 
