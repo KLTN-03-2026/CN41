@@ -10,30 +10,31 @@ class TeacherResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id'          => $this->id,
-            'name'        => $this->name,
-            'slug'        => $this->slug,
+            'id' => $this->id,
+            'name' => $this->name,
+            'email' => $this->user->email ?? null,
+            'slug' => $this->slug,
             'description' => $this->description,
-            'exp'         => $this->exp,
-            'image'       => $this->image
+            'exp' => $this->exp,
+            'image' => $this->image
                                 ? (str_starts_with($this->image, 'http') || str_starts_with($this->image, '/storage')
                                     ? $this->image
-                                    : '/storage/' . $this->image)
+                                    : '/storage/'.$this->image)
                                 : null,
-            'status'      => $this->status,
-            'courses'     => $this->whenLoaded('courses', function () {
+            'status' => $this->status,
+            'courses' => $this->whenLoaded('courses', function () {
                 return $this->courses->map(fn ($course) => [
-                    'id'        => $course->id,
-                    'name'      => $course->name,
-                    'slug'      => $course->slug,
+                    'id' => $course->id,
+                    'name' => $course->name,
+                    'slug' => $course->slug,
                     'thumbnail' => $course->thumbnail,
-                    'price'     => $course->price,
-                    'sale_price'=> $course->sale_price,
+                    'price' => $course->price,
+                    'sale_price' => $course->sale_price,
                 ]);
             }),
             'courses_count' => $this->whenCounted('courses'),
-            'created_at'  => $this->created_at->toISOString(),
-            'updated_at'  => $this->updated_at->toISOString(),
+            'created_at' => $this->created_at->toISOString(),
+            'updated_at' => $this->updated_at->toISOString(),
         ];
     }
 }

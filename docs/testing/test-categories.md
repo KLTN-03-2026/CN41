@@ -22,7 +22,7 @@
 | 2 | Submit không nhập gì | Lỗi: "Vui lòng nhập tên danh mục" |
 | 3 | Network | Không có request |
 
-## Test 3.3: Tạo Category gốc — Thành công ✅
+## Test 3.3: Tạo Category gốc — Thành công ⬜
 
 | # | Hành động | Kết quả mong đợi |
 |---|-----------|------------------|
@@ -134,7 +134,7 @@
 
 ---
 
-## Test 3.16: Khôi phục danh mục (Restore) — Strict Validation ✅
+## Test 3.16: Khôi phục danh mục (Restore) — Strict Validation ⬜
 
 | # | Hành động | Kết quả mong đợi |
 |---|-----------|------------------|
@@ -148,19 +148,19 @@
 
 | Test | Kết quả | Ghi chú |
 |------|---------|---------|
-| 3.1 Load trang | ✅ | Đã test list API returns 200 |
-| 3.2 Form trống | ✅ | Validation schema ok |
-| 3.3 Tạo gốc | ✅ | Tạo parent_id = null |
-| 3.4 Tạo con | ✅ | Tạo parent_id có giá trị |
-| 3.5 Slug auto | ⬜ | FE xử lý, Backend có DB save text |
-| 3.6 Slug trùng | ✅ | Validation backend báo 422 chuẩn |
-| 3.7 Slug sai format | ⬜ | Phụ thuộc validation rule |
-| 3.8 Sửa | ✅ | PUT Request OK |
-| 3.9 Sửa slug trùng | ✅ | Catch duplicate entry |
-| 3.10 Xóa đơn | ✅ | SoftDelete verified |
-| 3.11 Xóa có con | ✅ | Đã chặn xóa và trả lỗi 400 |
-| 3.12 Xóa có course | ✅ | Bị chặn 400 "đang dùng bởi N khóa học", bulk delete skip item bị chặn |
-| 3.13 Toggle status | ✅ | Toggle 0/1 thành công |
-| 3.14 Phân trang | ✅ | Đã test per_page query |
-| 3.15 Search | ✅ | Đã test search query (name/slug) |
-| 3.16 Khôi phục (Strict) | ✅ | Chặn khôi phục nếu cha chưa active |
+| 3.1 Load trang | ⬜ | |
+| 3.2 Form trống | ⬜ | |
+| 3.3 Tạo gốc | ⬜ | |
+| 3.4 Tạo con | ⬜ | |
+| 3.5 Slug auto | ⬜ | |
+| 3.6 Slug trùng | ⬜ | |
+| 3.7 Slug sai format | ⬜ | |
+| 3.8 Sửa | ⬜ | |
+| 3.9 Sửa slug trùng | ⬜ | |
+| 3.10 Xóa đơn | ⬜ | |
+| 3.11 Xóa có con | ⬜ | |
+| 3.12 Xóa có course | ⬜ | |
+| 3.13 Toggle status | ⬜ | |
+| 3.14 Phân trang | ⬜ | |
+| 3.15 Search | ⬜ | |
+| 3.16 Khôi phục (Strict) | ⬜ | |

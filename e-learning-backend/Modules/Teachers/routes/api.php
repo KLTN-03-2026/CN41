@@ -18,9 +18,9 @@ Route::middleware(['auth:admin'])->prefix('admin')->group(function () {
     Route::delete('teachers/bulk-force-delete', [TeachersController::class, 'bulkForceDelete'])->middleware('permission:users.delete');
 
     // Standard CRUD - từng route riêng để phân quyền chính xác
-    Route::get('teachers', [TeachersController::class, 'index'])->middleware('permission:users.view');
+    Route::get('teachers', [TeachersController::class, 'index'])->middleware('permission:users.view|courses.view');
     Route::post('teachers', [TeachersController::class, 'store'])->middleware('permission:users.create');
-    Route::get('teachers/{teacher}', [TeachersController::class, 'show'])->middleware('permission:users.view');
+    Route::get('teachers/{teacher}', [TeachersController::class, 'show'])->middleware('permission:users.view|courses.view');
     Route::put('teachers/{teacher}', [TeachersController::class, 'update'])->middleware('permission:users.edit');
     Route::patch('teachers/{teacher}', [TeachersController::class, 'update'])->middleware('permission:users.edit');
     Route::delete('teachers/{teacher}', [TeachersController::class, 'destroy'])->middleware('permission:users.delete');

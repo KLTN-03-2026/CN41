@@ -2,6 +2,7 @@
 
 namespace Modules\Users\Http\Controllers;
 
+use App\Events\ActivityLogsCleared;
 use App\Http\Controllers\Controller;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
@@ -45,7 +46,10 @@ class ActivityLogController extends Controller
      */
     public function clear()
     {
+        $admin = auth()->user();
         Activity::truncate();
+
+        event(new ActivityLogsCleared($admin));
 
         return $this->success(null, 'Đã dọn dẹp lịch sử hoạt động.');
     }

@@ -33,9 +33,9 @@ Mỗi file test bao gồm:
 
 | Module | Tài liệu báo cáo | Pass / Total | Cập nhật |
 |--------|-----------------|-------------|---------|
-| **Categories** | [test-categories-report.md](test-categories-report.md) | 14 / 16 | 2026-04-11 |
-| **Courses (Admin)** | [test-courses-admin-report.md](test-courses-admin-report.md) | 26 / 32 | 2026-04-11 |
-| **Security Hardening** | [report-security-hardening.md](report-security-hardening.md) | ✅ 100% | 2026-05-04 |
+| **Categories** | [test-categories-report.md](../report-testing/test-categories-report.md) | 14 / 16 | 2026-04-11 |
+| **Courses (Admin)** | [test-courses-admin-report.md](../report-testing/test-courses-admin-report.md) | 26 / 32 | 2026-04-11 |
+| **Security Hardening** | [report-security-hardening.md](../report-testing/report-security-hardening.md) | ⬜ 100% | 2026-05-04 |
 
 ---
 
@@ -56,7 +56,7 @@ Mỗi file test bao gồm:
 | Ký hiệu | Ý nghĩa |
 |---|---|
 | ⬜ | Chưa test |
-| ✅ | Pass |
+| ⬜ | Pass |
 | ❌ | Fail — ghi ghi chú lỗi |
 | ⚠️ | Partial — một phần hoạt động |
 | 🚧 | Chức năng chưa làm xong (xem QLCV) |

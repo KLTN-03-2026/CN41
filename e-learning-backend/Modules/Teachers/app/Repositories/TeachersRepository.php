@@ -3,8 +3,8 @@
 namespace Modules\Teachers\Repositories;
 
 use App\Repositories\BaseRepository;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Model;
 use Modules\Teachers\Models\Teachers;
 
 /**
@@ -42,11 +42,11 @@ class TeachersRepository extends BaseRepository implements TeachersRepositoryInt
     {
         $perPage = max(1, min($perPage, static::MAX_PER_PAGE));
 
-        $query = $this->model->newQuery()->latest();
+        $query = $this->model->newQuery()->with(['user'])->latest();
 
         // Filter theo tên
-        if (!empty($filters['search'])) {
-            $query->where('name', 'like', '%' . $filters['search'] . '%');
+        if (! empty($filters['search'])) {
+            $query->where('name', 'like', '%'.$filters['search'].'%');
         }
 
         // Filter theo status
@@ -69,8 +69,8 @@ class TeachersRepository extends BaseRepository implements TeachersRepositoryInt
             ->latest();
 
         // Tìm kiếm theo tên
-        if (!empty($filters['search'])) {
-            $query->where('name', 'like', '%' . $filters['search'] . '%');
+        if (! empty($filters['search'])) {
+            $query->where('name', 'like', '%'.$filters['search'].'%');
         }
 
         return $query->paginate($perPage);

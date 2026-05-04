@@ -63,9 +63,17 @@ class RolePermissionSeeder extends Seeder
 
         // teacher chỉ quản lý courses & lessons của mình
         $teacher->syncPermissions([
-            'courses.view', 'courses.create', 'courses.edit',
+            'courses.view', 'courses.create', 'courses.edit', 'courses.delete',
             'lessons.view', 'lessons.create', 'lessons.edit', 'lessons.delete',
             'dashboard.view',
+            'categories.view',
+            'users.view',
+            'tags.view',
+            'students.view',
+            'comments.view',
+            'comments.delete',
+            'posts.view',
+            'orders.view',
         ]);
     }
 }

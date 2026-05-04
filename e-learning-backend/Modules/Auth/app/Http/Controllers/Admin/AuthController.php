@@ -2,6 +2,7 @@
 
 namespace Modules\Auth\Http\Controllers\Admin;
 
+use App\Events\AdminLoggedIn;
 use App\Http\Controllers\Controller;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
@@ -43,6 +44,9 @@ class AuthController extends Controller
 
         // Tạo Sanctum token
         $token = $user->createToken('admin-token')->plainTextToken;
+
+        // Dispatch Event cho Activity Log
+        event(new AdminLoggedIn($user, $request->ip(), $request->userAgent() ?? 'Unknown'));
 
         return $this->success([
             'token' => $token,

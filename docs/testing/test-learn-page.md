@@ -43,7 +43,7 @@
 | 1 | Login nhưng chưa enroll → mở learn page | Redirect về trang detail hoặc thông báo "Bạn chưa đăng ký khóa học này" |
 | 2 | Network | BE trả về 403 |
 
-### Test 1.3: Truy cập đã enroll ✅
+### Test 1.3: Truy cập đã enroll ⬜
 
 | # | Hành động | Kết quả mong đợi |
 |---|-----------|------------------|
