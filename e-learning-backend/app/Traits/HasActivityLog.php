@@ -2,8 +2,8 @@
 
 namespace App\Traits;
 
-use Spatie\Activitylog\Models\Concerns\LogsActivity;
-use Spatie\Activitylog\Support\LogOptions;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 trait HasActivityLog
 {
@@ -14,7 +14,7 @@ trait HasActivityLog
         return LogOptions::defaults()
             ->logAll()
             ->logOnlyDirty()
-            ->dontLogEmptyChanges()
+            ->dontSubmitEmptyLogs()
             ->useLogName(strtolower(class_basename($this)))
             ->logExcept($this->getSensitiveAttributes());
     }
