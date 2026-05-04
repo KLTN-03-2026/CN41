@@ -12,33 +12,33 @@ use Modules\Posts\Http\Controllers\Client\PostController;
 
 Route::prefix('v1/admin')->middleware(['auth:admin'])->group(function () {
     // Post Categories
-    Route::get('post-categories', [AdminPostCategoryController::class, 'index']);
-    Route::post('post-categories', [AdminPostCategoryController::class, 'store']);
-    Route::get('post-categories/{id}', [AdminPostCategoryController::class, 'show']);
-    Route::patch('post-categories/{id}', [AdminPostCategoryController::class, 'update']);
-    Route::delete('post-categories/{id}', [AdminPostCategoryController::class, 'destroy']);
+    Route::get('post-categories', [AdminPostCategoryController::class, 'index'])->middleware('permission:posts.view');
+    Route::post('post-categories', [AdminPostCategoryController::class, 'store'])->middleware('permission:posts.create');
+    Route::get('post-categories/{id}', [AdminPostCategoryController::class, 'show'])->middleware('permission:posts.view');
+    Route::patch('post-categories/{id}', [AdminPostCategoryController::class, 'update'])->middleware('permission:posts.edit');
+    Route::delete('post-categories/{id}', [AdminPostCategoryController::class, 'destroy'])->middleware('permission:posts.delete');
 
     // Tags
-    Route::get('tags', [AdminTagController::class, 'index']);
-    Route::post('tags', [AdminTagController::class, 'store']);
-    Route::get('tags/{id}', [AdminTagController::class, 'show']);
-    Route::patch('tags/{id}', [AdminTagController::class, 'update']);
-    Route::delete('tags/{id}', [AdminTagController::class, 'destroy']);
+    Route::get('tags', [AdminTagController::class, 'index'])->middleware('permission:tags.view');
+    Route::post('tags', [AdminTagController::class, 'store'])->middleware('permission:tags.create');
+    Route::get('tags/{id}', [AdminTagController::class, 'show'])->middleware('permission:tags.view');
+    Route::patch('tags/{id}', [AdminTagController::class, 'update'])->middleware('permission:tags.edit');
+    Route::delete('tags/{id}', [AdminTagController::class, 'destroy'])->middleware('permission:tags.delete');
 
     // Posts
-    Route::post('posts/bulk-delete', [AdminPostController::class, 'bulkDelete']);
-    Route::get('posts', [AdminPostController::class, 'index']);
-    Route::post('posts', [AdminPostController::class, 'store']);
-    Route::get('posts/{id}', [AdminPostController::class, 'show']);
-    Route::match(['put', 'patch'], 'posts/{id}', [AdminPostController::class, 'update']);
-    Route::delete('posts/{id}', [AdminPostController::class, 'destroy']);
-    Route::patch('posts/{id}/toggle-publish', [AdminPostController::class, 'togglePublish']);
+    Route::post('posts/bulk-delete', [AdminPostController::class, 'bulkDelete'])->middleware('permission:posts.delete');
+    Route::get('posts', [AdminPostController::class, 'index'])->middleware('permission:posts.view');
+    Route::post('posts', [AdminPostController::class, 'store'])->middleware('permission:posts.create');
+    Route::get('posts/{id}', [AdminPostController::class, 'show'])->middleware('permission:posts.view');
+    Route::match(['put', 'patch'], 'posts/{id}', [AdminPostController::class, 'update'])->middleware('permission:posts.edit');
+    Route::delete('posts/{id}', [AdminPostController::class, 'destroy'])->middleware('permission:posts.delete');
+    Route::patch('posts/{id}/toggle-publish', [AdminPostController::class, 'togglePublish'])->middleware('permission:posts.edit');
 
     // Comments
-    Route::post('comments/bulk-delete', [AdminCommentController::class, 'bulkDelete']);
-    Route::get('comments', [AdminCommentController::class, 'index']);
-    Route::patch('comments/{id}/toggle-approval', [AdminCommentController::class, 'toggleApproval']);
-    Route::delete('comments/{id}', [AdminCommentController::class, 'destroy']);
+    Route::post('comments/bulk-delete', [AdminCommentController::class, 'bulkDelete'])->middleware('permission:comments.delete');
+    Route::get('comments', [AdminCommentController::class, 'index'])->middleware('permission:comments.view');
+    Route::patch('comments/{id}/toggle-approval', [AdminCommentController::class, 'toggleApproval'])->middleware('permission:comments.delete');
+    Route::delete('comments/{id}', [AdminCommentController::class, 'destroy'])->middleware('permission:comments.delete');
 });
 
 // Client Public Routes

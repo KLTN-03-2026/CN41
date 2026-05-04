@@ -3,34 +3,43 @@
 namespace Modules\Users\Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
 
 class RolePermissionSeeder extends Seeder
 {
     public function run(): void
     {
         // Reset cache
-        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+        app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
         $guard = 'admin';
 
         // ── Permissions ──
         $permissions = [
-            // Users
+            // Users & Roles
             'users.view', 'users.create', 'users.edit', 'users.delete',
+            'roles.view', 'roles.create', 'roles.edit', 'roles.delete',
             // Courses
             'courses.view', 'courses.create', 'courses.edit', 'courses.delete',
             // Categories
             'categories.view', 'categories.create', 'categories.edit', 'categories.delete',
             // Lessons
             'lessons.view', 'lessons.create', 'lessons.edit', 'lessons.delete',
-            // Orders
+            // Orders & Coupons
             'orders.view', 'orders.edit',
+            'coupons.view', 'coupons.create', 'coupons.edit', 'coupons.delete',
             // Students
             'students.view', 'students.edit',
+            // Posts (News)
+            'posts.view', 'posts.create', 'posts.edit', 'posts.delete',
+            'tags.view', 'tags.create', 'tags.edit', 'tags.delete',
+            'comments.view', 'comments.delete',
             // Dashboard
             'dashboard.view',
+            // System Logs
+            'system.logs.view', 'system.logs.delete',
         ];
 
         foreach ($permissions as $permission) {
@@ -39,8 +48,8 @@ class RolePermissionSeeder extends Seeder
 
         // ── Roles ──
         $superAdmin = Role::firstOrCreate(['name' => 'super-admin', 'guard_name' => $guard]);
-        $admin      = Role::firstOrCreate(['name' => 'admin',       'guard_name' => $guard]);
-        $teacher    = Role::firstOrCreate(['name' => 'teacher',     'guard_name' => $guard]);
+        $admin = Role::firstOrCreate(['name' => 'admin',       'guard_name' => $guard]);
+        $teacher = Role::firstOrCreate(['name' => 'teacher',     'guard_name' => $guard]);
 
         // super-admin có tất cả permissions
         $superAdmin->syncPermissions(Permission::where('guard_name', $guard)->get());

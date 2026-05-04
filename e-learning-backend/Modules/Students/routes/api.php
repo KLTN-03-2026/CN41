@@ -5,13 +5,19 @@ use Modules\Students\Http\Controllers\StudentsController;
 
 Route::middleware(['auth:admin'])->prefix('admin')->group(function () {
     // Bulk + static routes phải đặt TRƯỚC apiResource để tránh bị match bởi {student}
-    Route::get('students/trashed',              [StudentsController::class, 'trashed']);
-    Route::post('students/bulk-restore',        [StudentsController::class, 'bulkRestore']);
-    Route::delete('students/bulk-delete',       [StudentsController::class, 'bulkDelete']);
-    Route::delete('students/bulk-force-delete', [StudentsController::class, 'bulkForceDelete']);
+    Route::get('students/trashed', [StudentsController::class, 'trashed'])->middleware('permission:students.view');
+    Route::post('students/bulk-restore', [StudentsController::class, 'bulkRestore'])->middleware('permission:students.edit');
+    Route::delete('students/bulk-delete', [StudentsController::class, 'bulkDelete'])->middleware('permission:students.edit');
+    Route::delete('students/bulk-force-delete', [StudentsController::class, 'bulkForceDelete'])->middleware('permission:students.edit');
 
-    Route::apiResource('students', StudentsController::class)->names('admin.students');
+    // Standard CRUD - từng route riêng để phân quyền chính xác
+    Route::get('students', [StudentsController::class, 'index'])->middleware('permission:students.view');
+    Route::post('students', [StudentsController::class, 'store'])->middleware('permission:students.edit');
+    Route::get('students/{student}', [StudentsController::class, 'show'])->middleware('permission:students.view');
+    Route::put('students/{student}', [StudentsController::class, 'update'])->middleware('permission:students.edit');
+    Route::patch('students/{student}', [StudentsController::class, 'update'])->middleware('permission:students.edit');
+    Route::delete('students/{student}', [StudentsController::class, 'destroy'])->middleware('permission:students.edit');
 
-    Route::post('students/{id}/restore',        [StudentsController::class, 'restore']);
-    Route::delete('students/{id}/force-delete', [StudentsController::class, 'forceDelete']);
+    Route::post('students/{id}/restore', [StudentsController::class, 'restore'])->middleware('permission:students.edit');
+    Route::delete('students/{id}/force-delete', [StudentsController::class, 'forceDelete'])->middleware('permission:students.edit');
 });
