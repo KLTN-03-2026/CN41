@@ -196,8 +196,18 @@ const rawMenuGroups = [
         icon: UserGroupIcon,
         name: 'Người dùng',
         subItems: [
-          { name: 'Quản trị viên', path: '/admin/users', permission: 'users.view' },
-          { name: 'Giảng viên', path: '/admin/teachers', permission: 'users.view' },
+          {
+            name: 'Quản trị viên',
+            path: '/admin/users',
+            permission: 'users.view',
+            hideForRoles: ['teacher'],
+          },
+          {
+            name: 'Giảng viên',
+            path: '/admin/teachers',
+            permission: 'users.view',
+            hideForRoles: ['teacher'],
+          },
           { name: 'Học viên', path: '/admin/students', permission: 'students.view' },
         ],
       },
@@ -257,7 +267,18 @@ const rawMenuGroups = [
 import { useAdminAuthStore } from '@/stores/adminAuth.store'
 const adminStore = useAdminAuthStore()
 
-const hasPermission = (permission?: string) => {
+const hasPermission = (item: any) => {
+  const permission = item.permission
+  const hideForRoles = item.hideForRoles || []
+
+  // Kiểm tra nếu role bị cấm xem mục này
+  if (hideForRoles.length > 0) {
+    const userRoles = adminStore.user?.roles || []
+    if (hideForRoles.some((r: string) => userRoles.includes(r))) {
+      return false
+    }
+  }
+
   if (!permission) return true
   // Super admin luôn có quyền
   if (adminStore.user?.roles?.includes('super-admin')) return true
@@ -271,10 +292,10 @@ const menuGroups = computed(() => {
       .map((group) => {
         // Lọc các items con
         const filteredItems = group.items
-          .filter((item) => hasPermission(item.permission))
+          .filter((item) => hasPermission(item))
           .map((item) => {
             if (item.subItems) {
-              const filteredSub = item.subItems.filter((sub) => hasPermission(sub.permission))
+              const filteredSub = item.subItems.filter((sub) => hasPermission(sub))
               return { ...item, subItems: filteredSub.length ? filteredSub : undefined }
             }
             return item

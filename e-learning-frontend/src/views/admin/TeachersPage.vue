@@ -88,6 +88,9 @@
                 Giảng viên
               </th>
               <th class="text-left text-xs font-medium text-gray-500 dark:text-gray-400 px-4 py-3">
+                Email
+              </th>
+              <th class="text-left text-xs font-medium text-gray-500 dark:text-gray-400 px-4 py-3">
                 Kinh nghiệm
               </th>
               <th class="text-left text-xs font-medium text-gray-500 dark:text-gray-400 px-4 py-3">
@@ -109,6 +112,9 @@
                 </td>
                 <td class="px-4 py-3">
                   <div class="h-4 w-32 bg-gray-100 dark:bg-gray-800 rounded animate-pulse"></div>
+                </td>
+                <td class="px-4 py-3">
+                  <div class="h-4 w-40 bg-gray-100 dark:bg-gray-800 rounded animate-pulse"></div>
                 </td>
                 <td class="px-4 py-3">
                   <div class="h-4 w-20 bg-gray-100 dark:bg-gray-800 rounded animate-pulse"></div>
@@ -162,6 +168,9 @@
                       <p class="text-xs text-gray-400 truncate">{{ t.slug }}</p>
                     </div>
                   </div>
+                </td>
+                <td class="px-4 py-3 text-gray-600 dark:text-gray-400 text-xs">
+                  {{ t.email || '—' }}
                 </td>
                 <td class="px-4 py-3 text-gray-600 dark:text-gray-400 text-xs">
                   {{ t.exp || '—' }}
