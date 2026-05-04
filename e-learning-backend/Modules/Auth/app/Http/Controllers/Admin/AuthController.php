@@ -28,9 +28,6 @@ class AuthController extends Controller
      *
      * Validate email + password → kiểm tra credentials → trả token + user info.
      * Token name: 'admin-token' để phân biệt với student token.
-     *
-     * @param  AdminLoginRequest  $request
-     * @return JsonResponse
      */
     public function login(AdminLoginRequest $request): JsonResponse
     {
@@ -40,7 +37,7 @@ class AuthController extends Controller
         $user = User::where('email', $credentials['email'])->first();
 
         // Kiểm tra user tồn tại và password đúng
-        if (!$user || !Hash::check($credentials['password'], $user->password)) {
+        if (! $user || ! Hash::check($credentials['password'], $user->password)) {
             return $this->error('Email hoặc mật khẩu không đúng.', 401);
         }
 
@@ -53,6 +50,8 @@ class AuthController extends Controller
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
+                'roles' => $user->getRoleNames(),
+                'permissions' => $user->getAllPermissions()->pluck('name'),
             ],
         ], 'Đăng nhập thành công.');
     }
@@ -61,9 +60,6 @@ class AuthController extends Controller
      * Đăng xuất Admin.
      *
      * Revoke token hiện tại (chỉ token đang dùng, không revoke tất cả).
-     *
-     * @param  Request  $request
-     * @return JsonResponse
      */
     public function logout(Request $request): JsonResponse
     {
@@ -78,9 +74,6 @@ class AuthController extends Controller
 
     /**
      * Lấy thông tin Admin đang đăng nhập.
-     *
-     * @param  Request  $request
-     * @return JsonResponse
      */
     public function me(Request $request): JsonResponse
     {
@@ -90,6 +83,8 @@ class AuthController extends Controller
             'id' => $user->id,
             'name' => $user->name,
             'email' => $user->email,
+            'roles' => $user->getRoleNames(),
+            'permissions' => $user->getAllPermissions()->pluck('name'),
             'created_at' => $user->created_at,
         ]);
     }

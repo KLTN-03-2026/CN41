@@ -2,13 +2,15 @@
 
 namespace Modules\Lessons\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use App\Traits\ScopesToTeacher;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Modules\Course\Models\Course;
 
 class Section extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, ScopesToTeacher, SoftDeletes;
 
     protected $table = 'sections';
 
@@ -21,8 +23,8 @@ class Section extends Model
     ];
 
     protected $casts = [
-        'status'    => 'integer',
-        'order'     => 'integer',
+        'status' => 'integer',
+        'order' => 'integer',
         'course_id' => 'integer',
     ];
 
@@ -42,7 +44,7 @@ class Section extends Model
 
     public function course()
     {
-        return $this->belongsTo(\Modules\Course\Models\Course::class, 'course_id');
+        return $this->belongsTo(Course::class, 'course_id');
     }
 
     public function lessons()

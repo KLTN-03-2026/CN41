@@ -2,13 +2,16 @@
 
 namespace Modules\Teachers\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use App\Traits\HasActivityLog;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Modules\Course\Models\Course;
+use Modules\Users\Models\User;
 
 class Teachers extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasActivityLog, HasFactory, SoftDeletes;
 
     /**
      * Bảng tương ứng trong database.
@@ -19,6 +22,7 @@ class Teachers extends Model
      * Các cột được phép mass-assign.
      */
     protected $fillable = [
+        'user_id',
         'name',
         'date_of_birth',
         'slug',
@@ -32,6 +36,7 @@ class Teachers extends Model
      * Các cột cần cast kiểu dữ liệu.
      */
     protected $casts = [
+        'user_id' => 'integer',
         'exp' => 'float',
         'status' => 'integer',
         'created_at' => 'datetime',
@@ -50,11 +55,18 @@ class Teachers extends Model
     // ── Relationships ──
 
     /**
+     * Teacher liên kết với một tài khoản User.
+     */
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    /**
      * Teacher có nhiều Course.
-     * Relationship sẽ hoạt động khi Module Courses được tạo.
      */
     public function courses()
     {
-        return $this->hasMany(\Modules\Courses\Models\Course::class , 'teacher_id');
+        return $this->hasMany(Course::class, 'teacher_id');
     }
 }

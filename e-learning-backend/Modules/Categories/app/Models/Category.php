@@ -2,14 +2,16 @@
 
 namespace Modules\Categories\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use App\Traits\HasActivityLog;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Kalnoy\Nestedset\NodeTrait;
+use Modules\Course\Models\Course;
 
 class Category extends Model
 {
-    use HasFactory, SoftDeletes, NodeTrait;
+    use HasActivityLog, HasFactory, NodeTrait, SoftDeletes;
 
     /**
      * Bảng tương ứng trong database.
@@ -33,9 +35,9 @@ class Category extends Model
      * Các cột cần cast kiểu dữ liệu.
      */
     protected $casts = [
-        'status'     => 'integer',
-        'order'      => 'integer',
-        'parent_id'  => 'integer',
+        'status' => 'integer',
+        'order' => 'integer',
+        'parent_id' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'deleted_at' => 'datetime',
@@ -49,7 +51,7 @@ class Category extends Model
         '_rgt',
     ];
 
-// ── Scopes ──
+    // ── Scopes ──
 
     /**
      * Scope: chỉ lấy categories đang active.
@@ -59,7 +61,7 @@ class Category extends Model
         return $query->where('status', 1);
     }
 
-// ── Accessors ──
+    // ── Accessors ──
 
     /**
      * Check category có phải root (không có parent) hay không.
@@ -69,7 +71,7 @@ class Category extends Model
         return is_null($this->parent_id);
     }
 
-// ── Relationships ──
+    // ── Relationships ──
 
     /**
      * Category có nhiều Courses (many-to-many qua categories_courses).
@@ -77,7 +79,7 @@ class Category extends Model
     public function courses()
     {
         return $this->belongsToMany(
-            \Modules\Course\Models\Course::class,
+            Course::class,
             'categories_courses',
             'category_id',
             'course_id'

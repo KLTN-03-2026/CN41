@@ -8,6 +8,7 @@
       </div>
       <router-link
         v-if="!isTrashed"
+        v-permission="'courses.create'"
         to="/admin/courses/create"
         class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-colors"
       >
@@ -75,7 +76,8 @@
     >
       <p>
         Bạn có chắc muốn xóa khóa học
-        <strong class="text-gray-800 dark:text-white/90">{{ softDelete.target.value?.name }}</strong>?
+        <strong class="text-gray-800 dark:text-white/90">{{ softDelete.target.value?.name }}</strong
+        >?
         <span class="block mt-1 text-xs text-gray-400">Khóa học sẽ được chuyển vào thùng rác.</span>
       </p>
     </ConfirmModal>
@@ -94,7 +96,10 @@
     >
       <p>
         Bạn có chắc muốn xóa vĩnh viễn khóa học
-        <strong class="text-gray-800 dark:text-white/90">{{ forceDelete.target.value?.name }}</strong>?
+        <strong class="text-gray-800 dark:text-white/90">{{
+          forceDelete.target.value?.name
+        }}</strong
+        >?
       </p>
     </ConfirmModal>
 
@@ -127,22 +132,55 @@ import ConfirmModal from '@/components/common/ConfirmModal.vue'
 import BulkActions from '@/components/table/BulkActions.vue'
 
 const {
-  isTrashed, switchTab,
-  courses, loading, togglingId, filters,
-  loadActivePage, activePagination, activeSetPage, debouncedFetch,
+  isTrashed,
+  switchTab,
+  courses,
+  loading,
+  togglingId,
+  filters,
+  loadActivePage,
+  activePagination,
+  activeSetPage,
+  debouncedFetch,
   toggleStatus,
-  selectedIds, isAllSelected, isIndeterminate, toggleSelectAll, toggleSelect, clearSelection,
-  bulkDeleting, bulkUpdating, doBulkDelete, bulkToggleStatus,
-  trashedCourses, trashedLoading, trashedCount, restoringId, trashedFilters,
-  loadTrashedPage, trashedPagination, debouncedFetchTrashed, fetchTrashedCount, doRestore,
-  trashedSelectedIds, isTrashedAllSelected, isTrashedIndeterminate,
-  toggleTrashedSelectAll, toggleTrashedSelect, clearTrashedSelection,
-  bulkForceDeleting, bulkRestoring, doBulkRestore, doBulkForceDelete,
+  selectedIds,
+  isAllSelected,
+  isIndeterminate,
+  toggleSelectAll,
+  toggleSelect,
+  clearSelection,
+  bulkDeleting,
+  bulkUpdating,
+  doBulkDelete,
+  bulkToggleStatus,
+  trashedCourses,
+  trashedLoading,
+  trashedCount,
+  restoringId,
+  trashedFilters,
+  loadTrashedPage,
+  trashedPagination,
+  debouncedFetchTrashed,
+  fetchTrashedCount,
+  doRestore,
+  trashedSelectedIds,
+  isTrashedAllSelected,
+  isTrashedIndeterminate,
+  toggleTrashedSelectAll,
+  toggleTrashedSelect,
+  clearTrashedSelection,
+  bulkForceDeleting,
+  bulkRestoring,
+  doBulkRestore,
+  doBulkForceDelete,
   bulkActionsRef,
-  softDelete, forceDelete,
+  softDelete,
+  forceDelete,
 } = useCourses()
 
-const setBulkActionsRef = (el: { closeModal: () => void } | null) => { bulkActionsRef.value = el }
+const setBulkActionsRef = (el: { closeModal: () => void } | null) => {
+  bulkActionsRef.value = el
+}
 
 onMounted(() => {
   loadActivePage()

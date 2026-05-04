@@ -8,15 +8,16 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Modules\Course\Http\Requests\BulkDeleteCourseRequest;
+use Modules\Course\Http\Requests\BulkForceDeleteCourseRequest;
+use Modules\Course\Http\Requests\BulkRestoreCourseRequest;
+use Modules\Course\Http\Requests\BulkStatusCourseRequest;
 use Modules\Course\Http\Requests\StoreCourseRequest;
 use Modules\Course\Http\Requests\UpdateCourseRequest;
-use Modules\Course\Http\Requests\BulkDeleteCourseRequest;
-use Modules\Course\Http\Requests\BulkRestoreCourseRequest;
-use Modules\Course\Http\Requests\BulkForceDeleteCourseRequest;
-use Modules\Course\Http\Requests\BulkStatusCourseRequest;
 use Modules\Course\Http\Resources\CourseResource;
 use Modules\Course\Models\Course;
 use Modules\Course\Repositories\CourseRepositoryInterface;
+use Modules\Lessons\Models\Lesson;
 
 class CourseController extends Controller
 {
@@ -37,12 +38,12 @@ class CourseController extends Controller
     public function index(Request $request): JsonResponse
     {
         $request->validate([
-            'search'      => 'nullable|string|max:100',
-            'status'      => 'nullable|integer|in:0,1',
-            'teacher_id'  => 'nullable|integer|exists:teachers,id',
+            'search' => 'nullable|string|max:100',
+            'status' => 'nullable|integer|in:0,1',
+            'teacher_id' => 'nullable|integer|exists:teachers,id',
             'category_id' => 'nullable|integer|exists:categories,id',
-            'level'       => 'nullable|string|in:beginner,intermediate,advanced',
-            'per_page'    => 'nullable|integer|min:1|max:100',
+            'level' => 'nullable|string|in:beginner,intermediate,advanced',
+            'per_page' => 'nullable|integer|min:1|max:100',
         ]);
 
         $perPage = (int) $request->query('per_page', 15);
@@ -60,6 +61,12 @@ class CourseController extends Controller
     public function store(StoreCourseRequest $request): JsonResponse
     {
         $validated = $request->validated();
+
+        // Nếu là teacher, tự động gán teacher_id của họ
+        if (auth('admin')->check() && auth('admin')->user()->hasRole('teacher') && auth('admin')->user()->teacher) {
+            $validated['teacher_id'] = auth('admin')->user()->teacher->id;
+        }
+
         $categoryIds = $validated['category_ids'] ?? [];
         unset($validated['category_ids']);
 
@@ -67,7 +74,7 @@ class CourseController extends Controller
             $course = $this->repository->create($validated);
 
             // Sync categories nếu có
-            if (!empty($categoryIds)) {
+            if (! empty($categoryIds)) {
                 $this->repository->syncCategories($course->id, $categoryIds);
             }
 
@@ -268,10 +275,10 @@ class CourseController extends Controller
     public function publicIndex(Request $request): JsonResponse
     {
         $request->validate([
-            'search'      => 'nullable|string|max:100',
+            'search' => 'nullable|string|max:100',
             'category_id' => 'nullable|integer|exists:categories,id',
-            'level'       => 'nullable|string|in:beginner,intermediate,advanced',
-            'per_page'    => 'nullable|integer|min:1|max:100',
+            'level' => 'nullable|string|in:beginner,intermediate,advanced',
+            'per_page' => 'nullable|integer|min:1|max:100',
         ]);
 
         $perPage = (int) $request->query('per_page', 15);
@@ -288,13 +295,13 @@ class CourseController extends Controller
      */
     public function publicShow(string $slug): JsonResponse
     {
-        if (!preg_match('/^[a-z0-9]+(?:-[a-z0-9]+)*$/', $slug)) {
+        if (! preg_match('/^[a-z0-9]+(?:-[a-z0-9]+)*$/', $slug)) {
             return $this->error('Khóa học không tồn tại.', 404);
         }
 
         $course = $this->repository->findBySlug($slug, true);
 
-        if (!$course) {
+        if (! $course) {
             return $this->error('Khóa học không tồn tại.', 404);
         }
 
@@ -306,13 +313,13 @@ class CourseController extends Controller
      */
     public function publicLessons(string $slug): JsonResponse
     {
-        if (!preg_match('/^[a-z0-9]+(?:-[a-z0-9]+)*$/', $slug)) {
+        if (! preg_match('/^[a-z0-9]+(?:-[a-z0-9]+)*$/', $slug)) {
             return $this->error('Khóa học không tồn tại.', 404);
         }
 
         $course = $this->repository->findBySlug($slug, true);
 
-        if (!$course) {
+        if (! $course) {
             return $this->error('Khóa học không tồn tại.', 404);
         }
 
@@ -323,26 +330,26 @@ class CourseController extends Controller
         }
 
         // Load sections theo trạng thái mua
-        $sections = $course->sections()->where('status', 1)->with(['lessons' => function($q) {
+        $sections = $course->sections()->where('status', 1)->with(['lessons' => function ($q) {
             $q->where('status', 1);
         }])->get()->map(fn ($section) => [
-            'id'      => $section->id,
-            'title'   => $section->title,
-            'order'   => $section->order,
+            'id' => $section->id,
+            'title' => $section->title,
+            'order' => $section->order,
             'lessons' => $section->lessons->map(fn ($lesson) => [
-                'id'         => $lesson->id,
-                'title'      => $lesson->title,
-                'slug'       => $lesson->slug,
-                'type'       => $lesson->type,
-                'order'      => $lesson->order,
+                'id' => $lesson->id,
+                'title' => $lesson->title,
+                'slug' => $lesson->slug,
+                'type' => $lesson->type,
+                'order' => $lesson->order,
                 'is_preview' => $lesson->is_preview,
-                'duration'   => $lesson->duration,
+                'duration' => $lesson->duration,
             ])->values(),
         ])->values();
 
         return $this->success([
             'is_purchased' => $isPurchased,
-            'sections'     => $sections,
+            'sections' => $sections,
         ], 'Lấy danh sách bài giảng thành công.');
     }
 
@@ -352,7 +359,7 @@ class CourseController extends Controller
     public function enrollFree(string $slug): JsonResponse
     {
         $course = $this->repository->findBySlug($slug, true);
-        if (!$course) {
+        if (! $course) {
             return $this->error('Khóa học không tồn tại.', 404);
         }
 
@@ -362,9 +369,9 @@ class CourseController extends Controller
 
         $student = auth('api')->user();
 
-        if (!$course->students()->where('student_id', $student->id)->exists()) {
+        if (! $course->students()->where('student_id', $student->id)->exists()) {
             $course->students()->attach($student->id, ['enrolled_at' => now()]);
-            
+
             // Cập nhật số lượng học viên (+1)
             $this->repository->incrementStudentCount($course->id);
         }
@@ -397,32 +404,32 @@ class CourseController extends Controller
     public function publicPreviewLesson(string $courseSlug, string $lessonSlug): JsonResponse
     {
         $course = $this->repository->findBySlug($courseSlug, true);
-        if (!$course) {
+        if (! $course) {
             return $this->error('Khóa học không tồn tại.', 404);
         }
 
-        $lesson = \Modules\Lessons\Models\Lesson::where('course_id', $course->id)
+        $lesson = Lesson::where('course_id', $course->id)
             ->where('slug', $lessonSlug)
             ->where('status', 1)
             ->with(['video', 'document'])
             ->first();
 
-        if (!$lesson) {
+        if (! $lesson) {
             return $this->error('Bài học không tồn tại.', 404);
         }
 
-        if (!$lesson->is_preview) {
+        if (! $lesson->is_preview) {
             return $this->error('Đây không phải bài học thử.', 403);
         }
 
         return $this->success([
-            'id'           => $lesson->id,
-            'title'        => $lesson->title,
-            'type'         => $lesson->type,
-            'video_url'    => $lesson->video ? $lesson->video->url : null,
+            'id' => $lesson->id,
+            'title' => $lesson->title,
+            'type' => $lesson->type,
+            'video_url' => $lesson->video ? $lesson->video->url : null,
             'document_url' => $lesson->document ? $lesson->document->url : null,
-            'content'      => $lesson->content,
-            'is_preview'   => $lesson->is_preview,
+            'content' => $lesson->content,
+            'is_preview' => $lesson->is_preview,
         ], 'Lấy bài học thử thành công.');
     }
 

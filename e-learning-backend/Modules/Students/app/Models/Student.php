@@ -2,16 +2,19 @@
 
 namespace Modules\Students\Models;
 
-use Illuminate\Foundation\Auth\User as Authenticatable;
+use App\Traits\HasActivityLog;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Modules\Auth\Notifications\StudentResetPasswordNotification;
+use Modules\Course\Models\Course;
+use Modules\Payment\Models\Order;
 
 class Student extends Authenticatable
 {
-    use HasFactory, SoftDeletes, Notifiable, HasApiTokens;
+    use HasActivityLog, HasApiTokens, HasFactory, Notifiable, SoftDeletes;
 
     protected $table = 'students';
 
@@ -33,11 +36,11 @@ class Student extends Authenticatable
 
     protected $casts = [
         'email_verified_at' => 'datetime',
-        'date_of_birth'     => 'date',
-        'password'          => 'hashed',
-        'created_at'        => 'datetime',
-        'updated_at'        => 'datetime',
-        'deleted_at'        => 'datetime',
+        'date_of_birth' => 'date',
+        'password' => 'hashed',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+        'deleted_at' => 'datetime',
     ];
 
     /**
@@ -54,7 +57,7 @@ class Student extends Authenticatable
     public function enrolledCourses()
     {
         return $this->belongsToMany(
-            \Modules\Course\Models\Course::class,
+            Course::class,
             'students_course',
             'student_id',
             'course_id'
@@ -66,7 +69,6 @@ class Student extends Authenticatable
      */
     public function orders()
     {
-        return $this->hasMany(\Modules\Payment\Models\Order::class, 'student_id');
+        return $this->hasMany(Order::class, 'student_id');
     }
 }
-

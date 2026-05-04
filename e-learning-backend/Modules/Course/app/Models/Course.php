@@ -2,6 +2,8 @@
 
 namespace Modules\Course\Models;
 
+use App\Traits\HasActivityLog;
+use App\Traits\ScopesToTeacher;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -13,7 +15,7 @@ use Modules\Teachers\Models\Teachers;
 
 class Course extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasActivityLog, HasFactory, ScopesToTeacher, SoftDeletes;
 
     /**
      * Bảng tương ứng trong database.

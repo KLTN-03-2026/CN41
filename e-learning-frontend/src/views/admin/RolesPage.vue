@@ -404,7 +404,7 @@ async function fetchData() {
     ])
     roles.value = rolesRes.data.data
     allPermissions.value = permsRes.data.data
-  } catch (err) {
+  } catch (_err) {
     toast.error('Lỗi khi tải dữ liệu vai trò.')
   } finally {
     loading.value = false
@@ -466,11 +466,12 @@ async function submitForm() {
     }
     showModal.value = false
     fetchData()
-  } catch (err: any) {
-    if (err.response?.status === 422) {
-      formErrors.value = err.response.data.errors
+  } catch (err: unknown) {
+    const error = err as any
+    if (error.response?.status === 422) {
+      formErrors.value = error.response.data.errors
     } else {
-      formError.value = err.response?.data?.message || 'Có lỗi xảy ra khi lưu.'
+      formError.value = error.response?.data?.message || 'Có lỗi xảy ra khi lưu.'
     }
   } finally {
     submitting.value = false
@@ -495,8 +496,9 @@ async function doDelete() {
     toast.success('Đã xóa vai trò thành công!')
     showDeleteModal.value = false
     fetchData()
-  } catch (err: any) {
-    toast.error(err.response?.data?.message || 'Không thể xóa vai trò này.')
+  } catch (err: unknown) {
+    const error = err as any
+    toast.error(error.response?.data?.message || 'Không thể xóa vai trò này.')
   } finally {
     deleteLoading.value = false
   }
