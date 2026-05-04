@@ -39,6 +39,7 @@ const router = createRouter({
         { path: 'tags', component: () => import('@/views/admin/TagsPage.vue') },
         { path: 'post-comments', component: () => import('@/views/admin/CommentsPage.vue') },
         { path: 'coupons', component: () => import('@/views/admin/CouponsPage.vue') },
+        { path: 'system-logs', component: () => import('@/views/admin/ActivityLogsPage.vue') },
       ],
     },
 
@@ -134,7 +135,7 @@ function getToken(key) {
 }
 
 // ── Navigation Guard ───────────────────────────────────────
-router.beforeEach(async (to, from, next) => {
+router.beforeEach(async (to, _from) => {
   NProgress.start()
   const adminToken = getToken('adminToken')
   const studentToken = getToken('studentToken')
@@ -151,7 +152,7 @@ router.beforeEach(async (to, from, next) => {
     const unverified = studentStore.student && !studentStore.student.email_verified_at
     const allowedWhenUnverified = ['/verify-email', '/verify-email/result', '/login', '/register']
     if (unverified && !allowedWhenUnverified.includes(to.path)) {
-      return next('/verify-email')
+      return '/verify-email'
     }
   }
 
@@ -167,24 +168,24 @@ router.beforeEach(async (to, from, next) => {
   // Route cần auth
   if (to.meta.requiresAuth) {
     if (to.meta.guard === 'admin' && !adminToken) {
-      return next('/admin/login')
+      return '/admin/login'
     }
     if (to.meta.guard === 'student' && !studentToken) {
-      return next({ path: '/login', query: { redirect: to.fullPath } })
+      return { path: '/login', query: { redirect: to.fullPath } }
     }
   }
 
   // Route chỉ dành cho guest (login, register, forgot-password...)
   if (to.meta.requiresGuest) {
-    if (to.meta.guard === 'admin' && adminToken) return next('/admin/dashboard')
+    if (to.meta.guard === 'admin' && adminToken) return '/admin/dashboard'
 
     if (to.meta.guard === 'student') {
-      if (studentToken) return next('/')
-      if (adminToken) return next('/admin/dashboard')
+      if (studentToken) return '/'
+      if (adminToken) return '/admin/dashboard'
     }
   }
 
-  next()
+  return true
 })
 
 router.afterEach(() => {
