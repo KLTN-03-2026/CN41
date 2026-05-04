@@ -1,15 +1,20 @@
 <?php
 
+use Illuminate\Auth\AuthenticationException;
+use Illuminate\Console\Scheduling\Schedule;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Validation\ValidationException;
-use Illuminate\Auth\AuthenticationException;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Modules\Auth\Http\Middleware\EnsureEmailVerified;
+use Spatie\Permission\Middleware\PermissionMiddleware;
+use Spatie\Permission\Middleware\RoleMiddleware;
+use Spatie\Permission\Middleware\RoleOrPermissionMiddleware;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -25,7 +30,10 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Alias middleware kiểm tra tài khoản đã xác thực email
         $middleware->alias([
-            'email.verified' => \Modules\Auth\Http\Middleware\EnsureEmailVerified::class,
+            'email.verified' => EnsureEmailVerified::class,
+            'role' => RoleMiddleware::class,
+            'permission' => PermissionMiddleware::class,
+            'role_or_permission' => RoleOrPermissionMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
@@ -36,10 +44,11 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->render(function (ModelNotFoundException $e, Request $request) {
             if ($request->is('api/*') || $request->expectsJson()) {
                 $model = class_basename($e->getModel());
+
                 return response()->json([
                     'success' => false,
                     'message' => "{$model} không tìm thấy.",
-                    'data'    => null,
+                    'data' => null,
                 ], 404);
             }
         });
@@ -50,7 +59,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 return response()->json([
                     'success' => false,
                     'message' => 'Phương thức HTTP không được phép cho endpoint này.',
-                    'data'    => null,
+                    'data' => null,
                 ], 405);
             }
         });
@@ -61,7 +70,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 return response()->json([
                     'success' => false,
                     'message' => 'Endpoint không tồn tại.',
-                    'data'    => null,
+                    'data' => null,
                 ], 404);
             }
         });
@@ -72,7 +81,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 return response()->json([
                     'success' => false,
                     'message' => 'Chưa đăng nhập hoặc token không hợp lệ.',
-                    'data'    => null,
+                    'data' => null,
                 ], 401);
             }
         });
@@ -83,7 +92,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 return response()->json([
                     'success' => false,
                     'message' => 'Bạn không có quyền thực hiện hành động này.',
-                    'data'    => null,
+                    'data' => null,
                 ], 403);
             }
         });
@@ -94,14 +103,14 @@ return Application::configure(basePath: dirname(__DIR__))
                 return response()->json([
                     'success' => false,
                     'message' => 'Dữ liệu không hợp lệ.',
-                    'data'    => null,
-                    'errors'  => $e->errors(),
+                    'data' => null,
+                    'errors' => $e->errors(),
                 ], 422);
             }
         });
 
     })
-    ->withSchedule(function (\Illuminate\Console\Scheduling\Schedule $schedule) {
+    ->withSchedule(function (Schedule $schedule) {
         $schedule->command('media:prune-orphans')->dailyAt('03:00');
     })
     ->create();

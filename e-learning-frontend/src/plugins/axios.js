@@ -2,7 +2,7 @@ import axios from 'axios'
 
 const http = axios.create({
   baseURL: '/api/v1',
-  headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+  headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
   timeout: 15000,
 })
 
@@ -27,7 +27,13 @@ http.interceptors.request.use((config) => {
 
 // Response interceptor — xử lý lỗi chung
 // Bỏ qua redirect 401 cho các endpoint auth (login/register trả 401 khi sai credentials là bình thường)
-const AUTH_PATHS = ['/admin/auth/login', '/auth/login', '/auth/register', '/auth/forgot-password', '/auth/reset-password']
+const AUTH_PATHS = [
+  '/admin/auth/login',
+  '/auth/login',
+  '/auth/register',
+  '/auth/forgot-password',
+  '/auth/reset-password',
+]
 
 http.interceptors.response.use(
   (res) => res,
@@ -57,8 +63,16 @@ http.interceptors.response.use(
         window.location.href = '/login'
       }
     }
+
+    // Xử lý chung cho lỗi 403 (Không có quyền)
+    if (status === 403) {
+      const { useToast } = await import('vue-toastification')
+      const toast = useToast()
+      toast.error('Bạn không có quyền thực hiện hành động này!')
+    }
+
     return Promise.reject(error)
-  }
+  },
 )
 
 export default http
