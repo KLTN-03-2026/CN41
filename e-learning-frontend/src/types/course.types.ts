@@ -9,6 +9,7 @@ export interface Category {
 export interface Teacher {
   id: number
   name: string
+  email: string
   slug: string
   description?: string
   exp?: string
