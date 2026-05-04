@@ -3,6 +3,7 @@
 namespace Modules\Users\Repositories;
 
 use App\Repositories\BaseRepository;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Modules\Users\Models\User;
 
 /**
@@ -28,5 +29,40 @@ class UsersRepository extends BaseRepository implements UsersRepositoryInterface
         }
 
         return $users->count();
+    }
+
+    public function paginateFiltered(array $filters, int $perPage = 15, bool $trashed = false): LengthAwarePaginator
+    {
+        $perPage = max(1, min($perPage, static::MAX_PER_PAGE));
+        $query = $this->model->newQuery();
+
+        if ($trashed) {
+            $query->onlyTrashed();
+        }
+
+        $query->with(['roles']);
+
+        // Filter: search by name/email
+        if (! empty($filters['search'])) {
+            $search = '%'.$filters['search'].'%';
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'LIKE', $search)
+                    ->orWhere('email', 'LIKE', $search);
+            });
+        }
+
+        // Filter: role
+        if (! empty($filters['role'])) {
+            $query->whereHas('roles', function ($q) use ($filters) {
+                $q->where('name', $filters['role']);
+            });
+        }
+
+        // Filter: status
+        if (isset($filters['status']) && $filters['status'] !== '') {
+            $query->where('status', (int) $filters['status']);
+        }
+
+        return $query->paginate($perPage);
     }
 }

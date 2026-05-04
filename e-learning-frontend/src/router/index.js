@@ -24,6 +24,7 @@ const router = createRouter({
         { path: 'courses/create', component: () => import('@/views/admin/CourseFormPage.vue') },
         { path: 'courses/:id/edit', component: () => import('@/views/admin/CourseFormPage.vue') },
         { path: 'categories', component: () => import('@/views/admin/CategoriesPage.vue') },
+        { path: 'roles', component: () => import('@/views/admin/RolesPage.vue') },
         { path: 'users', component: () => import('@/views/admin/UsersPage.vue') },
         { path: 'teachers', component: () => import('@/views/admin/TeachersPage.vue') },
         { path: 'students', component: () => import('@/views/admin/StudentsPage.vue') },

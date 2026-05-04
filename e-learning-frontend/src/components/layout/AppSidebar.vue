@@ -161,6 +161,8 @@ import {
   BoxCubeIcon,
   ListIcon,
   TaskIcon,
+  SettingsIcon,
+  PlugInIcon,
 } from '@/components/icons'
 import { useSidebar } from '@/composables/useSidebar'
 
@@ -215,10 +217,18 @@ const menuGroups = [
         name: 'Mã giảm giá',
         path: '/admin/coupons',
       },
+    ],
+  },
+  {
+    title: 'Hệ thống',
+    items: [
       {
         icon: PieChartIcon,
-        name: 'Người dùng',
-        path: '/admin/users',
+        name: 'Người dùng & Phân quyền',
+        subItems: [
+          { name: 'Người dùng', path: '/admin/users' },
+          { name: 'Vai trò & Quyền hạn', path: '/admin/roles' },
+        ],
       },
     ],
   },
