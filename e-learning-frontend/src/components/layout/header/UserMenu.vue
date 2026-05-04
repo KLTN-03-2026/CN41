@@ -5,7 +5,9 @@
       @click.prevent="toggleDropdown"
     >
       <span class="mr-3 overflow-hidden rounded-full h-11 w-11">
-        <div class="h-11 w-11 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm">
+        <div
+          class="h-11 w-11 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm"
+        >
           {{ userInitial }}
         </div>
       </span>
@@ -27,7 +29,10 @@
         </span>
       </div>
 
-      <ul class="flex flex-col gap-1 pt-4 pb-3 border-b border-gray-200 dark:border-gray-700">
+      <ul
+        v-if="menuItems.length"
+        class="flex flex-col gap-1 pt-4 pb-3 border-b border-gray-200 dark:border-gray-700"
+      >
         <li v-for="item in menuItems" :key="item.href">
           <router-link
             :to="item.href"
@@ -56,7 +61,7 @@
 </template>
 
 <script setup lang="ts">
-import { UserCircleIcon, ChevronDownIcon, LogoutIcon, SettingsIcon } from '@/components/icons'
+import { ChevronDownIcon, LogoutIcon } from '@/components/icons'
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAdminAuthStore } from '@/stores/adminAuth.store'
@@ -73,10 +78,7 @@ const userName = computed(() => adminStore.user?.name || 'Administrator')
 const userEmail = computed(() => adminStore.user?.email || '')
 const userInitial = computed(() => userName.value.charAt(0).toUpperCase())
 
-const menuItems = [
-  { href: '/admin/profile', icon: UserCircleIcon, text: 'Hồ sơ cá nhân' },
-  { href: '/admin/settings', icon: SettingsIcon, text: 'Cài đặt tài khoản' },
-]
+const menuItems = []
 
 const toggleDropdown = () => {
   dropdownOpen.value = !dropdownOpen.value

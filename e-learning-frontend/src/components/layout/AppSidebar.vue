@@ -161,8 +161,6 @@ import {
   BoxCubeIcon,
   ListIcon,
   TaskIcon,
-  SettingsIcon,
-  PlugInIcon,
 } from '@/components/icons'
 import { useSidebar } from '@/composables/useSidebar'
 
@@ -170,7 +168,7 @@ const route = useRoute()
 
 const { isExpanded, isMobileOpen, isHovered, openSubmenu } = useSidebar()
 
-const menuGroups = [
+const rawMenuGroups = [
   {
     title: 'Quản trị',
     items: [
@@ -178,29 +176,30 @@ const menuGroups = [
         icon: GridIcon,
         name: 'Dashboard',
         path: '/admin/dashboard',
+        permission: 'dashboard.view',
       },
       {
         icon: BoxCubeIcon,
         name: 'Khóa học',
         subItems: [
-          { name: 'Danh sách', path: '/admin/courses' },
-          { name: 'Thêm mới', path: '/admin/courses/create' },
+          { name: 'Danh sách', path: '/admin/courses', permission: 'courses.view' },
+          { name: 'Thêm mới', path: '/admin/courses/create', permission: 'courses.create' },
         ],
       },
       {
         icon: ListIcon,
         name: 'Danh mục',
         path: '/admin/categories',
-      },
-      {
-        icon: UserCircleIcon,
-        name: 'Giảng viên',
-        path: '/admin/teachers',
+        permission: 'categories.view',
       },
       {
         icon: UserGroupIcon,
-        name: 'Học viên',
-        path: '/admin/students',
+        name: 'Người dùng',
+        subItems: [
+          { name: 'Quản trị viên', path: '/admin/users', permission: 'users.view' },
+          { name: 'Giảng viên', path: '/admin/teachers', permission: 'users.view' },
+          { name: 'Học viên', path: '/admin/students', permission: 'students.view' },
+        ],
       },
     ],
   },
@@ -211,11 +210,13 @@ const menuGroups = [
         icon: BoxIcon,
         name: 'Đơn hàng',
         path: '/admin/orders',
+        permission: 'orders.view',
       },
       {
         icon: TaskIcon,
         name: 'Mã giảm giá',
         path: '/admin/coupons',
+        permission: 'coupons.view',
       },
     ],
   },
@@ -224,11 +225,15 @@ const menuGroups = [
     items: [
       {
         icon: PieChartIcon,
-        name: 'Người dùng & Phân quyền',
-        subItems: [
-          { name: 'Người dùng', path: '/admin/users' },
-          { name: 'Vai trò & Quyền hạn', path: '/admin/roles' },
-        ],
+        name: 'Phân quyền',
+        path: '/admin/roles',
+        permission: 'roles.view',
+      },
+      {
+        icon: ListIcon,
+        name: 'Lịch sử hoạt động',
+        path: '/admin/system-logs',
+        permission: 'system.logs.view',
       },
     ],
   },
@@ -239,15 +244,50 @@ const menuGroups = [
         icon: PageIcon,
         name: 'Tin tức',
         subItems: [
-          { name: 'Bài viết', path: '/admin/posts' },
-          { name: 'Danh mục', path: '/admin/post-categories' },
-          { name: 'Thẻ (Tags)', path: '/admin/tags' },
-          { name: 'Bình luận', path: '/admin/post-comments' },
+          { name: 'Bài viết', path: '/admin/posts', permission: 'posts.view' },
+          { name: 'Danh mục', path: '/admin/post-categories', permission: 'categories.view' },
+          { name: 'Thẻ (Tags)', path: '/admin/tags', permission: 'tags.view' },
+          { name: 'Bình luận', path: '/admin/post-comments', permission: 'comments.view' },
         ],
       },
     ],
   },
 ]
+
+import { useAdminAuthStore } from '@/stores/adminAuth.store'
+const adminStore = useAdminAuthStore()
+
+const hasPermission = (permission?: string) => {
+  if (!permission) return true
+  // Super admin luôn có quyền
+  if (adminStore.user?.roles?.includes('super-admin')) return true
+  // Kiểm tra permission
+  return adminStore.user?.permissions?.includes(permission) || false
+}
+
+const menuGroups = computed(() => {
+  return (
+    rawMenuGroups
+      .map((group) => {
+        // Lọc các items con
+        const filteredItems = group.items
+          .filter((item) => hasPermission(item.permission))
+          .map((item) => {
+            if (item.subItems) {
+              const filteredSub = item.subItems.filter((sub) => hasPermission(sub.permission))
+              return { ...item, subItems: filteredSub.length ? filteredSub : undefined }
+            }
+            return item
+          })
+          // Loại bỏ item cha nếu nó có subItems nhưng sau khi filter lại bị rỗng
+          .filter((item) => !item.subItems || item.subItems.length > 0)
+
+        return { ...group, items: filteredItems }
+      })
+      // Ẩn group nếu không có item nào bên trong
+      .filter((group) => group.items.length > 0)
+  )
+})
 
 const isActive = (path: string) => route.path === path || route.path.startsWith(path + '/')
 
@@ -257,7 +297,7 @@ const toggleSubmenu = (groupIndex: number, itemIndex: number) => {
 }
 
 const isAnySubmenuRouteActive = computed(() => {
-  return menuGroups.some((group) =>
+  return menuGroups.value.some((group) =>
     group.items.some(
       (item) => item.subItems && item.subItems.some((subItem) => isActive(subItem.path)),
     ),
@@ -269,7 +309,9 @@ const isSubmenuOpen = (groupIndex: number, itemIndex: number) => {
   return (
     openSubmenu.value === key ||
     (isAnySubmenuRouteActive.value &&
-      menuGroups[groupIndex].items[itemIndex].subItems?.some((subItem) => isActive(subItem.path)))
+      menuGroups.value[groupIndex]?.items[itemIndex]?.subItems?.some((subItem) =>
+        isActive(subItem.path),
+      ))
   )
 }
 
