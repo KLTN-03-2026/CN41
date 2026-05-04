@@ -5,27 +5,13 @@ namespace Tests\Feature\Admin;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Modules\Posts\Models\Post;
 use Modules\Posts\Models\PostCategory;
-use Modules\Users\Models\User;
 use Tests\TestCase;
 
 class PostTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshDatabase, \Tests\Traits\HasAdminUser;
 
     private string $baseUrl = '/api/v1/admin/posts';
-
-    protected function setupAdmin()
-    {
-        $admin = User::forceCreate([
-            'name' => 'Admin Test',
-            'email' => 'admin_post_test@test.com',
-            'password' => 'password123',
-        ]);
-
-        $this->actingAs($admin, 'admin');
-
-        return $admin;
-    }
 
     public function test_posts_index_returns_success()
     {

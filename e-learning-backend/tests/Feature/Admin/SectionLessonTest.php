@@ -4,30 +4,17 @@ namespace Tests\Feature\Admin;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Modules\Course\Models\Course;
-use Modules\Lessons\Models\Section;
 use Modules\Lessons\Models\Lesson;
-use Modules\Upload\Models\MediaFile;
+use Modules\Lessons\Models\Section;
 use Modules\Teachers\Models\Teachers;
-use Modules\Users\Models\User;
+use Modules\Upload\Models\MediaFile;
 use Tests\TestCase;
 
 class SectionLessonTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshDatabase, \Tests\Traits\HasAdminUser;
 
     private string $baseUrl = '/api/v1/admin';
-
-    protected function setupAdmin()
-    {
-        $admin = User::forceCreate([
-            'name' => 'Admin Test',
-            'email' => 'admin_sl_test@test.com',
-            'password' => 'password123',
-        ]);
-        
-        $this->actingAs($admin, 'admin');
-        return $admin;
-    }
 
     private function createCourse()
     {
@@ -52,7 +39,7 @@ class SectionLessonTest extends TestCase
         $this->setupAdmin();
         $course = $this->createCourse();
 
-        $response = $this->getJson($this->baseUrl . "/courses/{$course->id}/sections");
+        $response = $this->getJson($this->baseUrl."/courses/{$course->id}/sections");
 
         $response->assertStatus(200);
     }
@@ -62,16 +49,16 @@ class SectionLessonTest extends TestCase
         $this->setupAdmin();
         $course = $this->createCourse();
 
-        $response = $this->postJson($this->baseUrl . "/courses/{$course->id}/sections", [
+        $response = $this->postJson($this->baseUrl."/courses/{$course->id}/sections", [
             'title' => 'Chương 1: Giới thiệu',
             'status' => 1,
-            'order' => 0
+            'order' => 0,
         ]);
 
         $response->assertStatus(201);
         $this->assertDatabaseHas('sections', [
             'title' => 'Chương 1: Giới thiệu',
-            'course_id' => $course->id
+            'course_id' => $course->id,
         ]);
     }
 
@@ -81,14 +68,14 @@ class SectionLessonTest extends TestCase
         $course = $this->createCourse();
         $section = Section::create(['title' => 'Old Title', 'course_id' => $course->id, 'order' => 0]);
 
-        $response = $this->putJson($this->baseUrl . "/sections/{$section->id}", [
+        $response = $this->putJson($this->baseUrl."/sections/{$section->id}", [
             'title' => 'New Title',
         ]);
 
         $response->assertStatus(200);
         $this->assertDatabaseHas('sections', [
             'id' => $section->id,
-            'title' => 'New Title'
+            'title' => 'New Title',
         ]);
     }
 
@@ -98,7 +85,7 @@ class SectionLessonTest extends TestCase
         $course = $this->createCourse();
         $section = Section::create(['title' => 'To Delete', 'course_id' => $course->id, 'order' => 0]);
 
-        $response = $this->deleteJson($this->baseUrl . "/sections/{$section->id}");
+        $response = $this->deleteJson($this->baseUrl."/sections/{$section->id}");
 
         $response->assertStatus(200);
         $this->assertSoftDeleted('sections', ['id' => $section->id]);
@@ -111,11 +98,11 @@ class SectionLessonTest extends TestCase
         $s1 = Section::create(['title' => 'S1', 'course_id' => $course->id, 'order' => 0]);
         $s2 = Section::create(['title' => 'S2', 'course_id' => $course->id, 'order' => 1]);
 
-        $response = $this->postJson($this->baseUrl . "/sections/reorder", [
+        $response = $this->postJson($this->baseUrl.'/sections/reorder', [
             'orders' => [
                 ['id' => $s1->id, 'order' => 1],
                 ['id' => $s2->id, 'order' => 0],
-            ]
+            ],
         ]);
 
         $response->assertStatus(200);
@@ -129,23 +116,23 @@ class SectionLessonTest extends TestCase
         $course = $this->createCourse();
         $section = Section::create(['title' => 'S1', 'course_id' => $course->id, 'order' => 0]);
         $lesson = Lesson::create([
-            'title' => 'L1', 
-            'course_id' => $course->id, 
-            'section_id' => $section->id, 
-            'type' => 'text', 
+            'title' => 'L1',
+            'course_id' => $course->id,
+            'section_id' => $section->id,
+            'type' => 'text',
             'slug' => 'l1',
-            'order' => 0
+            'order' => 0,
         ]);
 
-        $response = $this->deleteJson($this->baseUrl . "/sections/{$section->id}");
+        $response = $this->deleteJson($this->baseUrl."/sections/{$section->id}");
 
         $response->assertStatus(200);
         $this->assertSoftDeleted('sections', ['id' => $section->id]);
-        
+
         // Bài giảng vẫn còn nhưng section_id phải là null
         $this->assertDatabaseHas('lessons', [
             'id' => $lesson->id,
-            'section_id' => null
+            'section_id' => null,
         ]);
     }
 
@@ -155,7 +142,7 @@ class SectionLessonTest extends TestCase
         $course = $this->createCourse();
         $section = Section::create(['title' => 'S1', 'course_id' => $course->id, 'order' => 0, 'status' => 0]);
 
-        $response = $this->patchJson($this->baseUrl . "/sections/{$section->id}/toggle-status");
+        $response = $this->patchJson($this->baseUrl."/sections/{$section->id}/toggle-status");
 
         $response->assertStatus(200);
         $this->assertDatabaseHas('sections', ['id' => $section->id, 'status' => 1]);
@@ -168,7 +155,7 @@ class SectionLessonTest extends TestCase
         $this->setupAdmin();
         $course = $this->createCourse();
 
-        $response = $this->getJson($this->baseUrl . "/courses/{$course->id}/lessons");
+        $response = $this->getJson($this->baseUrl."/courses/{$course->id}/lessons");
 
         $response->assertStatus(200);
     }
@@ -189,20 +176,20 @@ class SectionLessonTest extends TestCase
             'size' => 1024,
         ]);
 
-        $response = $this->postJson($this->baseUrl . "/courses/{$course->id}/lessons", [
+        $response = $this->postJson($this->baseUrl."/courses/{$course->id}/lessons", [
             'title' => 'Bài giảng 1',
             'type' => 'video',
             'video_id' => $video->id,
             'section_id' => $section->id,
             'status' => 1,
-            'order' => 0
+            'order' => 0,
         ]);
 
         $response->assertStatus(201);
         $this->assertDatabaseHas('lessons', [
             'title' => 'Bài giảng 1',
             'section_id' => $section->id,
-            'course_id' => $course->id
+            'course_id' => $course->id,
         ]);
     }
 
@@ -211,18 +198,18 @@ class SectionLessonTest extends TestCase
         $this->setupAdmin();
         $course = $this->createCourse();
 
-        $response = $this->postJson($this->baseUrl . "/courses/{$course->id}/lessons", [
+        $response = $this->postJson($this->baseUrl."/courses/{$course->id}/lessons", [
             'title' => 'Bài không chương',
             'type' => 'text',
             'content' => 'Nội dung bài học text',
             'section_id' => null,
-            'order' => 0
+            'order' => 0,
         ]);
 
         $response->assertStatus(201);
         $this->assertDatabaseHas('lessons', [
             'title' => 'Bài không chương',
-            'section_id' => null
+            'section_id' => null,
         ]);
     }
 
@@ -231,21 +218,21 @@ class SectionLessonTest extends TestCase
         $this->setupAdmin();
         $course = $this->createCourse();
         $lesson = Lesson::create([
-            'title' => 'Old Title', 
-            'course_id' => $course->id, 
-            'type' => 'text', 
+            'title' => 'Old Title',
+            'course_id' => $course->id,
+            'type' => 'text',
             'slug' => 'old-title',
-            'order' => 0
+            'order' => 0,
         ]);
 
-        $response = $this->putJson($this->baseUrl . "/lessons/{$lesson->id}", [
+        $response = $this->putJson($this->baseUrl."/lessons/{$lesson->id}", [
             'title' => 'New Title',
         ]);
 
         $response->assertStatus(200);
         $this->assertDatabaseHas('lessons', [
             'id' => $lesson->id,
-            'title' => 'New Title'
+            'title' => 'New Title',
         ]);
     }
 
@@ -254,15 +241,15 @@ class SectionLessonTest extends TestCase
         $this->setupAdmin();
         $course = $this->createCourse();
         $lesson = Lesson::create([
-            'title' => 'L1', 
-            'course_id' => $course->id, 
-            'type' => 'text', 
-            'slug' => 'l1', 
+            'title' => 'L1',
+            'course_id' => $course->id,
+            'type' => 'text',
+            'slug' => 'l1',
             'status' => 0,
-            'order' => 0
+            'order' => 0,
         ]);
 
-        $response = $this->patchJson($this->baseUrl . "/lessons/{$lesson->id}/toggle-status");
+        $response = $this->patchJson($this->baseUrl."/lessons/{$lesson->id}/toggle-status");
 
         $response->assertStatus(200);
         $this->assertDatabaseHas('lessons', ['id' => $lesson->id, 'status' => 1]);
@@ -275,11 +262,11 @@ class SectionLessonTest extends TestCase
         $l1 = Lesson::create(['title' => 'L1', 'course_id' => $course->id, 'type' => 'text', 'slug' => 'l1', 'order' => 0]);
         $l2 = Lesson::create(['title' => 'L2', 'course_id' => $course->id, 'type' => 'text', 'slug' => 'l2', 'order' => 1]);
 
-        $response = $this->postJson($this->baseUrl . "/lessons/reorder", [
+        $response = $this->postJson($this->baseUrl.'/lessons/reorder', [
             'orders' => [
                 ['id' => $l1->id, 'order' => 1],
                 ['id' => $l2->id, 'order' => 0],
-            ]
+            ],
         ]);
 
         $response->assertStatus(200);
@@ -295,10 +282,10 @@ class SectionLessonTest extends TestCase
         $l1 = Lesson::create(['title' => 'L1', 'course_id' => $course->id, 'type' => 'text', 'slug' => 'l1', 'order' => 0]);
         $l2 = Lesson::create(['title' => 'L2', 'course_id' => $course->id, 'type' => 'text', 'slug' => 'l2', 'order' => 1]);
 
-        $response = $this->postJson($this->baseUrl . "/lessons/bulk-action", [
+        $response = $this->postJson($this->baseUrl.'/lessons/bulk-action', [
             'ids' => [$l1->id, $l2->id],
             'action' => 'assign-section',
-            'section_id' => $section->id
+            'section_id' => $section->id,
         ]);
 
         $response->assertStatus(200);
@@ -313,10 +300,10 @@ class SectionLessonTest extends TestCase
         $section = Section::create(['title' => 'S1', 'course_id' => $course->id, 'order' => 0]);
         $l1 = Lesson::create(['title' => 'L1', 'course_id' => $course->id, 'section_id' => $section->id, 'type' => 'text', 'slug' => 'l1', 'order' => 0]);
 
-        $response = $this->postJson($this->baseUrl . "/lessons/bulk-action", [
+        $response = $this->postJson($this->baseUrl.'/lessons/bulk-action', [
             'ids' => [$l1->id],
             'action' => 'assign-section',
-            'section_id' => null // Bỏ gán
+            'section_id' => null, // Bỏ gán
         ]);
 
         $response->assertStatus(200);
@@ -328,14 +315,14 @@ class SectionLessonTest extends TestCase
         $this->setupAdmin();
         $course = $this->createCourse();
         $lesson = Lesson::create([
-            'title' => 'To Delete', 
-            'course_id' => $course->id, 
-            'type' => 'text', 
+            'title' => 'To Delete',
+            'course_id' => $course->id,
+            'type' => 'text',
             'slug' => 'to-delete',
-            'order' => 0
+            'order' => 0,
         ]);
 
-        $response = $this->deleteJson($this->baseUrl . "/lessons/{$lesson->id}");
+        $response = $this->deleteJson($this->baseUrl."/lessons/{$lesson->id}");
 
         $response->assertStatus(200);
         $this->assertSoftDeleted('lessons', ['id' => $lesson->id]);
