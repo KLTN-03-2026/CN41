@@ -198,6 +198,9 @@ Hệ thống sử dụng các cơ chế bảo mật mặc định của Laravel:
 - **SQL Injection Prevention** — thông qua Eloquent ORM & Query Builder
 - **XSS Protection** — Blade Template tự động escape output
 - **Authentication & Authorization** — Laravel Sanctum + Spatie Permission (RBAC)
+- **Anti-Privilege Escalation** — Chặn Admin can thiệp tài khoản Super Admin hoặc tự nâng quyền trái phép
+- **Role-Scoping** — Giới hạn truy vấn người dùng (chỉ được quản lý Student/Teacher) cho các tài khoản không phải Super Admin
+- **Automated Testing** — Hệ thống Feature Tests phủ kín các module quan trọng (126/126 cases passed)
 
 ---
 
