@@ -1,0 +1,11 @@
+{
+    "name": "Quiz",
+    "alias": "quiz",
+    "description": "AI Auto-Quiz Module",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\Quiz\\Providers\\QuizServiceProvider"
+    ],
+    "files": []
+}
