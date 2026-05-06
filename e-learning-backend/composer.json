@@ -76,7 +76,10 @@
             "Modules\\Coupons\\Database\\Seeders\\": "Modules/Coupons/database/seeders/",
             "Modules\\Posts\\": "Modules/Posts/app/",
             "Modules\\Posts\\Database\\Factories\\": "Modules/Posts/database/factories/",
-            "Modules\\Posts\\Database\\Seeders\\": "Modules/Posts/database/seeders/"
+            "Modules\\Posts\\Database\\Seeders\\": "Modules/Posts/database/seeders/",
+            "Modules\\Quiz\\": "Modules/Quiz/app/",
+            "Modules\\Quiz\\Database\\Factories\\": "Modules/Quiz/database/factories/",
+            "Modules\\Quiz\\Database\\Seeders\\": "Modules/Quiz/database/seeders/"
         }
     },
     "autoload-dev": {
