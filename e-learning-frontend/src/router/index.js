@@ -39,6 +39,7 @@ const router = createRouter({
         { path: 'tags', component: () => import('@/views/admin/TagsPage.vue') },
         { path: 'post-comments', component: () => import('@/views/admin/CommentsPage.vue') },
         { path: 'coupons', component: () => import('@/views/admin/CouponsPage.vue') },
+        { path: 'quizzes', component: () => import('@/views/admin/QuizzesPage.vue') },
         { path: 'system-logs', component: () => import('@/views/admin/ActivityLogsPage.vue') },
       ],
     },
@@ -91,6 +92,20 @@ const router = createRouter({
     {
       path: '/courses/:slug/learn',
       component: () => import('@/views/client/LearnPage.vue'),
+    },
+
+    // ── QUIZ PAGES (fullscreen, no layout) ───────────────────
+    {
+      path: '/lessons/:lessonId/quiz',
+      name: 'quiz',
+      component: () => import('@/views/client/QuizPage.vue'),
+      meta: { requiresAuth: true, guard: 'student' },
+    },
+    {
+      path: '/quizzes/:id/history',
+      name: 'quiz-history',
+      component: () => import('@/views/client/QuizHistoryPage.vue'),
+      meta: { requiresAuth: true, guard: 'student' },
     },
 
     // ── AUTH CLIENT ────────────────────────────────────────
