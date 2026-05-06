@@ -7,24 +7,17 @@ use Modules\Course\Models\Course;
 use Modules\Lessons\Models\Lesson;
 use Modules\Quiz\Models\Quiz;
 use Modules\Teachers\Models\Teachers;
-use Modules\Users\Models\User;
 use Tests\TestCase;
+use Tests\Traits\HasAdminUser;
 
 class QuizTest extends TestCase
 {
-    use RefreshDatabase;
-
-    protected User $admin;
+    use HasAdminUser, RefreshDatabase;
 
     protected function setUp(): void
     {
         parent::setUp();
-        $this->admin = User::forceCreate([
-            'name' => 'Admin Test',
-            'email' => 'admin@test.com',
-            'password' => bcrypt('password'),
-        ]);
-        $this->actingAs($this->admin, 'admin');
+        $this->setupAdmin('quiz_admin@test.com');
     }
 
     private function createLesson(): Lesson
