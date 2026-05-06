@@ -35,11 +35,9 @@ class AdminQuizController extends Controller
         }
 
         $quizzes = $query->paginate($perPage);
+        $quizzes->setCollection(QuizResource::collection($quizzes->getCollection())->collection);
 
-        return $this->paginated(
-            QuizResource::collection($quizzes),
-            'Danh sách quiz'
-        );
+        return $this->paginated($quizzes, 'Danh sách quiz');
     }
 
     public function store(StoreQuizRequest $request): JsonResponse
