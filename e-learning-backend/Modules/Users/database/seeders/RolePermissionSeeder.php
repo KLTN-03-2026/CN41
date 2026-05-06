@@ -27,6 +27,8 @@ class RolePermissionSeeder extends Seeder
             'categories.view', 'categories.create', 'categories.edit', 'categories.delete',
             // Lessons
             'lessons.view', 'lessons.create', 'lessons.edit', 'lessons.delete',
+            // Quizzes
+            'quizzes.view', 'quizzes.create', 'quizzes.edit', 'quizzes.delete',
             // Orders & Coupons
             'orders.view', 'orders.edit',
             'coupons.view', 'coupons.create', 'coupons.edit', 'coupons.delete',
@@ -65,6 +67,7 @@ class RolePermissionSeeder extends Seeder
         $teacher->syncPermissions([
             'courses.view', 'courses.create', 'courses.edit', 'courses.delete',
             'lessons.view', 'lessons.create', 'lessons.edit', 'lessons.delete',
+            'quizzes.view', 'quizzes.create', 'quizzes.edit',
             'dashboard.view',
             'categories.view',
             'users.view',
