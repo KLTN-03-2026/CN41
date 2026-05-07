@@ -228,12 +228,6 @@ const rawMenuGroups = [
         path: '/admin/coupons',
         permission: 'coupons.view',
       },
-      {
-        icon: TaskIcon,
-        name: 'Quiz AI',
-        path: '/admin/quizzes',
-        permission: 'quizzes.view',
-      },
     ],
   },
   {

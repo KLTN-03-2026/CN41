@@ -2,9 +2,18 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Modules\Categories\Database\Seeders\CategoriesDatabaseSeeder;
+use Modules\Course\Database\Seeders\CourseDatabaseSeeder;
+use Modules\Lessons\Database\Seeders\LessonDatabaseSeeder;
+use Modules\Payment\Database\Seeders\OrderSeeder;
+use Modules\Posts\Database\Seeders\PostsDatabaseSeeder;
+use Modules\Students\Database\Seeders\StudentEnrollmentSeeder;
+use Modules\Teachers\Database\Seeders\TeachersDatabaseSeeder;
+use Modules\Upload\Database\Seeders\MediaFileSeeder;
+use Modules\Users\Database\Seeders\AdminUserSeeder;
+use Modules\Users\Database\Seeders\RolePermissionSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -17,31 +26,34 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             // 1. Roles & Permissions (phải chạy trước)
-            \Modules\Users\Database\Seeders\RolePermissionSeeder::class,
+            RolePermissionSeeder::class,
 
             // 2. Admin users
-            \Modules\Users\Database\Seeders\AdminUserSeeder::class,
+            AdminUserSeeder::class,
 
             // 3. Categories (cây danh mục)
-            \Modules\Categories\Database\Seeders\CategoriesDatabaseSeeder::class,
+            CategoriesDatabaseSeeder::class,
 
             // 4. Teachers
-            \Modules\Teachers\Database\Seeders\TeachersDatabaseSeeder::class,
+            TeachersDatabaseSeeder::class,
 
             // 5. Media files (video + documents)
-            \Modules\Upload\Database\Seeders\MediaFileSeeder::class,
+            MediaFileSeeder::class,
 
             // 6. Courses (phụ thuộc teachers + categories)
-            \Modules\Course\Database\Seeders\CourseDatabaseSeeder::class,
+            CourseDatabaseSeeder::class,
 
             // 7. Sections + Lessons (phụ thuộc courses + media)
-            \Modules\Lessons\Database\Seeders\LessonDatabaseSeeder::class,
+            LessonDatabaseSeeder::class,
 
             // 8. Students + Enrollments
-            \Modules\Students\Database\Seeders\StudentEnrollmentSeeder::class,
+            StudentEnrollmentSeeder::class,
 
             // 9. Orders (đơn hàng mẫu cho Dashboard)
-            \Modules\Payment\Database\Seeders\OrderSeeder::class,
+            OrderSeeder::class,
+
+            // 10. Posts (bài viết + danh mục + tags)
+            PostsDatabaseSeeder::class,
         ]);
     }
 }

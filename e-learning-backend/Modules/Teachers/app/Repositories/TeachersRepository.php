@@ -66,6 +66,7 @@ class TeachersRepository extends BaseRepository implements TeachersRepositoryInt
 
         $query = $this->model->newQuery()
             ->active()
+            ->withCount('courses')
             ->latest();
 
         // Tìm kiếm theo tên

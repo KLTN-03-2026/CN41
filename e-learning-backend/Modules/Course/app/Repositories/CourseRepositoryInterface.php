@@ -3,8 +3,9 @@
 namespace Modules\Course\Repositories;
 
 use App\Repositories\RepositoryInterface;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
 
 /**
  * Interface CourseRepositoryInterface
@@ -69,5 +70,10 @@ interface CourseRepositoryInterface extends RepositoryInterface
     /**
      * Tìm nhiều courses đã soft-delete theo ids.
      */
-    public function findManyTrashed(array $ids): \Illuminate\Database\Eloquent\Collection;
+    public function findManyTrashed(array $ids): Collection;
+
+    /**
+     * Lấy courses nổi bật: published, sort theo rating DESC, giới hạn $limit.
+     */
+    public function getFeatured(int $limit = 8): Collection;
 }

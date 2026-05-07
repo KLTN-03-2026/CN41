@@ -5,8 +5,9 @@ import type { ApiResponse, PaginatedResponse, Course } from '@/types'
 export const courseService = {
   // ── Admin ──────────────────────────────────────────────────
   /** GET /admin/courses?search=&status=&teacher_id=&category_id=&level=&per_page= */
-  index: (params: Record<string, unknown> = {}): Promise<AxiosResponse<PaginatedResponse<Course>>> =>
-    http.get('/admin/courses', { params }),
+  index: (
+    params: Record<string, unknown> = {},
+  ): Promise<AxiosResponse<PaginatedResponse<Course>>> => http.get('/admin/courses', { params }),
 
   /** GET /admin/courses/{id} */
   show: (id: number): Promise<AxiosResponse<ApiResponse<Course>>> =>
@@ -17,8 +18,10 @@ export const courseService = {
     http.post('/admin/courses', data),
 
   /** PUT /admin/courses/{id} */
-  update: (id: number, data: Record<string, unknown>): Promise<AxiosResponse<ApiResponse<Course>>> =>
-    http.put(`/admin/courses/${id}`, data),
+  update: (
+    id: number,
+    data: Record<string, unknown>,
+  ): Promise<AxiosResponse<ApiResponse<Course>>> => http.put(`/admin/courses/${id}`, data),
 
   /** DELETE /admin/courses/{id} (soft delete) */
   destroy: (id: number): Promise<AxiosResponse<ApiResponse<null>>> =>
@@ -29,7 +32,9 @@ export const courseService = {
     http.patch(`/admin/courses/${id}/toggle-status`),
 
   /** GET /admin/courses/trashed */
-  trashed: (params: Record<string, unknown> = {}): Promise<AxiosResponse<PaginatedResponse<Course>>> =>
+  trashed: (
+    params: Record<string, unknown> = {},
+  ): Promise<AxiosResponse<PaginatedResponse<Course>>> =>
     http.get('/admin/courses/trashed', { params }),
 
   /** POST /admin/courses/{id}/restore */
@@ -54,8 +59,13 @@ export const courseService = {
 
   // ── Public ─────────────────────────────────────────────────
   /** GET /courses?search=&category_id=&level=&per_page= */
-  publicIndex: (params: Record<string, unknown> = {}): Promise<AxiosResponse<PaginatedResponse<Course>>> =>
-    http.get('/courses', { params }),
+  publicIndex: (
+    params: Record<string, unknown> = {},
+  ): Promise<AxiosResponse<PaginatedResponse<Course>>> => http.get('/courses', { params }),
+
+  /** GET /courses/featured?limit=8 */
+  featured: (limit = 8): Promise<AxiosResponse<ApiResponse<Course[]>>> =>
+    http.get('/courses/featured', { params: { limit } }),
 
   /** GET /courses/{slug} */
   publicShow: (slug: string): Promise<AxiosResponse<ApiResponse<Course>>> =>
@@ -66,13 +76,17 @@ export const courseService = {
     http.get(`/courses/${slug}/lessons`),
 
   /** GET /courses/{course_slug}/preview-lesson/{lesson_slug} */
-  publicPreviewLesson: (courseSlug: string, lessonSlug: string): Promise<AxiosResponse<ApiResponse<unknown>>> =>
+  publicPreviewLesson: (
+    courseSlug: string,
+    lessonSlug: string,
+  ): Promise<AxiosResponse<ApiResponse<unknown>>> =>
     http.get(`/courses/${courseSlug}/preview-lesson/${lessonSlug}`),
 
   // ── Client (auth:api) ───────────────────────────────────────
   /** GET /my-courses?per_page= */
-  myCourses: (params: Record<string, unknown> = {}): Promise<AxiosResponse<PaginatedResponse<Course>>> =>
-    http.get('/my-courses', { params }),
+  myCourses: (
+    params: Record<string, unknown> = {},
+  ): Promise<AxiosResponse<PaginatedResponse<Course>>> => http.get('/my-courses', { params }),
 
   /** POST /courses/{slug}/enroll-free */
   enrollFree: (slug: string): Promise<AxiosResponse<ApiResponse<null>>> =>

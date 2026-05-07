@@ -291,6 +291,20 @@ class CourseController extends Controller
     }
 
     /**
+     * Public: Danh sách khóa học nổi bật (top rating, published).
+     */
+    public function featuredCourses(Request $request): JsonResponse
+    {
+        $limit = max(1, min((int) $request->query('limit', 8), 20));
+        $courses = $this->repository->getFeatured($limit);
+
+        return $this->success(
+            CourseResource::collection($courses),
+            'Lấy khóa học nổi bật thành công.'
+        );
+    }
+
+    /**
      * Public: Chi tiết khóa học theo slug.
      */
     public function publicShow(string $slug): JsonResponse

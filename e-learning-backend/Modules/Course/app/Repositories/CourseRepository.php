@@ -202,6 +202,19 @@ class CourseRepository extends BaseRepository implements CourseRepositoryInterfa
     }
 
     /**
+     * {@inheritDoc}
+     */
+    public function getFeatured(int $limit = 8): Collection
+    {
+        return $this->model->newQuery()
+            ->published()
+            ->with(['teacher', 'categories'])
+            ->orderByDesc('rating')
+            ->limit($limit)
+            ->get();
+    }
+
+    /**
      * Override restoreMany để trigger model events (restoring/restored)
      * cho từng Course, từ đó cascade restore sections & lessons.
      *
