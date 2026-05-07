@@ -12,10 +12,10 @@
 !.gitignore
 !CLAUDE.md
 !.claude/
-!AGENTS.md
 !README.md
 !LICENSE
 !GIT_WORKFLOW.md
+!QLCV.md
 !.husky/
 !package.json
 !package-lock.json
@@ -28,8 +28,20 @@ vue-tailwind-admin-dashboard-main/
 # Root node_modules & package files (/ prefix = chỉ root)
 /node_modules/
 
-# File test/hướng dẫn
+# File nội bộ / ghi chú quá trình phát triển
 testing_guide_by_module.md
+AGENTS.md
+PLAN_async_quiz_generation.md
+refactoring_report.md
+
+# docs: file lạc chỗ (nội dung đã được tổng hợp vào docs/ chính)
+docs/test-progress.md
+docs/test-report.md
+docs/pre-commit-setup.md
+
+# Root scripts tạm thời
+scratch_git.sh
+test_migrate.sh
 
 # ---------- BE: Laravel specific ----------
 e-learning-backend/.env
@@ -60,6 +72,21 @@ e-learning-backend/.vscode/
 e-learning-backend/.fleet/
 e-learning-backend/.nova/
 e-learning-backend/.zed/
+
+# BE: Debug/fix scripts tạm thời (đã được chuẩn hóa vào RolePermissionSeeder)
+e-learning-backend/fix_teacher_perms.php
+e-learning-backend/adjust_teacher_sidebar.php
+e-learning-backend/check_roles.php
+e-learning-backend/check_teacher_perms.php
+e-learning-backend/check_users.php
+e-learning-backend/debug_ids.php
+e-learning-backend/force_sync_teacher_perms.php
+e-learning-backend/restore_users_view.php
+e-learning-backend/sync_teacher_roles.php
+e-learning-backend/test_val.php
+e-learning-backend/update_teacher_perms_full.php
+e-learning-backend/find_gemini.py
+e-learning-backend/test_gemini.sh
 
 # ---------- FE: Vue/Vite specific ----------
 e-learning-frontend/.env

@@ -1,13 +1,13 @@
 # Bảng Theo Dõi Tiến Độ — E-Learning Marketplace
 
-> Cập nhật lần cuối: 04/05/2026 | Deadline: 15/05/2026
+> Cập nhật lần cuối: 07/05/2026 | Deadline: 15/05/2026
 
 ---
 
 ## Tiến Độ Tổng Quan
 
 ```
-Tổng thể: ██████████████████████████░░  90%
+Tổng thể: ████████████████████████████░  96%
 ```
 
 ---
@@ -16,7 +16,7 @@ Tổng thể: ██████████████████████
 
 ### 1. Xác Thực (Auth)
 | BE | ✅ Hoàn thành | Admin + Sinh viên: đăng nhập, đăng ký, xác minh email, reset mật khẩu, resend verification. **Hệ thống phân quyền (RBAC) đã bọc thép với Middleware permission cho từng API.** |
-| FE | ✅ Hoàn thành | LoginPage, RegisterPage, AdminLoginPage, VerifyEmailPage, ForgotPasswordPage, ResetPasswordPage — có guard theo role. **Hệ thống Axios interceptor xử lý lỗi 403 chuyên nghiệp.** |
+| FE | ✅ Hoàn thành | LoginPage, RegisterPage, AdminLoginPage, VerifyEmailPage, ForgotPasswordPage, ResetPasswordPage — có guard theo role. **Hệ thống Axios interceptor xử lý lỗi 403 chuyên nghiệp.** **07/05: Cải thiện toàn bộ UI Auth pages (login, register, forgot/reset password, verify email) + logo mới.** |
 
 **Hoàn thành: 100%**
 
@@ -92,14 +92,13 @@ Còn lại:
 ### 7. AI Auto-Quiz
 | Tầng | Trạng thái | Ghi chú |
 |------|-----------|---------|
-| BE | ✅ Hoàn thành | Tích hợp Google Gemini AI (Flash 2.0/Lite), cơ chế Fallback tự động, trích xuất PDF Tiếng Việt chuẩn. API sinh tối đa 20 câu hỏi chất lượng cao. |
-| FE | ✅ Hoàn thành | Admin UI sinh câu hỏi AI từ file upload hoặc tài liệu bài học, cho phép tùy chỉnh prompt và số lượng. |
+| BE | ✅ Hoàn thành | Tích hợp Google Gemini AI (Flash 2.0/Lite), cơ chế Fallback tự động, trích xuất PDF Tiếng Việt chuẩn. API sinh tối đa 20 câu hỏi chất lượng cao. **07/05: `QuizAttemptResource` bổ sung field `questions` (nội dung câu hỏi + options) vào response submit & attempts.** |
+| FE | ✅ Hoàn thành | Admin UI sinh câu hỏi AI từ file upload hoặc tài liệu bài học, cho phép tùy chỉnh prompt và số lượng. **07/05: QuizPage học viên hoàn chỉnh — làm bài, nộp bài, hiển thị kết quả inline (highlight đúng/sai từng câu, không redirect). QuizHistoryPage — xem lịch sử + expand chi tiết đúng/sai từng lần làm.** |
 
 **Hoàn thành: 100%**
 
 Còn lại:
-- Trang làm bài quiz phía học viên (QuizPage client)
-- Chấm điểm và lưu lịch sử làm bài học viên
+- Không còn
 
 ---
 
@@ -176,20 +175,36 @@ Còn lại:
 
 ---
 
+### 14. Giao Diện (UI/UX)
+| Tầng | Trạng thái | Ghi chú |
+|------|-----------|---------|
+| Logo & Brand | ✅ Hoàn thành | Cập nhật logo mới (auth-logo, logo-dark, logo-icon, logo.svg) 07/05 |
+| Auth Pages | ✅ Hoàn thành | Redesign toàn bộ: LoginPage, RegisterPage, AdminLoginPage, ForgotPasswordPage, ResetPasswordPage, VerifyEmailPage, VerifyEmailResultPage 07/05 |
+| Sidebar & Header | ✅ Hoàn thành | AppSidebar refactor, HeaderLogo cập nhật, ClientLayout cải thiện nav 07/05 |
+| HomePage Client | ✅ Hoàn thành | 8 section hoàn chỉnh: Hero, Stats (count-up animation), FeaturedCategories, FeaturedCourses, WhyUs, FeaturedTeachers (API), LatestPosts, CTA 07/05 |
+
+**Hoàn thành: 100%**
+
+Còn lại:
+- Không còn
+
+---
+
 ## Tiến Độ Theo Tầng
 
 | Tầng | Tiến độ | Thanh tiến độ |
 |------|---------|--------------|
 | **Backend** | **99%** | `█████████████████████████████` |
-| **Frontend** | **94%** | `████████████████████████████░` |
+| **Frontend** | **99%** | `█████████████████████████████` |
 
 ### Chi tiết Backend:
 - ✅ Hoàn thành: Auth, Course, Categories, Lessons/Sections, Students, Teachers, Users (Role-based API Security), Upload, Payment/VNPAY, Enrollment, Dashboard, Coupons, Posts, AI Quiz (Core Logic), **126/126 Feature Tests passed (100% stable)**
 - ⬜ Chưa làm: Notifications (phần real-time)
 
 ### Chi tiết Frontend:
-- ✅ Hoàn thành: Auth pages, Course pages, Category pages, Lessons manager, Student/Teacher/Coupon pages (CRUD đầy đủ), Upload UI, Enrollment flow, Payment FE, Dashboard charts thực, User Management Scoping UI, Sidebar Refactoring, AI Quiz Generator UI.
-- 🔄 Đang làm: Notifications UI, Quiz UI (Student side)
+- ✅ Hoàn thành: Auth pages (redesign 07/05), Course pages, Category pages, Lessons manager, Student/Teacher/Coupon pages (CRUD đầy đủ), Upload UI, Enrollment flow, Payment FE, Dashboard charts thực, User Management Scoping UI, Sidebar Refactoring, AI Quiz Generator UI, **HomePage Client 8 sections (07/05)**, Logo & ClientLayout nav (07/05).
+- ✅ Hoàn thành thêm: **Quiz UI Student (07/05)** — QuizPage làm bài + result inline, QuizHistoryPage expand chi tiết đúng/sai.
+- 🔄 Đang làm: Notifications UI
 
 ---
 
@@ -202,8 +217,12 @@ Còn lại:
 | ✅ Xong | Dashboard & Thống Kê | Đã tích hợp API thực |
 | ✅ Xong | Quản lý Học viên & Giảng viên FE | Đã hoàn thành 26/04/2026 |
 | ✅ Xong | Mã Giảm Giá (Coupon) | Đã hoàn thành 26/04/2026 |
-| 🔴 Cao | AI Auto-Quiz | USP của đề tài, cần làm sớm |
-| 🟢 Thấp | Thông báo real-time | Nice-to-have |
+| ✅ Xong | HomePage Client (8 sections) | Đã hoàn thành 07/05/2026 |
+| ✅ Xong | Redesign Auth Pages + Logo + ClientLayout | Đã hoàn thành 07/05/2026 |
+| ✅ Xong | Quiz UI phía học viên | Đã hoàn thành 07/05/2026 — làm bài, result inline, lịch sử chi tiết |
+| ✅ Xong | CourseDetailPage client | Đã hoàn chỉnh |
+| 🟡 Trung | Progress tracking bài học | Cần kiểm tra LearnPage + video player |
+| 🟢 Thấp | Thông báo real-time | Nice-to-have, low priority |
 
 ---
 
