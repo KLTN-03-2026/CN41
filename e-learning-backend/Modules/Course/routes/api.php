@@ -39,6 +39,7 @@ Route::middleware(['auth:admin'])->prefix('admin')->group(function () {
 */
 Route::group([], function () {
     Route::get('courses', [CourseController::class, 'publicIndex']);
+    Route::get('courses/featured', [CourseController::class, 'featuredCourses']);
     Route::get('courses/{slug}', [CourseController::class, 'publicShow']);
     Route::get('courses/{slug}/lessons', [CourseController::class, 'publicLessons']);
     Route::get('courses/{slug}/preview-lesson/{lesson_slug}', [CourseController::class, 'publicPreviewLesson']);

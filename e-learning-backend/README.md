@@ -27,6 +27,7 @@
 - **Quản lý khóa học Video (VOD)** — upload, tổ chức và phân phối bài giảng video
 - **Hệ thống giỏ hàng & thanh toán** — tích hợp VNPAY/MoMo, xử lý giao dịch an toàn
 - **AI Auto-Quiz** — tự động sinh câu hỏi trắc nghiệm từ tài liệu PDF/TXT (Google Gemini / OpenAI GPT-4o-mini)
+- **Tự động hủy đơn hàng** — đơn "Chờ thanh toán" quá 15 phút sẽ tự động chuyển sang "Đã hủy" và gửi email thông báo cho học viên
 - **Dashboard thống kê** — theo dõi doanh thu, tiến độ học tập
 - **Phân quyền đa vai trò** — Admin / Giảng viên / Học viên
 - **Mã giảm giá (Coupon)** và thông báo real-time
@@ -114,9 +115,14 @@ php artisan storage:link
 
 **8. Khởi chạy ứng dụng**
 ```bash
+# Terminal 1 — API server
 php artisan serve
-# Mở một terminal mới và chạy lệnh sau để xử lý queue (mail, AI, v.v.):
+
+# Terminal 2 — Queue worker (xử lý mail, AI, v.v.)
 php artisan queue:work
+
+# Terminal 3 — Scheduler (tự động hủy đơn hàng chờ thanh toán quá hạn, v.v.)
+php artisan schedule:work
 ```
 
 Truy cập: `http://localhost:8000`

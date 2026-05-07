@@ -1,8 +1,18 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Modules\Students\Http\Controllers\StudentProfileController;
 use Modules\Students\Http\Controllers\StudentsController;
 
+// ─── STUDENT PROFILE (guard: api) ───────────────────────────
+Route::middleware(['auth:api', 'email.verified'])->prefix('profile')->group(function () {
+    Route::get('/', [StudentProfileController::class, 'show']);
+    Route::patch('/', [StudentProfileController::class, 'update']);
+    Route::post('/avatar', [StudentProfileController::class, 'uploadAvatar']);
+    Route::post('/change-password', [StudentProfileController::class, 'changePassword']);
+});
+
+// ─── ADMIN STUDENTS (guard: admin) ──────────────────────────
 Route::middleware(['auth:admin'])->prefix('admin')->group(function () {
     // Bulk + static routes phải đặt TRƯỚC apiResource để tránh bị match bởi {student}
     Route::get('students/trashed', [StudentsController::class, 'trashed'])->middleware('permission:students.view');

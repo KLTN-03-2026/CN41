@@ -5,8 +5,9 @@ import type { ApiResponse, PaginatedResponse, Teacher } from '@/types'
 export const teacherService = {
   // ── Admin ──────────────────────────────────────────────────
   /** GET /admin/teachers?search=&status=&per_page= */
-  index: (params: Record<string, unknown> = {}): Promise<AxiosResponse<PaginatedResponse<Teacher>>> =>
-    http.get('/admin/teachers', { params }),
+  index: (
+    params: Record<string, unknown> = {},
+  ): Promise<AxiosResponse<PaginatedResponse<Teacher>>> => http.get('/admin/teachers', { params }),
 
   /** GET /admin/teachers/{id} */
   show: (id: number): Promise<AxiosResponse<ApiResponse<Teacher>>> =>
@@ -17,8 +18,10 @@ export const teacherService = {
     http.post('/admin/teachers', data),
 
   /** PUT /admin/teachers/{id} */
-  update: (id: number, data: Record<string, unknown>): Promise<AxiosResponse<ApiResponse<Teacher>>> =>
-    http.put(`/admin/teachers/${id}`, data),
+  update: (
+    id: number,
+    data: Record<string, unknown>,
+  ): Promise<AxiosResponse<ApiResponse<Teacher>>> => http.put(`/admin/teachers/${id}`, data),
 
   /** DELETE /admin/teachers/{id} (soft delete) */
   destroy: (id: number): Promise<AxiosResponse<ApiResponse<null>>> =>
@@ -29,7 +32,9 @@ export const teacherService = {
     http.patch(`/admin/teachers/${id}/toggle-status`),
 
   /** GET /admin/teachers/trashed */
-  trashed: (params: Record<string, unknown> = {}): Promise<AxiosResponse<PaginatedResponse<Teacher>>> =>
+  trashed: (
+    params: Record<string, unknown> = {},
+  ): Promise<AxiosResponse<PaginatedResponse<Teacher>>> =>
     http.get('/admin/teachers/trashed', { params }),
 
   /** POST /admin/teachers/{id}/restore */
@@ -53,9 +58,14 @@ export const teacherService = {
     http.delete('/admin/teachers/bulk-force-delete', { data: { ids } }),
 
   // ── Public ─────────────────────────────────────────────────
+  /** GET /teachers?per_page=4 — top teachers for homepage */
+  featured: (limit = 4): Promise<AxiosResponse<PaginatedResponse<Teacher>>> =>
+    http.get('/teachers', { params: { per_page: limit } }),
+
   /** GET /teachers */
-  publicList: (params: Record<string, unknown> = {}): Promise<AxiosResponse<PaginatedResponse<Teacher>>> =>
-    http.get('/teachers', { params }),
+  publicList: (
+    params: Record<string, unknown> = {},
+  ): Promise<AxiosResponse<PaginatedResponse<Teacher>>> => http.get('/teachers', { params }),
 
   /** GET /teachers/{slug} */
   publicShow: (slug: string): Promise<AxiosResponse<ApiResponse<Teacher>>> =>

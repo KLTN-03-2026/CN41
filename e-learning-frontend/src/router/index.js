@@ -39,7 +39,6 @@ const router = createRouter({
         { path: 'tags', component: () => import('@/views/admin/TagsPage.vue') },
         { path: 'post-comments', component: () => import('@/views/admin/CommentsPage.vue') },
         { path: 'coupons', component: () => import('@/views/admin/CouponsPage.vue') },
-        { path: 'quizzes', component: () => import('@/views/admin/QuizzesPage.vue') },
         { path: 'system-logs', component: () => import('@/views/admin/ActivityLogsPage.vue') },
       ],
     },
@@ -52,6 +51,11 @@ const router = createRouter({
         { path: '', component: () => import('@/views/client/HomePage.vue') },
         { path: 'courses', component: () => import('@/views/client/CoursesPage.vue') },
         { path: 'courses/:slug', component: () => import('@/views/client/CourseDetailPage.vue') },
+        { path: 'teachers', component: () => import('@/views/client/TeachersPage.vue') },
+        {
+          path: 'teachers/:slug',
+          component: () => import('@/views/client/TeacherProfilePage.vue'),
+        },
         { path: 'posts', component: () => import('@/views/client/BlogPage.vue') },
         { path: 'posts/:slug', component: () => import('@/views/client/PostDetailPage.vue') },
         // Cần auth

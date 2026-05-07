@@ -27,7 +27,11 @@ class TeacherResource extends JsonResource
                     'id' => $course->id,
                     'name' => $course->name,
                     'slug' => $course->slug,
-                    'thumbnail' => $course->thumbnail,
+                    'thumbnail' => $course->thumbnail
+                        ? (str_starts_with($course->thumbnail, 'http') || str_starts_with($course->thumbnail, '/storage')
+                            ? $course->thumbnail
+                            : asset('storage/'.$course->thumbnail))
+                        : null,
                     'price' => $course->price,
                     'sale_price' => $course->sale_price,
                 ]);

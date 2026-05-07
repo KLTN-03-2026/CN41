@@ -3,6 +3,7 @@ export interface Student {
   name: string
   email: string
   avatar?: string
+  date_of_birth?: string
   email_verified_at?: string
 }
 
