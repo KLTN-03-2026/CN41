@@ -10,7 +10,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    # Chỉ định cho GitHub biết thư mục chứa Laravel
     defaults:
       run:
         working-directory: ./e-learning-backend
@@ -22,7 +21,7 @@ jobs:
       uses: shivammathur/setup-php@v2
       with:
         php-version: '8.2'
-        
+
     - name: Copy .env
       run: php -r "file_exists('.env') || copy('.env.example', '.env');"
 
@@ -50,4 +49,3 @@ jobs:
         DB_DATABASE: database/database.sqlite
         MAIL_MAILER: log
       run: php artisan test --parallel
-
