@@ -68,6 +68,8 @@ class QuizController extends Controller
             ]);
         });
 
+        $attempt->setRelation('quiz', $quiz);
+
         return $this->success(
             new QuizAttemptResource($attempt),
             'Nộp bài thành công',
@@ -79,10 +81,13 @@ class QuizController extends Controller
     {
         $student = auth('api')->user();
 
+        $quiz = Quiz::with('questions')->findOrFail($id);
+
         $attempts = QuizAttempt::where('quiz_id', $id)
             ->where('student_id', $student->id)
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->get()
+            ->each(fn ($attempt) => $attempt->setRelation('quiz', $quiz));
 
         return $this->success(
             QuizAttemptResource::collection($attempts),

@@ -162,7 +162,7 @@
 
     <!-- Delete Confirm Modal -->
     <div
-      v-if="softDelete.show.value"
+      v-if="softDelete.isOpen.value"
       class="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
       @click.self="softDelete.cancel()"
     >
@@ -178,7 +178,7 @@
           </button>
           <button
             @click="softDelete.execute()"
-            :disabled="softDelete.loading.value"
+            :disabled="softDelete.loading"
             class="px-4 py-2 text-sm rounded-lg bg-red-500 text-white hover:bg-red-600 disabled:opacity-50"
           >
             Xóa

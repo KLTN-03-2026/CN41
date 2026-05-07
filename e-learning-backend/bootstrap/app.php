@@ -7,6 +7,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Modules\Auth\Http\Middleware\EnsureEmailVerified;
 use Spatie\Permission\Middleware\PermissionMiddleware;
@@ -100,6 +101,8 @@ return Application::configure(basePath: dirname(__DIR__))
         // ValidationException → 422 JSON (chuẩn hoá format giống ApiResponse)
         $exceptions->render(function (ValidationException $e, Request $request) {
             if ($request->is('api/*') || $request->expectsJson()) {
+                Log::warning('Validation failed:', $e->errors());
+
                 return response()->json([
                     'success' => false,
                     'message' => 'Dữ liệu không hợp lệ.',

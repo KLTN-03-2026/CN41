@@ -18,6 +18,7 @@
           @preview="$emit('preview', $event)"
           @edit="$emit('edit', $event)"
           @delete="$emit('delete', $event)"
+          @manage-quiz="$emit('manage-quiz', $event)"
           @dragstart="$emit('dragstart', lIdx)"
           @drop="$emit('drop', lIdx)"
         />
@@ -40,10 +41,11 @@ defineProps<{
 defineEmits<{
   'toggle-select': [id: number]
   'toggle-status': [lesson: AdminLesson]
-  'preview': [id: number]
-  'edit': [lesson: AdminLesson]
-  'delete': [lesson: AdminLesson]
-  'dragstart': [idx: number]
-  'drop': [idx: number]
+  preview: [id: number]
+  edit: [lesson: AdminLesson]
+  delete: [lesson: AdminLesson]
+  'manage-quiz': [lesson: AdminLesson]
+  dragstart: [idx: number]
+  drop: [idx: number]
 }>()
 </script>

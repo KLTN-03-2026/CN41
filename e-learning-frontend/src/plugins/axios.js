@@ -3,7 +3,7 @@ import axios from 'axios'
 const http = axios.create({
   baseURL: '/api/v1',
   headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-  timeout: 15000,
+  timeout: 60000, // Tăng lên 60s để chờ các API AI/Generate lâu
 })
 
 /**

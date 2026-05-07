@@ -7,13 +7,14 @@ use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Modules\Quiz\Http\Requests\StoreQuizRequest;
 use Modules\Quiz\Http\Requests\UpdateQuizRequest;
 use Modules\Quiz\Http\Resources\QuizQuestionResource;
 use Modules\Quiz\Http\Resources\QuizResource;
 use Modules\Quiz\Models\Quiz;
 use Modules\Quiz\Repositories\QuizRepositoryInterface;
-use Modules\Quiz\Services\GeminiQuizService;
+use Modules\Quiz\Services\AIQuizService;
 
 class AdminQuizController extends Controller
 {
@@ -21,7 +22,7 @@ class AdminQuizController extends Controller
 
     public function __construct(
         private QuizRepositoryInterface $repository,
-        private GeminiQuizService $geminiService
+        private AIQuizService $aiService
     ) {}
 
     public function index(Request $request): JsonResponse
@@ -80,33 +81,39 @@ class AdminQuizController extends Controller
 
     public function generate(Request $request, int $id): JsonResponse
     {
-        $quiz = $this->repository->findOrFail($id);
-        $quiz->load('lesson');
+        try {
+            $quiz = $this->repository->findOrFail($id);
+            $quiz->load('lesson');
 
-        $context = $quiz->lesson->title;
-        if ($quiz->lesson->description) {
-            $context .= '. '.$quiz->lesson->description;
-        }
-
-        if ($request->filled('custom_prompt')) {
-            $context .= ' '.$request->input('custom_prompt');
-        }
-
-        $count = min((int) $request->get('count', 5), 10);
-        $questions = $this->geminiService->generateQuestions($context, $count);
-
-        DB::transaction(function () use ($quiz, $questions) {
-            $quiz->questions()->delete();
-            foreach ($questions as $index => $q) {
-                $q['order'] = $index;
-                $quiz->questions()->create($q);
+            $context = $quiz->lesson->title;
+            if ($quiz->lesson->description) {
+                $context .= '. '.$quiz->lesson->description;
             }
-        });
 
-        return $this->success(
-            QuizQuestionResource::collection($quiz->fresh()->questions),
-            'Đã sinh câu hỏi thành công'
-        );
+            if ($request->filled('custom_prompt')) {
+                $context .= ' '.$request->input('custom_prompt');
+            }
+
+            $count = min((int) $request->get('count', 5), 10);
+            $questions = $this->aiService->generateQuestions($context, $count);
+
+            DB::transaction(function () use ($quiz, $questions) {
+                $quiz->questions()->delete();
+                foreach ($questions as $index => $q) {
+                    $q['order'] = $index;
+                    $quiz->questions()->create($q);
+                }
+            });
+
+            return $this->success(
+                QuizQuestionResource::collection($quiz->fresh()->questions),
+                'Đã sinh câu hỏi thành công'
+            );
+        } catch (\Exception $e) {
+            Log::error('Quiz generation failed', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+
+            return $this->error($e->getMessage(), 500);
+        }
     }
 
     public function toggleStatus(int $id): JsonResponse

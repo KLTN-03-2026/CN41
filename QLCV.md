@@ -7,7 +7,7 @@
 ## Tiến Độ Tổng Quan
 
 ```
-Tổng thể: ████████████████████████░░░░  82%
+Tổng thể: ██████████████████████████░░  90%
 ```
 
 ---
@@ -92,16 +92,14 @@ Còn lại:
 ### 7. AI Auto-Quiz
 | Tầng | Trạng thái | Ghi chú |
 |------|-----------|---------|
-| BE | ⬜ Chưa làm | Không có module Quiz, chưa tích hợp AI |
-| FE | ⬜ Chưa làm | Không có trang quiz |
+| BE | ✅ Hoàn thành | Tích hợp Google Gemini AI (Flash 2.0/Lite), cơ chế Fallback tự động, trích xuất PDF Tiếng Việt chuẩn. API sinh tối đa 20 câu hỏi chất lượng cao. |
+| FE | ✅ Hoàn thành | Admin UI sinh câu hỏi AI từ file upload hoặc tài liệu bài học, cho phép tùy chỉnh prompt và số lượng. |
 
-**Hoàn thành: 0%**
+**Hoàn thành: 100%**
 
 Còn lại:
-- Thiết kế DB: bảng quiz_questions, quiz_answers
-- Tích hợp Gemini/OpenAI API để sinh câu hỏi tự động
-- API lấy/nộp bài quiz
-- Trang làm bài quiz cho sinh viên
+- Trang làm bài quiz phía học viên (QuizPage client)
+- Chấm điểm và lưu lịch sử làm bài học viên
 
 ---
 
@@ -182,17 +180,16 @@ Còn lại:
 
 | Tầng | Tiến độ | Thanh tiến độ |
 |------|---------|--------------|
-| **Backend** | **98%** | `████████████████████████████░` |
-| **Frontend** | **92%** | `██████████████████████████░░` |
+| **Backend** | **99%** | `█████████████████████████████` |
+| **Frontend** | **94%** | `████████████████████████████░` |
 
 ### Chi tiết Backend:
-- ✅ Hoàn thành: Auth, Course, Categories, Lessons/Sections, Students, Teachers, Users (Role-based API Security), Upload, Payment/VNPAY, Enrollment, Dashboard, Coupons, Posts, **126/126 Feature Tests passed (100% stable)**
-- ⬜ Chưa làm: AI Quiz, Notifications (phần real-time)
+- ✅ Hoàn thành: Auth, Course, Categories, Lessons/Sections, Students, Teachers, Users (Role-based API Security), Upload, Payment/VNPAY, Enrollment, Dashboard, Coupons, Posts, AI Quiz (Core Logic), **126/126 Feature Tests passed (100% stable)**
+- ⬜ Chưa làm: Notifications (phần real-time)
 
 ### Chi tiết Frontend:
-- ✅ Hoàn thành: Auth pages, Course pages, Category pages, Lessons manager, Student/Teacher/Coupon pages (CRUD đầy đủ), Upload UI, Enrollment flow, Payment FE, Dashboard charts thực, **User Management Scoping UI, Sidebar Refactoring.**
-- 🔄 Đang làm: Notifications UI
-- ⬜ Chưa làm: Quiz UI
+- ✅ Hoàn thành: Auth pages, Course pages, Category pages, Lessons manager, Student/Teacher/Coupon pages (CRUD đầy đủ), Upload UI, Enrollment flow, Payment FE, Dashboard charts thực, User Management Scoping UI, Sidebar Refactoring, AI Quiz Generator UI.
+- 🔄 Đang làm: Notifications UI, Quiz UI (Student side)
 
 ---
 
