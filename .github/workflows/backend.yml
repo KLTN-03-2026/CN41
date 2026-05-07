@@ -10,7 +10,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    # Chỉ định cho GitHub biết thư mục chứa Laravel
     defaults:
       run:
         working-directory: ./e-learning-backend
@@ -29,19 +28,29 @@ jobs:
     - name: Install Dependencies
       run: composer install --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
 
-    - name: Generate key
-      run: php artisan key:generate
-
     - name: Directory Permissions
       run: chmod -R 777 storage bootstrap/cache
 
-    - name: Create SQLite DB and Execute tests (Unit and Feature)
+    - name: Create SQLite DB
+      run: |
+        mkdir -p database
+        touch database/database.sqlite
+
+    - name: Generate key
+      env:
+        DB_CONNECTION: sqlite
+        DB_DATABASE: database/database.sqlite
+      run: php artisan key:generate
+
+    - name: Run Migrations
+      env:
+        DB_CONNECTION: sqlite
+        DB_DATABASE: database/database.sqlite
+      run: php artisan migrate --force
+
+    - name: Execute tests (Unit and Feature)
       env:
         DB_CONNECTION: sqlite
         DB_DATABASE: database/database.sqlite
         MAIL_MAILER: log
-      run: |
-        mkdir -p database
-        touch database/database.sqlite
-        php artisan test --parallel
-
+      run: php artisan test --parallel
