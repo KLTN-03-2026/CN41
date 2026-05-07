@@ -27,6 +27,16 @@ export interface QuizQuestion {
   order: number
 }
 
+export interface QuizAttemptQuestion {
+  id: number
+  question: string
+  option_a: string
+  option_b: string
+  option_c: string
+  option_d: string
+  order: number
+}
+
 export interface QuizAttempt {
   id: number
   quiz_id: number
@@ -36,6 +46,7 @@ export interface QuizAttempt {
   percentage: number
   answers: Record<string, string>
   correct_answers: Record<string, string> | null
+  questions: QuizAttemptQuestion[] | null
   completed_at: string
   created_at: string
 }

@@ -327,6 +327,13 @@ import { ref, computed, onMounted, onUnmounted, defineComponent, h } from 'vue'
 import { useToast } from 'vue-toastification'
 import { quizService } from '@/services/quiz.service'
 import type { Quiz, QuizQuestion, QuizAttempt } from '@/services/quiz.service'
+import {
+  optionResultClass,
+  optionBadgeClass,
+  optionLabel,
+  isQuestionCorrect,
+} from '@/utils/quizResult'
+import type { Option } from '@/utils/quizResult'
 
 // ── Inline sub-component: Chi tiết từng câu ─────────────────────────────────
 const QuestionBreakdown = defineComponent({
@@ -335,30 +342,22 @@ const QuestionBreakdown = defineComponent({
     attempt: { type: Object as () => QuizAttempt, required: true },
   },
   setup(props) {
-    function correctOf(q: QuizQuestion) {
-      return props.attempt.correct_answers?.[String(q.id)] ?? q.correct_option
-    }
-    function chosenOf(q: QuizQuestion) {
-      return props.attempt.answers[String(q.id)]
-    }
-    function isCorrect(q: QuizQuestion) {
-      return chosenOf(q) === correctOf(q)
-    }
     function optionClass(q: QuizQuestion, opt: string) {
-      const isRight = opt === correctOf(q)
-      const isChosen = chosenOf(q) === opt
-      if (isRight)
-        return 'border-green-400 bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-300'
-      if (isChosen)
-        return 'border-red-400 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300'
-      return 'border-gray-100 dark:border-gray-700 text-gray-500 dark:text-gray-400'
+      return optionResultClass(
+        props.attempt.correct_answers,
+        props.attempt.answers,
+        q.id,
+        opt as Option,
+        'dark',
+      )
     }
     function badgeClass(q: QuizQuestion, opt: string) {
-      const isRight = opt === correctOf(q)
-      const isChosen = chosenOf(q) === opt
-      if (isRight) return 'bg-green-500 text-white'
-      if (isChosen) return 'bg-red-500 text-white'
-      return 'bg-gray-100 dark:bg-gray-700 text-gray-400'
+      return optionBadgeClass(
+        props.attempt.correct_answers,
+        props.attempt.answers,
+        q.id,
+        opt as Option,
+      )
     }
     return () =>
       h(
@@ -382,9 +381,11 @@ const QuestionBreakdown = defineComponent({
                   h(
                     'span',
                     {
-                      class: `flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-white text-xs font-bold mt-0.5 ${isCorrect(q) ? 'bg-green-500' : 'bg-red-500'}`,
+                      class: `flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-white text-xs font-bold mt-0.5 ${isQuestionCorrect(props.attempt.correct_answers, props.attempt.answers, q.id) ? 'bg-green-500' : 'bg-red-500'}`,
                     },
-                    isCorrect(q) ? '✓' : '✗',
+                    isQuestionCorrect(props.attempt.correct_answers, props.attempt.answers, q.id)
+                      ? '✓'
+                      : '✗',
                   ),
                   h(
                     'p',
@@ -415,15 +416,23 @@ const QuestionBreakdown = defineComponent({
                           {},
                           String(q[`option_${opt.toLowerCase()}` as keyof typeof q] ?? ''),
                         ),
-                        opt === correctOf(q)
-                          ? h(
+                        (() => {
+                          const lbl = optionLabel(
+                            props.attempt.correct_answers,
+                            props.attempt.answers,
+                            q.id,
+                            opt as Option,
+                          )
+                          if (lbl === '✓ Đúng')
+                            return h(
                               'span',
                               { class: 'ml-auto text-green-600 dark:text-green-400 font-medium' },
-                              '✓ Đúng',
+                              lbl,
                             )
-                          : chosenOf(q) === opt
-                            ? h('span', { class: 'ml-auto text-red-500 font-medium' }, '✗ Bạn chọn')
-                            : null,
+                          if (lbl === '✗ Bạn chọn')
+                            return h('span', { class: 'ml-auto text-red-500 font-medium' }, lbl)
+                          return null
+                        })(),
                       ],
                     ),
                   ),

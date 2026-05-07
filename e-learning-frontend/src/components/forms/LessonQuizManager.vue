@@ -167,7 +167,7 @@
             d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
           />
         </svg>
-        {{ generating ? 'Đang sinh câu hỏi...' : '✨ Sinh câu hỏi' }}
+        {{ generating ? generatingStep || 'Đang xử lý...' : '✨ Sinh câu hỏi' }}
       </button>
     </div>
 
@@ -271,6 +271,7 @@ const toast = useToast()
 const questions = ref<Question[]>([])
 const showGeneratePanel = ref(false)
 const generating = ref(false)
+const generatingStep = ref('')
 const genSource = ref<'upload' | 'chapter'>('upload')
 const genCount = ref(5)
 const maxAttempts = ref(3)
@@ -312,6 +313,7 @@ async function loadChapterPdfs() {
 
 async function doGenerate() {
   generating.value = true
+  generatingStep.value = 'Đang gửi yêu cầu...'
   try {
     const formData = new FormData()
     formData.append('source', genSource.value)
@@ -326,21 +328,45 @@ async function doGenerate() {
       headers: { 'Content-Type': 'multipart/form-data' },
     })
 
-    questions.value = res.data.data.questions
-    showGeneratePanel.value = false
-    toast.success(`Đã sinh ${questions.value.length} câu hỏi thành công!`)
+    const jobId: number = res.data.data.job_id
+    generatingStep.value = 'AI đang sinh câu hỏi...'
+    await pollJobStatus(jobId)
   } catch (err: any) {
     const data = err.response?.data
     if (data?.errors) {
-      // Lấy lỗi validation đầu tiên để hiển thị
       const firstError = Object.values(data.errors)[0] as string[]
       toast.error(firstError[0] || data.message || 'Sinh câu hỏi thất bại')
     } else {
-      toast.error(data?.message || 'Sinh câu hỏi thất bại')
+      toast.error(err.message || data?.message || 'Sinh câu hỏi thất bại')
     }
   } finally {
     generating.value = false
+    generatingStep.value = ''
   }
+}
+
+async function pollJobStatus(jobId: number): Promise<void> {
+  const MAX_POLLS = 60
+  const INTERVAL_MS = 2000
+
+  for (let i = 0; i < MAX_POLLS; i++) {
+    await new Promise((r) => setTimeout(r, INTERVAL_MS))
+
+    const res = await http.get(`/admin/lesson-quiz/jobs/${jobId}`)
+    const payload = res.data.data
+
+    if (payload.status === 'done') {
+      questions.value = payload.questions
+      showGeneratePanel.value = false
+      toast.success(`Đã sinh ${payload.questions.length} câu hỏi thành công!`)
+      return
+    }
+
+    if (payload.status === 'failed') {
+      throw new Error(res.data.message || 'Sinh câu hỏi thất bại')
+    }
+  }
+  throw new Error('Hết thời gian chờ. Vui lòng thử lại.')
 }
 
 async function saveQuestion(q: Question) {

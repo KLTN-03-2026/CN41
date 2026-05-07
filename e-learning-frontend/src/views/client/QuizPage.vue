@@ -34,7 +34,103 @@
         </button>
       </div>
 
-      <!-- Quiz form -->
+      <!-- ── RESULT MODE ── -->
+      <div v-else-if="resultData">
+        <!-- Score card -->
+        <div class="bg-white rounded-2xl p-6 mb-5 shadow-sm text-center">
+          <div class="text-5xl mb-3">
+            {{ resultData.percentage >= 80 ? '🎉' : resultData.percentage >= 50 ? '👍' : '😢' }}
+          </div>
+          <h2 class="text-xl font-bold text-gray-800 mb-1">
+            {{ resultData.score }}/{{ resultData.total_questions }} câu đúng
+          </h2>
+          <div
+            :class="
+              resultData.percentage >= 80
+                ? 'text-green-600'
+                : resultData.percentage >= 50
+                  ? 'text-yellow-600'
+                  : 'text-red-600'
+            "
+            class="text-3xl font-extrabold mb-3"
+          >
+            {{ resultData.percentage }}%
+          </div>
+          <div class="h-2.5 bg-gray-100 rounded-full overflow-hidden max-w-xs mx-auto mb-4">
+            <div
+              :style="{ width: resultData.percentage + '%' }"
+              :class="
+                resultData.percentage >= 80
+                  ? 'bg-green-500'
+                  : resultData.percentage >= 50
+                    ? 'bg-yellow-500'
+                    : 'bg-red-500'
+              "
+              class="h-full rounded-full transition-all duration-700"
+            />
+          </div>
+          <div class="flex justify-center gap-3">
+            <button
+              @click="router.push({ name: 'quiz-history', params: { id: quiz!.id } })"
+              class="px-4 py-2 text-sm border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50"
+            >
+              Lịch sử làm bài
+            </button>
+            <button
+              @click="router.back()"
+              class="px-4 py-2 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+            >
+              Quay lại bài học
+            </button>
+          </div>
+        </div>
+
+        <!-- Per-question review -->
+        <div class="space-y-4">
+          <div
+            v-for="(q, index) in questions"
+            :key="q.id"
+            class="bg-white rounded-2xl p-5 shadow-sm"
+          >
+            <div class="flex items-start gap-2 mb-3">
+              <span
+                :class="isCorrect(q.id) ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'"
+                class="mt-0.5 flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold"
+              >
+                {{ isCorrect(q.id) ? '✓' : '✗' }}
+              </span>
+              <p class="font-medium text-gray-800 text-sm">{{ index + 1 }}. {{ q.question }}</p>
+            </div>
+            <div class="space-y-2">
+              <div
+                v-for="opt in ['A', 'B', 'C', 'D'] as const"
+                :key="opt"
+                :class="optionResultClass(q.id, opt)"
+                class="flex items-center gap-3 px-4 py-3 rounded-xl border text-sm"
+              >
+                <span
+                  :class="optionBadgeClass(q.id, opt)"
+                  class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
+                  >{{ opt }}</span
+                >
+                <span>{{ q[`option_${opt.toLowerCase()}` as keyof typeof q] }}</span>
+                <span
+                  v-if="getCorrectAnswer(q.id) === opt"
+                  class="ml-auto text-green-600 text-xs font-medium"
+                  >Đáp án đúng</span
+                >
+                <span
+                  v-else-if="getStudentAnswer(q.id) === opt && !isCorrect(q.id)"
+                  class="ml-auto text-red-500 text-xs font-medium"
+                  >Bạn chọn</span
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── QUIZ FORM ── -->
       <div v-else-if="quiz && questions.length">
         <!-- Header -->
         <div class="bg-white rounded-2xl p-5 mb-4 shadow-sm">
@@ -135,7 +231,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useToast } from 'vue-toastification'
 import { quizService } from '@/services/quiz.service'
-import type { Quiz, QuizQuestion } from '@/services/quiz.service'
+import type { Quiz, QuizQuestion, QuizAttempt } from '@/services/quiz.service'
 
 const router = useRouter()
 const route = useRoute()
@@ -151,6 +247,7 @@ const answers = ref<Record<number, string>>({})
 const submitting = ref(false)
 const attemptsExceeded = ref(false)
 const timeLeft = ref<number | null>(null)
+const resultData = ref<QuizAttempt | null>(null)
 let timer: ReturnType<typeof setInterval> | null = null
 
 const answeredCount = computed(() => Object.keys(answers.value).length)
@@ -161,7 +258,6 @@ onMounted(async () => {
     quiz.value = res.data.data.quiz
     questions.value = res.data.data.questions
 
-    // Setup timer
     if (quiz.value.time_limit) {
       timeLeft.value = quiz.value.time_limit * 60
       timer = setInterval(() => {
@@ -212,13 +308,49 @@ async function submitQuiz() {
 
   try {
     const res = await quizService.submit(quiz.value.id, payload)
-    const attempt = res.data.data
-    toast.success(`Nộp bài thành công! Điểm: ${attempt.score}/${attempt.total_questions}`)
-    router.push({ name: 'quiz-result', params: { id: quiz.value.id, attemptId: attempt.id } })
+    resultData.value = res.data.data
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   } catch (err: unknown) {
     const axiosError = err as { response?: { data?: { message?: string } } }
     toast.error(axiosError.response?.data?.message || 'Nộp bài thất bại')
     submitting.value = false
   }
+}
+
+// ── Helpers for result display ──────────────────────────────────
+
+function getCorrectAnswer(questionId: number): string | undefined {
+  if (!resultData.value?.correct_answers) return undefined
+  // correct_answers keys may be numbers or strings — normalise to string
+  const map = resultData.value.correct_answers as Record<string, string>
+  return map[String(questionId)]
+}
+
+function getStudentAnswer(questionId: number): string | undefined {
+  if (!resultData.value?.answers) return undefined
+  const map = resultData.value.answers as Record<string, string>
+  return map[String(questionId)]
+}
+
+function isCorrect(questionId: number): boolean {
+  const correct = getCorrectAnswer(questionId)
+  const student = getStudentAnswer(questionId)
+  return !!correct && !!student && correct === student
+}
+
+function optionResultClass(questionId: number, opt: 'A' | 'B' | 'C' | 'D'): string {
+  const correct = getCorrectAnswer(questionId)
+  const student = getStudentAnswer(questionId)
+  if (opt === correct) return 'border-green-400 bg-green-50 text-green-800'
+  if (opt === student && student !== correct) return 'border-red-400 bg-red-50 text-red-800'
+  return 'border-gray-100 text-gray-500'
+}
+
+function optionBadgeClass(questionId: number, opt: 'A' | 'B' | 'C' | 'D'): string {
+  const correct = getCorrectAnswer(questionId)
+  const student = getStudentAnswer(questionId)
+  if (opt === correct) return 'bg-green-500 text-white'
+  if (opt === student && student !== correct) return 'bg-red-500 text-white'
+  return 'bg-gray-100 text-gray-400'
 }
 </script>

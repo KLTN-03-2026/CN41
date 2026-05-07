@@ -16,6 +16,8 @@ Route::middleware(['auth:admin'])->prefix('admin')->group(function () {
     Route::patch('quizzes/{id}/toggle-status', [AdminQuizController::class, 'toggleStatus'])->middleware('permission:quizzes.edit');
 
     // ── Quiz gắn với lesson (dùng prefix lesson-quiz để tránh conflict với Lessons module) ──
+    // Đặt route tĩnh trước route có param để tránh Laravel khớp nhầm "jobs" vào {lessonId}
+    Route::get('lesson-quiz/jobs/{jobId}', [QuizGenerateController::class, 'jobStatus'])->middleware('permission:quizzes.view');
     Route::get('lesson-quiz/{lessonId}', [QuizGenerateController::class, 'show'])->middleware('permission:quizzes.view');
     Route::post('lesson-quiz/{lessonId}/generate', [QuizGenerateController::class, 'generate'])->middleware('permission:quizzes.edit');
     Route::get('lesson-quiz/{lessonId}/chapter-pdfs', [QuizGenerateController::class, 'chapterPdfs'])->middleware('permission:quizzes.view');

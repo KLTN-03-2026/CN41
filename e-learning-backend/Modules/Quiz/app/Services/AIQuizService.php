@@ -122,7 +122,7 @@ PROMPT;
         }
 
         try {
-            $response = Http::timeout(60)
+            $response = Http::timeout(90)
                 ->post("{$url}?key={$this->apiKey}", [
                     'contents' => [
                         ['parts' => [['text' => $prompt]]],

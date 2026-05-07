@@ -68,7 +68,7 @@ class QuizController extends Controller
             ]);
         });
 
-        $attempt->setRelation('quiz', $quiz);
+        $attempt->load(['quiz.questions']);
 
         return $this->success(
             new QuizAttemptResource($attempt),
@@ -83,11 +83,11 @@ class QuizController extends Controller
 
         $quiz = Quiz::with('questions')->findOrFail($id);
 
-        $attempts = QuizAttempt::where('quiz_id', $id)
+        $attempts = QuizAttempt::with(['quiz.questions'])
+            ->where('quiz_id', $id)
             ->where('student_id', $student->id)
             ->orderBy('created_at', 'desc')
-            ->get()
-            ->each(fn ($attempt) => $attempt->setRelation('quiz', $quiz));
+            ->get();
 
         return $this->success(
             QuizAttemptResource::collection($attempts),

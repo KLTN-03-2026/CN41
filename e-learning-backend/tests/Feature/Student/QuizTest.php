@@ -115,6 +115,169 @@ class QuizTest extends TestCase
         ]);
     }
 
+    // ── Kết quả submit: correct_answers và questions phải có ────────────────
+
+    public function test_submit_response_contains_correct_answers(): void
+    {
+        $lesson = $this->createLesson();
+        $quiz = $this->createQuizWithQuestions($lesson, 3, 'B');
+        $questions = $quiz->questions;
+        $answers = $questions->mapWithKeys(fn ($q) => [$q->id => 'A'])->toArray(); // tất cả sai
+
+        $response = $this->postJson("/api/v1/quizzes/{$quiz->id}/submit", ['answers' => $answers]);
+
+        $response->assertStatus(201);
+
+        $data = $response->json('data');
+
+        // correct_answers phải là object, không null
+        $this->assertNotNull($data['correct_answers'], 'correct_answers phải có trong response submit');
+        $this->assertIsArray($data['correct_answers']);
+
+        // Mỗi question_id phải map về đáp án đúng là 'B'
+        foreach ($questions as $q) {
+            $this->assertEquals('B', $data['correct_answers'][(string) $q->id],
+                "correct_answers[{$q->id}] phải là 'B'");
+        }
+    }
+
+    public function test_submit_response_contains_questions(): void
+    {
+        $lesson = $this->createLesson();
+        $quiz = $this->createQuizWithQuestions($lesson, 2, 'C');
+        $questions = $quiz->questions;
+        $answers = $questions->mapWithKeys(fn ($q) => [$q->id => 'A'])->toArray();
+
+        $response = $this->postJson("/api/v1/quizzes/{$quiz->id}/submit", ['answers' => $answers]);
+
+        $response->assertStatus(201);
+        $data = $response->json('data');
+
+        // questions phải có trong response (để FE hiển thị nội dung câu hỏi)
+        $this->assertNotNull($data['questions'], 'questions phải có trong response submit');
+        $this->assertCount(2, $data['questions']);
+
+        // Mỗi question phải có option_a..d nhưng KHÔNG có correct_option
+        $q = $data['questions'][0];
+        $this->assertArrayHasKey('option_a', $q);
+        $this->assertArrayHasKey('option_b', $q);
+        $this->assertArrayHasKey('option_c', $q);
+        $this->assertArrayHasKey('option_d', $q);
+        $this->assertArrayNotHasKey('correct_option', $q);
+    }
+
+    public function test_submit_all_correct_score_is_full(): void
+    {
+        $lesson = $this->createLesson();
+        $quiz = $this->createQuizWithQuestions($lesson, 4, 'C');
+        $questions = $quiz->questions;
+        $answers = $questions->mapWithKeys(fn ($q) => [$q->id => 'C'])->toArray(); // tất cả đúng
+
+        $response = $this->postJson("/api/v1/quizzes/{$quiz->id}/submit", ['answers' => $answers]);
+
+        $response->assertStatus(201)
+            ->assertJsonPath('data.score', 4)
+            ->assertJsonPath('data.total_questions', 4)
+            ->assertJsonPath('data.percentage', 100);
+    }
+
+    public function test_submit_all_wrong_score_is_zero(): void
+    {
+        $lesson = $this->createLesson();
+        $quiz = $this->createQuizWithQuestions($lesson, 4, 'A');
+        $questions = $quiz->questions;
+        $answers = $questions->mapWithKeys(fn ($q) => [$q->id => 'B'])->toArray(); // tất cả sai
+
+        $response = $this->postJson("/api/v1/quizzes/{$quiz->id}/submit", ['answers' => $answers]);
+
+        $response->assertStatus(201)
+            ->assertJsonPath('data.score', 0)
+            ->assertJsonPath('data.percentage', 0);
+
+        // correct_answers vẫn phải có dù điểm 0
+        $this->assertNotNull($response->json('data.correct_answers'));
+    }
+
+    public function test_submit_mixed_answers_score_is_partial(): void
+    {
+        $lesson = $this->createLesson();
+        $quiz = Quiz::create([
+            'lesson_id' => $lesson->id,
+            'title' => 'Mixed Quiz',
+            'max_attempts' => 5,
+            'status' => 1,
+        ]);
+
+        // Tạo 4 câu với đáp án đúng khác nhau
+        $q1 = QuizQuestion::create(['quiz_id' => $quiz->id, 'question' => 'Q1', 'option_a' => 'A', 'option_b' => 'B', 'option_c' => 'C', 'option_d' => 'D', 'correct_option' => 'A', 'order' => 0]);
+        $q2 = QuizQuestion::create(['quiz_id' => $quiz->id, 'question' => 'Q2', 'option_a' => 'A', 'option_b' => 'B', 'option_c' => 'C', 'option_d' => 'D', 'correct_option' => 'B', 'order' => 1]);
+        $q3 = QuizQuestion::create(['quiz_id' => $quiz->id, 'question' => 'Q3', 'option_a' => 'A', 'option_b' => 'B', 'option_c' => 'C', 'option_d' => 'D', 'correct_option' => 'C', 'order' => 2]);
+        $q4 = QuizQuestion::create(['quiz_id' => $quiz->id, 'question' => 'Q4', 'option_a' => 'A', 'option_b' => 'B', 'option_c' => 'C', 'option_d' => 'D', 'correct_option' => 'D', 'order' => 3]);
+
+        // Học viên chọn đúng q1, q2 — sai q3, q4
+        $response = $this->postJson("/api/v1/quizzes/{$quiz->id}/submit", [
+            'answers' => [
+                $q1->id => 'A', // đúng
+                $q2->id => 'B', // đúng
+                $q3->id => 'A', // sai (đúng là C)
+                $q4->id => 'A', // sai (đúng là D)
+            ],
+        ]);
+
+        $response->assertStatus(201)
+            ->assertJsonPath('data.score', 2)
+            ->assertJsonPath('data.total_questions', 4)
+            ->assertJsonPath('data.percentage', 50);
+
+        $data = $response->json('data');
+
+        // Verify correct_answers chính xác
+        $this->assertEquals('A', $data['correct_answers'][(string) $q1->id]);
+        $this->assertEquals('B', $data['correct_answers'][(string) $q2->id]);
+        $this->assertEquals('C', $data['correct_answers'][(string) $q3->id]);
+        $this->assertEquals('D', $data['correct_answers'][(string) $q4->id]);
+
+        // Verify answers học viên được lưu — normalise key vì PHP encode integer-key array
+        // thành numeric JSON array khi key liên tiếp
+        $answersRaw = $data['answers'];
+        $answersNorm = [];
+        foreach ($answersRaw as $k => $v) {
+            $answersNorm[(string) $k] = $v;
+        }
+        $this->assertContains('A', $answersNorm, 'Phải có ít nhất 1 câu học viên chọn A');
+        // Đảm bảo số câu trả lời đúng với số câu gửi lên
+        $this->assertCount(4, $answersNorm);
+    }
+
+    // ── Lịch sử: correct_answers và questions phải có ───────────────────────
+
+    public function test_attempts_history_contains_correct_answers_and_questions(): void
+    {
+        $lesson = $this->createLesson();
+        $quiz = $this->createQuizWithQuestions($lesson, 3, 'B');
+        $questions = $quiz->questions;
+        $answers = $questions->mapWithKeys(fn ($q) => [$q->id => 'A'])->toArray();
+
+        // Submit trước
+        $this->postJson("/api/v1/quizzes/{$quiz->id}/submit", ['answers' => $answers])
+            ->assertStatus(201);
+
+        // Lấy lịch sử
+        $response = $this->getJson("/api/v1/quizzes/{$quiz->id}/attempts");
+        $response->assertStatus(200);
+
+        $attempt = $response->json('data.0');
+
+        $this->assertNotNull($attempt['correct_answers'], 'correct_answers phải có trong history');
+        $this->assertNotNull($attempt['questions'], 'questions phải có trong history');
+        $this->assertCount(3, $attempt['questions']);
+
+        // Verify từng câu có đáp án đúng là B
+        foreach ($questions as $q) {
+            $this->assertEquals('B', $attempt['correct_answers'][(string) $q->id]);
+        }
+    }
+
     public function test_student_cannot_exceed_max_attempts(): void
     {
         $lesson = $this->createLesson();

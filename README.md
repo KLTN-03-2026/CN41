@@ -99,14 +99,13 @@ cd e-learning-backend
 
 # Cài đặt dependencies
 composer install
-npm install && npm run build
 
 # Cấu hình môi trường
 cp .env.example .env
 php artisan key:generate
 
 # Cấu hình database trong .env
-# DB_DATABASE=elearning_db
+# DB_DATABASE=e_learning
 # DB_USERNAME=root
 # DB_PASSWORD=your_password
 
@@ -114,12 +113,16 @@ php artisan key:generate
 php artisan migrate --seed
 php artisan storage:link
 
-# Khởi chạy
-php artisan serve
-php artisan queue:work    # Chạy queue worker xử lý email/AI/thanh toán
+# Khởi chạy (mỗi lệnh chạy ở tab terminal riêng)
+php artisan serve                                                          # Tab 1 — API server
+php artisan queue:work --queue=default --tries=3                          # Tab 2 — Worker email/payment
+php artisan queue:work --queue=ai --timeout=${QUEUE_AI_TIMEOUT:-130} --tries=1   # Tab 3 — Worker AI quiz
+php artisan schedule:work                                                  # Tab 4 — Scheduler (cleanup)
 ```
 
 > Backend chạy tại: `http://localhost:8000`
+>
+> ⚠️ **Tab 3 (AI worker) là bắt buộc** khi dùng tính năng sinh câu hỏi AI — nếu không bật, job sẽ nằm mãi ở trạng thái `pending`.
 
 ### Frontend
 
@@ -156,11 +159,13 @@ npm run dev
 
 ### Backend
 ```bash
-php artisan serve         # Khởi chạy server
-php artisan queue:work    # Chạy worker xử lý tiến trình ngầm
-php artisan migrate       # Chạy migration
-php artisan db:seed       # Seed dữ liệu mẫu
-php artisan test          # Chạy unit tests
+php artisan serve                                                          # Khởi chạy API server
+php artisan queue:work --queue=default --tries=3                          # Worker email/payment
+php artisan queue:work --queue=ai --timeout=${QUEUE_AI_TIMEOUT:-130} --tries=1   # Worker AI quiz generation
+php artisan schedule:work                                                  # Scheduler (cleanup jobs/files)
+php artisan module:migrate Quiz                                            # Migrate module cụ thể
+php artisan migrate --seed                                                 # Migrate toàn bộ + seed
+php artisan test                                                           # Chạy feature tests
 ```
 
 ### Frontend

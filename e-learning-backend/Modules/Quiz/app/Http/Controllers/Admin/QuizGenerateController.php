@@ -6,12 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Modules\Lessons\Models\Lesson;
 use Modules\Quiz\Http\Resources\QuizQuestionResource;
 use Modules\Quiz\Http\Resources\QuizResource;
+use Modules\Quiz\Jobs\GenerateQuizJob;
 use Modules\Quiz\Models\Quiz;
+use Modules\Quiz\Models\QuizGenerationJob;
 use Modules\Quiz\Models\QuizQuestion;
 use Modules\Quiz\Services\AIQuizService;
 
@@ -41,16 +42,8 @@ class QuizGenerateController extends Controller
     }
 
     /**
-     * Sinh câu hỏi quiz từ PDF upload hoặc PDF trong chương.
-     * POST /admin/lessons/{lessonId}/quiz/generate
-     *
-     * Body:
-     *   source: "upload" | "chapter"
-     *   count: int (1-10)
-     *   file: File (khi source=upload)
-     *   custom_prompt: string (tuỳ chọn, bổ sung context)
-     *   max_attempts: int
-     *   time_limit: int|null
+     * Sinh câu hỏi quiz từ PDF upload hoặc PDF trong chương (async via queue).
+     * POST /admin/lesson-quiz/{lessonId}/generate
      */
     public function generate(Request $request, int $lessonId): JsonResponse
     {
@@ -63,60 +56,55 @@ class QuizGenerateController extends Controller
             'time_limit' => 'nullable|integer|min:1',
         ]);
 
-        $lesson = Lesson::with('section.lessons.document')->findOrFail($lessonId);
-        $count = min((int) $request->get('count', 5), 20);
+        Lesson::findOrFail($lessonId);
 
-        $pdfText = '';
-
-        if ($request->source === 'upload') {
-            $pdfText = $this->extractPdfText($request->file('file')->getRealPath());
-        } else {
-            // Lấy tất cả document PDF trong chương (hoặc khóa học nếu không có chương)
-            $pdfText = $this->extractChapterPdfText($lesson);
+        $tempPath = null;
+        if ($request->source === 'upload' && $request->hasFile('file')) {
+            $tempPath = $request->file('file')->store('quiz-tmp', 'local');
         }
 
-        // Thêm custom_prompt vào context nếu có
-        if ($request->filled('custom_prompt')) {
-            $pdfText .= "\n\n".$request->input('custom_prompt');
+        $jobRecord = QuizGenerationJob::create([
+            'lesson_id' => $lessonId,
+            'status' => 'pending',
+            'payload' => [
+                'lesson_id' => $lessonId,
+                'source' => $request->source,
+                'count' => min((int) $request->get('count', 5), 20),
+                'custom_prompt' => $request->input('custom_prompt'),
+                'max_attempts' => $request->get('max_attempts', 3),
+                'time_limit' => $request->get('time_limit'),
+                'temp_path' => $tempPath,
+            ],
+        ]);
+
+        GenerateQuizJob::dispatch($jobRecord->id)->onQueue('ai');
+
+        return $this->success(['job_id' => $jobRecord->id], 'Yêu cầu đã được nhận. Đang xử lý...', 202);
+    }
+
+    /**
+     * Kiểm tra trạng thái job sinh câu hỏi AI.
+     * GET /admin/lesson-quiz/jobs/{jobId}
+     */
+    public function jobStatus(int $jobId): JsonResponse
+    {
+        $job = QuizGenerationJob::findOrFail($jobId);
+
+        if ($job->status === 'done') {
+            $quiz = Quiz::where('lesson_id', $job->lesson_id)->with('questions')->first();
+
+            return $this->success([
+                'status' => 'done',
+                'quiz' => new QuizResource($quiz),
+                'questions' => $quiz->questions->map(fn ($q) => new QuizQuestionResource($q)),
+            ], 'Sinh câu hỏi thành công');
         }
 
-        $lessonContext = $lesson->title.($lesson->description ? '. '.$lesson->description : '');
-
-        try {
-            if (empty(trim($pdfText))) {
-                $questions = $this->aiService->generateQuestions($lessonContext, $count);
-            } else {
-                $questions = $this->aiService->generateFromPdfText($pdfText, $count, $lessonContext);
-            }
-        } catch (\Exception $e) {
-            return $this->error($e->getMessage(), 503);
+        if ($job->status === 'failed') {
+            return $this->error($job->error ?? 'Sinh câu hỏi thất bại.', 503);
         }
 
-        // Tạo hoặc cập nhật quiz cho lesson
-        $quiz = DB::transaction(function () use ($lesson, $questions, $request) {
-            $quiz = Quiz::firstOrCreate(
-                ['lesson_id' => $lesson->id],
-                [
-                    'title' => 'Bài kiểm tra: '.$lesson->title,
-                    'max_attempts' => $request->get('max_attempts', 3),
-                    'time_limit' => $request->get('time_limit'),
-                    'status' => 1,
-                ]
-            );
-
-            // Xóa câu hỏi cũ, thay bằng câu hỏi mới
-            $quiz->questions()->delete();
-            foreach ($questions as $q) {
-                $quiz->questions()->create($q);
-            }
-
-            return $quiz->fresh(['questions']);
-        });
-
-        return $this->success([
-            'quiz' => new QuizResource($quiz),
-            'questions' => $quiz->questions->map(fn ($q) => new QuizQuestionResource($q)),
-        ], 'Đã sinh '.count($questions).' câu hỏi thành công', 201);
+        return $this->success(['status' => $job->status], 'Đang xử lý...');
     }
 
     /**
