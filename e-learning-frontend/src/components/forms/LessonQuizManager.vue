@@ -34,10 +34,7 @@
           📄 Upload PDF mới
         </button>
         <button
-          @click="
-            genSource = 'chapter'
-            loadChapterPdfs()
-          "
+          @click="selectChapterSource()"
           :class="
             genSource === 'chapter'
               ? 'bg-purple-500 text-white'
@@ -294,6 +291,11 @@ async function loadQuiz() {
   } catch {
     // Quiz chưa có — bình thường
   }
+}
+
+function selectChapterSource() {
+  genSource.value = 'chapter'
+  loadChapterPdfs()
 }
 
 async function loadChapterPdfs() {
