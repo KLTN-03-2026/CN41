@@ -1,6 +1,6 @@
 import type { AxiosResponse } from 'axios'
 import http from '@/plugins/axios'
-import type { ApiResponse, PaginatedResponse } from '@/types'
+import type { ApiResponse } from '@/types'
 
 export interface Quiz {
   id: number
@@ -35,6 +35,7 @@ export interface QuizAttempt {
   total_questions: number
   percentage: number
   answers: Record<string, string>
+  correct_answers: Record<string, string> | null
   completed_at: string
   created_at: string
 }
@@ -79,6 +80,6 @@ export const quizService = {
   ): Promise<AxiosResponse<ApiResponse<QuizAttempt>>> =>
     http.post(`/quizzes/${id}/submit`, { answers }),
 
-  attempts: (id: number): Promise<AxiosResponse<PaginatedResponse<QuizAttempt>>> =>
+  attempts: (id: number): Promise<AxiosResponse<ApiResponse<QuizAttempt[]>>> =>
     http.get(`/quizzes/${id}/attempts`),
 }

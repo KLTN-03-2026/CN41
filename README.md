@@ -24,7 +24,7 @@
 
 - 🎬 **Quản lý khóa học Video (VOD)** — Upload, tổ chức và phân phối bài giảng video
 - 💳 **Giỏ hàng & Thanh toán trực tuyến** — Tích hợp VNPAY/MoMo, xử lý giao dịch an toàn
-- 🤖 **AI Auto-Quiz** — Tự động sinh câu hỏi trắc nghiệm từ tài liệu PDF/TXT (OpenAI GPT-4o-mini)
+- 🤖 **AI Auto-Quiz (Gemini AI)** — Tự động sinh câu hỏi trắc nghiệm thông minh từ tài liệu PDF (hỗ trợ Tiếng Việt 100%, cơ chế fallback tự động).
 - 📊 **Dashboard thống kê** — Theo dõi doanh thu, tiến độ học tập
 - 🔐 **Bảo mật & Phân quyền nâng cao** — RBAC chuyên sâu, Role-scoping (Admin chỉ quản lý Student/Teacher), chặn leo thang đặc quyền (Anti-Privilege Escalation)
 - 🧪 **Kiểm thử tự động** — Hệ thống Feature Tests đạt độ ổn định cao (126/126 passed)

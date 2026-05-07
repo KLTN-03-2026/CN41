@@ -5,7 +5,9 @@
       class="fixed inset-0 z-[100000] flex items-center justify-center bg-black/50 px-4"
       @click.self="closeModal"
     >
-      <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
+      <div
+        class="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto"
+      >
         <h3 class="text-base font-semibold text-gray-800 dark:text-white/90 mb-5">
           {{ isEdit ? 'Chỉnh sửa bài giảng' : 'Thêm bài giảng' }}
         </h3>
@@ -23,7 +25,13 @@
           <!-- Tiêu đề -->
           <div>
             <label class="label-form">Tiêu đề <span class="text-red-500">*</span></label>
-            <input v-model="localForm.title" type="text" class="input-field" :class="{ 'input-error': errors.title }" placeholder="Giới thiệu khóa học" />
+            <input
+              v-model="localForm.title"
+              type="text"
+              class="input-field"
+              :class="{ 'input-error': errors.title }"
+              placeholder="Giới thiệu khóa học"
+            />
             <p v-if="errors.title" class="error-msg">{{ errors.title }}</p>
           </div>
 
@@ -33,22 +41,52 @@
             <select v-model="localForm.type" class="input-field">
               <option value="video">Video</option>
               <option value="document">Tài liệu</option>
+              <option value="quiz">Bài kiểm tra</option>
             </select>
           </div>
 
+          <!-- Thông báo quiz: file upload sẽ làm sau khi tạo lesson -->
+          <div
+            v-if="localForm.type === 'quiz'"
+            class="rounded-xl bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-700 p-4"
+          >
+            <div class="flex items-start gap-3">
+              <span class="text-2xl">✨</span>
+              <div>
+                <p class="text-sm font-medium text-purple-800 dark:text-purple-300">
+                  Bài kiểm tra AI
+                </p>
+                <p class="text-xs text-purple-600 dark:text-purple-400 mt-0.5">
+                  Sau khi tạo bài học, bạn có thể upload PDF hoặc dùng tài liệu trong chương để AI
+                  sinh câu hỏi tự động.
+                </p>
+              </div>
+            </div>
+          </div>
+
           <!-- Nội dung tải lên -->
-          <div>
-            <label class="label-form">Nội dung tải lên (Video / Tài liệu) <span class="text-red-500">*</span></label>
-            
+          <div v-if="localForm.type !== 'quiz'">
+            <label class="label-form"
+              >Nội dung tải lên (Video / Tài liệu) <span class="text-red-500">*</span></label
+            >
+
             <div v-if="localForm.content" class="flex flex-col gap-2 relative">
-               <input v-model="localForm.content" type="text" class="input-field pr-10" />
-               <button
+              <input v-model="localForm.content" type="text" class="input-field pr-10" />
+              <button
                 type="button"
                 @click="localForm.content = ''"
                 class="absolute right-2 top-2 w-6 h-6 flex items-center justify-center bg-gray-100 hover:bg-red-100 text-gray-500 hover:text-red-500 rounded-md transition-colors"
-               >
-                 <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-               </button>
+              >
+                <svg
+                  class="w-3.5 h-3.5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             </div>
 
             <div
@@ -56,30 +94,60 @@
               @dragover.prevent=""
               @drop.prevent="handleLessonDrop"
               @click="!lUploading && lFileInput?.click()"
-              :class="[lUploading ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer hover:border-blue-400 dark:hover:border-blue-500', 'border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-xl px-4 py-8 text-center transition-all']"
+              :class="[
+                lUploading
+                  ? 'opacity-70 cursor-not-allowed'
+                  : 'cursor-pointer hover:border-blue-400 dark:hover:border-blue-500',
+                'border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-xl px-4 py-8 text-center transition-all',
+              ]"
             >
-               <div v-if="lUploading" class="max-w-xs mx-auto">
-                  <div class="flex justify-between text-xs text-blue-600 dark:text-blue-400 font-medium mb-2">
-                     <span>Đang tải lên...</span>
-                     <span>{{ lUploadProgress }}%</span>
-                  </div>
-                  <div class="w-full h-2 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
-                     <div class="h-full bg-blue-500 rounded-full transition-all duration-300" :style="{ width: lUploadProgress + '%' }" />
-                  </div>
-               </div>
-               <div v-else class="flex flex-col items-center justify-center space-y-2">
-                  <svg class="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-                  </svg>
-                  <p class="text-sm font-medium text-gray-600 dark:text-gray-300">
-                    <span class="text-blue-500">Nhấp để tải lên</span> hoặc kéo thả file
-                  </p>
-                  <p class="text-xs text-gray-500 dark:text-gray-400">
-                    {{ localForm.type === 'video' ? 'Hỗ trợ MP4, WebM (Max: 50MB)' : 'Hỗ trợ PDF, DOCX (Max: 10MB)' }}
-                  </p>
-               </div>
+              <div v-if="lUploading" class="max-w-xs mx-auto">
+                <div
+                  class="flex justify-between text-xs text-blue-600 dark:text-blue-400 font-medium mb-2"
+                >
+                  <span>Đang tải lên...</span>
+                  <span>{{ lUploadProgress }}%</span>
+                </div>
+                <div class="w-full h-2 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+                  <div
+                    class="h-full bg-blue-500 rounded-full transition-all duration-300"
+                    :style="{ width: lUploadProgress + '%' }"
+                  />
+                </div>
+              </div>
+              <div v-else class="flex flex-col items-center justify-center space-y-2">
+                <svg
+                  class="w-8 h-8 text-gray-400"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"
+                  />
+                </svg>
+                <p class="text-sm font-medium text-gray-600 dark:text-gray-300">
+                  <span class="text-blue-500">Nhấp để tải lên</span> hoặc kéo thả file
+                </p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">
+                  {{
+                    localForm.type === 'video'
+                      ? 'Hỗ trợ MP4, WebM (Max: 50MB)'
+                      : 'Hỗ trợ PDF, DOCX (Max: 10MB)'
+                  }}
+                </p>
+              </div>
             </div>
-            <input ref="lFileInput" type="file" class="hidden" :accept="localForm.type === 'video' ? 'video/*' : '*/*'" @change="handleLessonFileSelect" />
+            <input
+              ref="lFileInput"
+              type="file"
+              class="hidden"
+              :accept="localForm.type === 'video' ? 'video/*' : '*/*'"
+              @change="handleLessonFileSelect"
+            />
             <p v-if="lUploadError" class="error-msg mt-2">{{ lUploadError }}</p>
             <p v-if="errors.content" class="error-msg mt-1">{{ errors.content }}</p>
             <p v-if="errors.video_id" class="error-msg mt-1">{{ errors.video_id }}</p>
@@ -89,12 +157,24 @@
           <!-- Thời lượng (nếu là video) -->
           <div v-if="localForm.type === 'video'">
             <label class="label-form">Thời lượng (giây)</label>
-            <input v-model.number="localForm.duration" type="number" min="0" class="input-field cursor-not-allowed bg-gray-50 dark:bg-gray-800/50" readonly disabled placeholder="Tự động tính khi tải lên video" />
+            <input
+              v-model.number="localForm.duration"
+              type="number"
+              min="0"
+              class="input-field cursor-not-allowed bg-gray-50 dark:bg-gray-800/50"
+              readonly
+              disabled
+              placeholder="Tự động tính khi tải lên video"
+            />
           </div>
 
           <div class="flex items-center gap-4">
             <label class="flex items-center gap-2 cursor-pointer">
-              <input v-model="localForm.is_preview" type="checkbox" class="w-4 h-4 rounded border-gray-300" />
+              <input
+                v-model="localForm.is_preview"
+                type="checkbox"
+                class="w-4 h-4 rounded border-gray-300"
+              />
               <span class="text-sm text-gray-700 dark:text-gray-400">Cho xem thử (preview)</span>
             </label>
             <div>
@@ -108,7 +188,11 @@
           <p v-if="submitError" class="text-sm text-red-500">{{ submitError }}</p>
 
           <div class="flex justify-end gap-3 pt-2">
-            <button type="button" @click="closeModal" class="px-4 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400">
+            <button
+              type="button"
+              @click="closeModal"
+              class="px-4 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400"
+            >
               Hủy
             </button>
             <button
@@ -116,9 +200,26 @@
               :disabled="submitting"
               class="px-4 py-2 text-sm rounded-lg bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50 flex items-center gap-2"
             >
-              <svg v-if="submitting" class="animate-spin w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+              <svg
+                v-if="submitting"
+                class="animate-spin w-4 h-4"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  class="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  stroke-width="4"
+                />
+                <path
+                  class="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                />
               </svg>
               {{ isEdit ? 'Cập nhật' : 'Tạo mới' }}
             </button>
@@ -140,7 +241,7 @@ const props = defineProps<{
   submitting: boolean
   errors: Record<string, string>
   submitError: string
-  sectionsList: Array<{ id: number, title: string }>
+  sectionsList: Array<{ id: number; title: string }>
   form: {
     section_id: number | null
     title: string
@@ -174,7 +275,7 @@ watch(
       lUploadError.value = ''
       lUploadProgress.value = 0
     }
-  }
+  },
 )
 
 // Upload state
@@ -209,7 +310,7 @@ function extractVideoDuration(file: File): Promise<number | null> {
 async function uploadLessonFile(file: File) {
   lUploadError.value = ''
   lUploadProgress.value = 0
-  
+
   if (localForm.value.type === 'video' && !file.type.startsWith('video/')) {
     lUploadError.value = 'Vui lòng chọn file video.'
     return
@@ -219,22 +320,22 @@ async function uploadLessonFile(file: File) {
     const duration = await extractVideoDuration(file)
     if (duration) localForm.value.duration = duration
   }
-  
+
   lUploading.value = true
   try {
-    const onProgress = (progressEvent: { total?: number, loaded: number }) => {
+    const onProgress = (progressEvent: { total?: number; loaded: number }) => {
       if (progressEvent.total) {
         lUploadProgress.value = Math.round((progressEvent.loaded / progressEvent.total) * 100)
       }
     }
-    
-    let res;
+
+    let res
     if (localForm.value.type === 'video') {
-       res = await uploadService.video(file, onProgress)
+      res = await uploadService.video(file, onProgress)
     } else {
-       res = await uploadService.document(file, onProgress)
+      res = await uploadService.document(file, onProgress)
     }
-    
+
     let url = res.data.data.url
     localForm.value.media_id = res.data.data.id
     try {
@@ -245,7 +346,7 @@ async function uploadLessonFile(file: File) {
     } catch (err) {
       console.error('Failed to parse URL', err)
     }
-    
+
     localForm.value.content = url
     toast.success('Tải lên thành công')
     toast.success('Tải lên thành công')
@@ -254,7 +355,9 @@ async function uploadLessonFile(file: File) {
     lUploadError.value = axiosError.response?.data?.message || 'Tải lên thất bại'
   } finally {
     lUploading.value = false
-    setTimeout(() => { lUploadProgress.value = 0 }, 1000)
+    setTimeout(() => {
+      lUploadProgress.value = 0
+    }, 1000)
   }
 }
 
