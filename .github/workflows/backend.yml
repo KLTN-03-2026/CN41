@@ -51,4 +51,6 @@ jobs:
         DB_DATABASE: database/database.sqlite
         CACHE_STORE: array
         MAIL_MAILER: log
+        MAIL_FROM_ADDRESS: noreply@elearning.test
+        MAIL_FROM_NAME: E-Learning
       run: php artisan test --parallel
