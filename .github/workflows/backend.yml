@@ -39,6 +39,7 @@ jobs:
         DB_CONNECTION: sqlite
         DB_DATABASE: database/database.sqlite
         PERMISSION_REGISTER_CHECK_METHOD: "false"
+        CACHE_STORE: array
       run: |
         mkdir -p database
         touch database/database.sqlite
@@ -48,5 +49,6 @@ jobs:
       env:
         DB_CONNECTION: sqlite
         DB_DATABASE: database/database.sqlite
+        CACHE_STORE: array
         MAIL_MAILER: log
       run: php artisan test --parallel
