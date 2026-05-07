@@ -29,19 +29,25 @@ jobs:
     - name: Install Dependencies
       run: composer install --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
 
-    - name: Generate key
-      run: php artisan key:generate
+    - name: Generate key (without booting app)
+      run: php -r "echo 'base64:' . base64_encode(random_bytes(32));" | xargs -I{} sed -i "s|APP_KEY=.*|APP_KEY={}|" .env
 
     - name: Directory Permissions
       run: chmod -R 777 storage bootstrap/cache
 
-    - name: Create SQLite DB and Execute tests (Unit and Feature)
+    - name: Create SQLite DB and run migrations
+      env:
+        DB_CONNECTION: sqlite
+        DB_DATABASE: database/database.sqlite
+      run: |
+        mkdir -p database
+        touch database/database.sqlite
+        php artisan migrate --force
+
+    - name: Execute tests (Unit and Feature)
       env:
         DB_CONNECTION: sqlite
         DB_DATABASE: database/database.sqlite
         MAIL_MAILER: log
-      run: |
-        mkdir -p database
-        touch database/database.sqlite
-        php artisan test --parallel
+      run: php artisan test --parallel
 
