@@ -20,10 +20,15 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Grant all permissions to super-admin
-        Gate::before(function ($user, $ability) {
-            return $user->hasRole('super-admin') ? true : null;
-        });
+        // Grant all permissions to super-admin.
+        // Try/catch prevents crash when permissions table doesn't exist yet (e.g. during migrate).
+        try {
+            Gate::before(function ($user, $ability) {
+                return $user->hasRole('super-admin') ? true : null;
+            });
+        } catch (\Exception $e) {
+            //
+        }
 
         // Register Activity Log Listener (Laravel 11 tự động discovery nếu để trong App/Listeners)
         // \Illuminate\Support\Facades\Event::subscribe(\App\Listeners\LogActivityListener::class);

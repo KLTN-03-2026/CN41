@@ -38,6 +38,7 @@ jobs:
       env:
         DB_CONNECTION: sqlite
         DB_DATABASE: database/database.sqlite
+        PERMISSION_REGISTER_CHECK_METHOD: "false"
       run: |
         mkdir -p database
         touch database/database.sqlite
