@@ -1,9 +1,8 @@
 <template>
   <router-link to="/admin/dashboard" class="lg:hidden">
-    <img class="dark:hidden" src="/images/logo/logo.svg" alt="Logo" />
-    <img class="hidden dark:block" src="/images/logo/logo-dark.svg" alt="Logo" />
+    <img class="dark:hidden h-8 w-auto" src="/images/logo/logo.svg" alt="EduLearn" />
+    <img class="hidden dark:block h-8 w-auto" src="/images/logo/logo-dark.svg" alt="EduLearn" />
   </router-link>
 </template>
 
-<script setup lang="ts">
-</script>
+<script setup lang="ts"></script>

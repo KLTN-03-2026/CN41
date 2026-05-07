@@ -3,10 +3,9 @@
     <div class="w-full max-w-md">
       <!-- Logo -->
       <div class="text-center mb-8">
-        <div class="inline-flex items-center gap-2 text-primary-600">
-          <BookOpen class="w-8 h-8" />
-          <span class="text-2xl font-bold text-gray-800">E-Learning</span>
-        </div>
+        <router-link to="/" class="inline-flex justify-center">
+          <img src="/images/logo/logo.svg" alt="EduLearn" class="h-10 w-auto" />
+        </router-link>
         <h2 class="mt-4 text-2xl font-bold text-gray-800">Đăng nhập</h2>
         <p class="mt-1 text-sm text-gray-500">Chào mừng bạn trở lại!</p>
       </div>
@@ -196,32 +195,12 @@ import { Form, Field } from 'vee-validate'
 import * as z from 'zod'
 import { toTypedSchema } from '@vee-validate/zod'
 import { useToast } from 'vue-toastification'
-import {
-  BookOpen,
-  Mail,
-  Lock,
-  Eye,
-  EyeOff,
-  AlertCircle,
-  MailWarning,
-  RefreshCw,
-} from 'lucide-vue-next'
+import { Mail, Lock, Eye, EyeOff, AlertCircle, MailWarning, RefreshCw } from 'lucide-vue-next'
 import { useStudentAuthStore } from '@/stores/studentAuth.store'
 import { authService } from '@/services/auth.service'
 
 export default {
-  components: {
-    Form,
-    Field,
-    BookOpen,
-    Mail,
-    Lock,
-    Eye,
-    EyeOff,
-    AlertCircle,
-    MailWarning,
-    RefreshCw,
-  },
+  components: { Form, Field, Mail, Lock, Eye, EyeOff, AlertCircle, MailWarning, RefreshCw },
   setup() {
     const router = useRouter()
     const route = useRoute()

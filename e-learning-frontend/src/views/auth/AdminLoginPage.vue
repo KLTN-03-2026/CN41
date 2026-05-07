@@ -1,8 +1,6 @@
 <template>
   <div class="relative p-6 bg-white z-10 dark:bg-gray-900 sm:p-0">
-    <div
-      class="relative flex flex-col justify-center w-full h-screen lg:flex-row dark:bg-gray-900"
-    >
+    <div class="relative flex flex-col justify-center w-full h-screen lg:flex-row dark:bg-gray-900">
       <!-- Left Column: Form -->
       <div class="flex flex-col flex-1 w-full lg:w-1/2">
         <div class="w-full max-w-md pt-10 mx-auto">
@@ -32,9 +30,7 @@
         <div class="flex flex-col justify-center flex-1 w-full max-w-md mx-auto">
           <div>
             <div class="mb-5 sm:mb-8">
-              <h1
-                class="mb-2 font-semibold text-gray-800 text-2xl sm:text-3xl dark:text-white/90"
-              >
+              <h1 class="mb-2 font-semibold text-gray-800 text-2xl sm:text-3xl dark:text-white/90">
                 Đăng nhập Quản trị
               </h1>
               <p class="text-sm text-gray-500 dark:text-gray-400">
@@ -57,7 +53,11 @@
                 <span>{{ apiError }}</span>
               </div>
 
-              <Form @submit="onSubmit" :validation-schema="schema" v-slot="{ errors, isSubmitting }">
+              <Form
+                @submit="onSubmit"
+                :validation-schema="schema"
+                v-slot="{ errors, isSubmitting }"
+              >
                 <div class="space-y-5">
                   <!-- Email -->
                   <div>
@@ -134,7 +134,9 @@
                         </svg>
                       </span>
                     </div>
-                    <p v-if="errors.password" class="text-xs text-red-500 mt-1">{{ errors.password }}</p>
+                    <p v-if="errors.password" class="text-xs text-red-500 mt-1">
+                      {{ errors.password }}
+                    </p>
                   </div>
                   <!-- Checkbox -->
                   <div class="flex items-center justify-between">
@@ -195,8 +197,19 @@
                         fill="none"
                         viewBox="0 0 24 24"
                       >
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                        <circle
+                          class="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          stroke-width="4"
+                        />
+                        <path
+                          class="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        />
                       </svg>
                       <span v-if="!isSubmitting">Đăng nhập</span>
                       <span v-else>Đang xử lý...</span>
@@ -216,7 +229,7 @@
           <CommonGridShape />
           <div class="flex flex-col items-center max-w-xs">
             <router-link to="/" class="block mb-4">
-              <img width="231" height="48" src="/images/logo/auth-logo.svg" alt="Logo" />
+              <img width="200" height="48" src="/images/logo/auth-logo.svg" alt="EduLearn" />
             </router-link>
             <p class="text-center text-gray-400 dark:text-white/60">
               Hệ thống quản trị giáo dục trực tuyến toàn diện, hiệu quả.
@@ -251,8 +264,11 @@ const apiError = ref('')
 const schema = toTypedSchema(
   z.object({
     email: z.string().min(1, 'Vui lòng nhập email').email('Email không đúng định dạng'),
-    password: z.string().min(1, 'Vui lòng nhập mật khẩu').min(6, 'Mật khẩu phải có ít nhất 6 ký tự'),
-  })
+    password: z
+      .string()
+      .min(1, 'Vui lòng nhập mật khẩu')
+      .min(6, 'Mật khẩu phải có ít nhất 6 ký tự'),
+  }),
 )
 
 const togglePasswordVisibility = () => {
