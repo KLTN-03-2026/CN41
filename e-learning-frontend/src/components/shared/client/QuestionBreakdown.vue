@@ -18,7 +18,7 @@
         </div>
         <div class="space-y-1.5 pl-7">
           <div
-            v-for="opt in (['A', 'B', 'C', 'D'] as const)"
+            v-for="opt in ['A', 'B', 'C', 'D'] as const"
             :key="opt"
             :class="optionClass(q.id, opt)"
             class="flex items-center gap-2.5 px-3 py-2 rounded-xl border text-xs"
