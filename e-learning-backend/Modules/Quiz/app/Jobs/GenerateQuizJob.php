@@ -44,9 +44,9 @@ class GenerateQuizJob implements ShouldQueue
             $pdfText = '';
             if ($payload['source'] === 'upload' && ! empty($payload['temp_path'])) {
                 $fullPath = Storage::disk('local')->path($payload['temp_path']);
-                $pdfText = $this->extractPdfText($fullPath);
+                $pdfText = $aiService->extractPdfTextFromPath($fullPath);
             } else {
-                $pdfText = $this->extractChapterPdfText($lesson);
+                $pdfText = $aiService->extractChapterPdfText($lesson);
             }
 
             if (! empty($payload['custom_prompt'])) {
@@ -110,93 +110,5 @@ class GenerateQuizJob implements ShouldQueue
             str_contains($raw, 'parse') => 'AI trả về kết quả không hợp lệ. Vui lòng thử lại.',
             default => 'Sinh câu hỏi thất bại. Vui lòng thử lại.',
         };
-    }
-
-    // ── PDF helpers (copy từ QuizGenerateController) ──────────────────────────
-
-    private function extractPdfText(string $filePath): string
-    {
-        try {
-            if (shell_exec('which pdftotext 2>/dev/null')) {
-                $escaped = escapeshellarg($filePath);
-
-                return shell_exec("pdftotext {$escaped} - 2>/dev/null") ?? '';
-            }
-
-            return $this->extractPdfTextRaw($filePath);
-        } catch (\Throwable) {
-            return '';
-        }
-    }
-
-    private function extractPdfTextRaw(string $filePath): string
-    {
-        $content = file_get_contents($filePath);
-        if (! $content) {
-            return '';
-        }
-
-        preg_match_all('/stream(.*?)endstream/si', $content, $matches);
-        $text = '';
-        foreach ($matches[1] as $stream) {
-            $decompressed = @gzuncompress(ltrim($stream));
-            if ($decompressed !== false) {
-                $readable = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/', ' ', $decompressed);
-                $text .= ' '.$readable;
-            }
-        }
-
-        return preg_replace('/\s+/', ' ', $text) ?? '';
-    }
-
-    private function extractChapterPdfText(Lesson $lesson): string
-    {
-        $documents = $this->getChapterDocuments($lesson);
-        if (empty($documents)) {
-            return '';
-        }
-
-        $allText = '';
-        foreach ($documents as $doc) {
-            if (empty($doc['path'])) {
-                continue;
-            }
-
-            $fullPath = Storage::disk($doc['disk'] ?? 'public')->path($doc['path']);
-            if (! file_exists($fullPath)) {
-                continue;
-            }
-
-            $text = $this->extractPdfText($fullPath);
-            if ($text) {
-                $allText .= "\n\n--- Document: {$doc['name']} ---\n".$text;
-            }
-        }
-
-        return $allText;
-    }
-
-    private function getChapterDocuments(Lesson $lesson): array
-    {
-        $query = Lesson::where('course_id', $lesson->course_id)
-            ->where('type', 'document')
-            ->with('document')
-            ->whereNotNull('document_id');
-
-        if ($lesson->section_id) {
-            $query->where('section_id', $lesson->section_id);
-        }
-
-        return $query->get()
-            ->filter(fn ($l) => $l->document && str_contains($l->document->mime_type ?? '', 'pdf'))
-            ->map(fn ($l) => [
-                'id' => $l->document->id,
-                'name' => $l->title,
-                'path' => $l->document->path,
-                'disk' => $l->document->disk,
-                'url' => $l->document->url,
-            ])
-            ->values()
-            ->toArray();
     }
 }

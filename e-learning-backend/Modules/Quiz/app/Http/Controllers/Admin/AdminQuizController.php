@@ -30,7 +30,7 @@ class AdminQuizController extends Controller
         $perPage = max(1, min($request->get('per_page', 15), 100));
         $lessonId = $request->get('lesson_id');
 
-        $query = Quiz::query();
+        $query = Quiz::withCount('questions');
         if ($lessonId) {
             $query->where('lesson_id', $lessonId);
         }

@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Modules\Lessons\Models\Lesson;
 use Modules\Quiz\Http\Resources\QuizQuestionResource;
 use Modules\Quiz\Http\Resources\QuizResource;
@@ -59,7 +58,7 @@ class QuizGenerateController extends Controller
         Lesson::findOrFail($lessonId);
 
         $tempPath = null;
-        if ($request->source === 'upload' && $request->hasFile('file')) {
+        if ($request->input('source') === 'upload' && $request->hasFile('file')) {
             $tempPath = $request->file('file')->store('quiz-tmp', 'local');
         }
 
@@ -68,7 +67,7 @@ class QuizGenerateController extends Controller
             'status' => 'pending',
             'payload' => [
                 'lesson_id' => $lessonId,
-                'source' => $request->source,
+                'source' => $request->input('source'),
                 'count' => min((int) $request->get('count', 5), 20),
                 'custom_prompt' => $request->input('custom_prompt'),
                 'max_attempts' => $request->get('max_attempts', 3),
@@ -101,7 +100,7 @@ class QuizGenerateController extends Controller
         }
 
         if ($job->status === 'failed') {
-            return $this->error($job->error ?? 'Sinh câu hỏi thất bại.', 503);
+            return $this->error($job->error ?? 'Sinh câu hỏi thất bại.', 422);
         }
 
         return $this->success(['status' => $job->status], 'Đang xử lý...');
@@ -146,105 +145,8 @@ class QuizGenerateController extends Controller
     public function chapterPdfs(int $lessonId): JsonResponse
     {
         $lesson = Lesson::with(['section.lessons.document'])->findOrFail($lessonId);
-        $pdfs = $this->getChapterDocuments($lesson);
+        $pdfs = $this->aiService->getChapterDocuments($lesson);
 
         return $this->success($pdfs, 'Danh sách PDF trong chương');
-    }
-
-    // ── Private helpers ───────────────────────────────────────
-
-    private function extractPdfText(string $filePath): string
-    {
-        try {
-            // Dùng pdftotext nếu có (Linux servers thường có)
-            if (shell_exec('which pdftotext 2>/dev/null')) {
-                $escaped = escapeshellarg($filePath);
-
-                return shell_exec("pdftotext {$escaped} - 2>/dev/null") ?? '';
-            }
-
-            // Fallback: đọc raw text từ PDF (không dùng library nặng)
-            return $this->extractPdfTextRaw($filePath);
-        } catch (\Throwable) {
-            return '';
-        }
-    }
-
-    private function extractPdfTextRaw(string $filePath): string
-    {
-        // Extract readable text từ PDF binary
-        $content = file_get_contents($filePath);
-        if (! $content) {
-            return '';
-        }
-
-        // Lấy text giữa stream...endstream
-        preg_match_all('/stream(.*?)endstream/si', $content, $matches);
-        $text = '';
-        foreach ($matches[1] as $stream) {
-            // Decompress zlib streams
-            $decompressed = @gzuncompress(ltrim($stream));
-            if ($decompressed !== false) {
-                // Giữ lại các ký tự có dấu (UTF-8) thay vì chỉ giữ ASCII
-                // Bỏ các ký tự điều khiển (control characters) không cần thiết
-                $readable = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/', ' ', $decompressed);
-                $text .= ' '.$readable;
-            }
-        }
-
-        // Clean up whitespace
-        return preg_replace('/\s+/', ' ', $text) ?? '';
-    }
-
-    private function extractChapterPdfText(Lesson $lesson): string
-    {
-        $documents = $this->getChapterDocuments($lesson);
-        if (empty($documents)) {
-            return '';
-        }
-
-        $allText = '';
-        foreach ($documents as $doc) {
-            if (empty($doc['path'])) {
-                continue;
-            }
-
-            $fullPath = Storage::disk($doc['disk'] ?? 'public')->path($doc['path']);
-            if (! file_exists($fullPath)) {
-                continue;
-            }
-
-            $text = $this->extractPdfText($fullPath);
-            if ($text) {
-                $allText .= "\n\n--- Document: {$doc['name']} ---\n".$text;
-            }
-        }
-
-        return $allText;
-    }
-
-    private function getChapterDocuments(Lesson $lesson): array
-    {
-        // Lấy tất cả document lessons trong cùng section (hoặc course nếu không có section)
-        $query = Lesson::where('course_id', $lesson->course_id)
-            ->where('type', 'document')
-            ->with('document')
-            ->whereNotNull('document_id');
-
-        if ($lesson->section_id) {
-            $query->where('section_id', $lesson->section_id);
-        }
-
-        return $query->get()
-            ->filter(fn ($l) => $l->document && str_contains($l->document->mime_type ?? '', 'pdf'))
-            ->map(fn ($l) => [
-                'id' => $l->document->id,
-                'name' => $l->title,
-                'path' => $l->document->path,
-                'disk' => $l->document->disk,
-                'url' => $l->document->url,
-            ])
-            ->values()
-            ->toArray();
     }
 }

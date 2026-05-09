@@ -39,7 +39,9 @@ class QuizAttemptResource extends JsonResource
             'student_id' => $this->student_id,
             'score' => $this->score,
             'total_questions' => $this->total_questions,
-            'percentage' => round(($this->score / $this->total_questions) * 100),
+            'percentage' => $this->total_questions > 0
+                ? round(($this->score / $this->total_questions) * 100)
+                : 0,
             'answers' => $answersObj,
             'correct_answers' => $correctAnswers,
             'questions' => $questions,

@@ -32,7 +32,7 @@ class QuizController extends Controller
 
     public function submit(SubmitQuizRequest $request, int $id): JsonResponse
     {
-        $quiz = Quiz::findOrFail($id);
+        $quiz = Quiz::where('status', 1)->findOrFail($id);
         $student = auth('api')->user();
 
         // Check max attempts

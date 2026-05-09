@@ -5,16 +5,22 @@ namespace Modules\Quiz\Services;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use Modules\Lessons\Models\Lesson;
 
 class AIQuizService
 {
     private string $apiKey;
 
-    private string $apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+    private string $apiUrl;
+
+    private string $fallbackUrl;
 
     public function __construct()
     {
-        $this->apiKey = env('GEMINI_API_KEY', '');
+        $this->apiKey = config('services.gemini.key', '');
+        $this->apiUrl = config('services.gemini.url');
+        $this->fallbackUrl = config('services.gemini.fallback_url');
     }
 
     /**
@@ -78,6 +84,76 @@ PROMPT;
         return $this->callAndParse($prompt);
     }
 
+    // ── PDF helpers ───────────────────────────────────────────────────────────
+
+    public function extractPdfTextFromPath(string $filePath): string
+    {
+        try {
+            if (shell_exec('which pdftotext 2>/dev/null')) {
+                $escaped = escapeshellarg($filePath);
+
+                return shell_exec("pdftotext {$escaped} - 2>/dev/null") ?? '';
+            }
+
+            return $this->extractPdfTextRaw($filePath);
+        } catch (\Throwable) {
+            return '';
+        }
+    }
+
+    public function extractChapterPdfText(Lesson $lesson): string
+    {
+        $documents = $this->getChapterDocuments($lesson);
+        if (empty($documents)) {
+            return '';
+        }
+
+        $allText = '';
+        foreach ($documents as $doc) {
+            if (empty($doc['path'])) {
+                continue;
+            }
+
+            $fullPath = Storage::disk($doc['disk'] ?? 'public')->path($doc['path']);
+            if (! file_exists($fullPath)) {
+                continue;
+            }
+
+            $text = $this->extractPdfTextFromPath($fullPath);
+            if ($text) {
+                $allText .= "\n\n--- Document: {$doc['name']} ---\n".$text;
+            }
+        }
+
+        return $allText;
+    }
+
+    public function getChapterDocuments(Lesson $lesson): array
+    {
+        $query = Lesson::where('course_id', $lesson->course_id)
+            ->where('type', 'document')
+            ->with('document')
+            ->whereNotNull('document_id');
+
+        if ($lesson->section_id) {
+            $query->where('section_id', $lesson->section_id);
+        }
+
+        return $query->get()
+            ->filter(fn ($l) => $l->document && str_contains($l->document->mime_type ?? '', 'pdf'))
+            ->map(fn ($l) => [
+                'id' => $l->document->id,
+                'name' => $l->title,
+                'path' => $l->document->path,
+                'disk' => $l->document->disk,
+                'url' => $l->document->url,
+            ])
+            ->values()
+            ->toArray();
+    }
+
+    // ── Private helpers ───────────────────────────────────────────────────────
+
     private function buildContextPrompt(string $context, int $count): string
     {
         return <<<PROMPT
@@ -115,11 +191,7 @@ PROMPT;
             throw new \Exception('GEMINI_API_KEY chưa được cấu hình.');
         }
 
-        $url = $this->apiUrl;
-        if ($isFallback) {
-            // Sử dụng model lite làm fallback nếu model chính bị Rate Limit
-            $url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent';
-        }
+        $url = $isFallback ? $this->fallbackUrl : $this->apiUrl;
 
         try {
             $response = Http::timeout(90)
@@ -205,5 +277,25 @@ PROMPT;
             'correct_option' => strtoupper($q['correct_option'] ?? 'A'),
             'order' => $i,
         ], $questions, array_keys($questions)));
+    }
+
+    private function extractPdfTextRaw(string $filePath): string
+    {
+        $content = file_get_contents($filePath);
+        if (! $content) {
+            return '';
+        }
+
+        preg_match_all('/stream(.*?)endstream/si', $content, $matches);
+        $text = '';
+        foreach ($matches[1] as $stream) {
+            $decompressed = @gzuncompress(ltrim($stream));
+            if ($decompressed !== false) {
+                $readable = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/', ' ', $decompressed);
+                $text .= ' '.$readable;
+            }
+        }
+
+        return preg_replace('/\s+/', ' ', $text) ?? '';
     }
 }
