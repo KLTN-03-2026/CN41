@@ -3,6 +3,7 @@
 namespace Modules\Payment\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Modules\Course\Models\Course;
 
 class OrderItem extends Model
 {
@@ -17,10 +18,10 @@ class OrderItem extends Model
     ];
 
     protected $casts = [
-        'order_id'    => 'integer',
-        'course_id'   => 'integer',
-        'price'       => 'decimal:2',
-        'sale_price'  => 'decimal:2',
+        'order_id' => 'integer',
+        'course_id' => 'integer',
+        'price' => 'decimal:2',
+        'sale_price' => 'decimal:2',
         'final_price' => 'decimal:2',
     ];
 
@@ -39,6 +40,6 @@ class OrderItem extends Model
      */
     public function course()
     {
-        return $this->belongsTo(\Modules\Course\Models\Course::class, 'course_id');
+        return $this->belongsTo(Course::class, 'course_id');
     }
 }

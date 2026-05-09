@@ -32,8 +32,8 @@ class AdminLoginRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'email'    => ['required', 'email', 'max:255'],
-            'password' => ['required', 'string', 'min:6', 'max:100'],
+            'email' => ['required', 'email', 'max:255'],
+            'password' => ['required', 'string', 'min:8', 'max:100'],
         ];
     }
 
@@ -43,12 +43,12 @@ class AdminLoginRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'email.required'    => 'Email không được để trống.',
-            'email.email'       => 'Email không đúng định dạng.',
-            'email.max'         => 'Email không được vượt quá :max ký tự.',
+            'email.required' => 'Email không được để trống.',
+            'email.email' => 'Email không đúng định dạng.',
+            'email.max' => 'Email không được vượt quá :max ký tự.',
             'password.required' => 'Mật khẩu không được để trống.',
-            'password.min'      => 'Mật khẩu phải có ít nhất :min ký tự.',
-            'password.max'      => 'Mật khẩu không được vượt quá :max ký tự.',
+            'password.min' => 'Mật khẩu phải có ít nhất :min ký tự.',
+            'password.max' => 'Mật khẩu không được vượt quá :max ký tự.',
         ];
     }
 
@@ -60,7 +60,7 @@ class AdminLoginRequest extends FormRequest
         throw new HttpResponseException(response()->json([
             'success' => false,
             'message' => 'Dữ liệu không hợp lệ.',
-            'errors'  => $validator->errors(),
+            'errors' => $validator->errors(),
         ], 422));
     }
 }

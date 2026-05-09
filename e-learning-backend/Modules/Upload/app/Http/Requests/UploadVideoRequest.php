@@ -2,8 +2,8 @@
 
 namespace Modules\Upload\Http\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
 class UploadVideoRequest extends FormRequest
@@ -23,10 +23,10 @@ class UploadVideoRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'file.required'  => 'Vui lòng chọn file video.',
-            'file.file'      => 'Dữ liệu phải là file.',
+            'file.required' => 'Vui lòng chọn file video.',
+            'file.file' => 'Dữ liệu phải là file.',
             'file.mimetypes' => 'Chỉ chấp nhận định dạng: MP4, WebM, QuickTime, MKV.',
-            'file.max'       => 'Dung lượng video tối đa 500MB.',
+            'file.max' => 'Dung lượng video tối đa 500MB.',
         ];
     }
 
@@ -35,7 +35,7 @@ class UploadVideoRequest extends FormRequest
         throw new HttpResponseException(response()->json([
             'success' => false,
             'message' => 'Dữ liệu không hợp lệ.',
-            'errors'  => $validator->errors(),
+            'errors' => $validator->errors(),
         ], 422));
     }
 }

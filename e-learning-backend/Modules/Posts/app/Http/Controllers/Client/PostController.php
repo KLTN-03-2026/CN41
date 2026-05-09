@@ -33,7 +33,7 @@ class PostController extends Controller
     {
         $post = $this->repository->findBySlug($slug);
 
-        if (!$post) {
+        if (! $post) {
             return $this->error('Bài viết không tồn tại hoặc đã bị ẩn.', 404);
         }
 

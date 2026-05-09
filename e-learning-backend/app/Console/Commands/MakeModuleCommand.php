@@ -2,18 +2,18 @@
 
 namespace App\Console\Commands;
 
+use App\Console\Commands\Generators\ComposerAutoloadGenerator;
+use App\Console\Commands\Generators\ControllerGenerator;
+use App\Console\Commands\Generators\HelperGenerator;
+use App\Console\Commands\Generators\MigrationGenerator;
+use App\Console\Commands\Generators\ModelGenerator;
+use App\Console\Commands\Generators\RepositoryGenerator;
+use App\Console\Commands\Generators\RequestGenerator;
+use App\Console\Commands\Generators\RouteGenerator;
+use App\Console\Commands\Generators\ServiceProviderGenerator;
 use Illuminate\Console\Command;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Str;
-use App\Console\Commands\Generators\ModelGenerator;
-use App\Console\Commands\Generators\MigrationGenerator;
-use App\Console\Commands\Generators\ControllerGenerator;
-use App\Console\Commands\Generators\RequestGenerator;
-use App\Console\Commands\Generators\RepositoryGenerator;
-use App\Console\Commands\Generators\HelperGenerator;
-use App\Console\Commands\Generators\RouteGenerator;
-use App\Console\Commands\Generators\ServiceProviderGenerator;
-use App\Console\Commands\Generators\ComposerAutoloadGenerator;
 
 /**
  * Custom Artisan Command: make:module
@@ -56,9 +56,10 @@ class MakeModuleCommand extends Command
         $tableName = Str::snake(Str::plural($name));
 
         // ── Validate input ──
-        if (!preg_match('/^[A-Za-z][A-Za-z0-9]*$/', $name)) {
+        if (! preg_match('/^[A-Za-z][A-Za-z0-9]*$/', $name)) {
             $this->error('Tên module chỉ được chứa chữ cái và số, bắt đầu bằng chữ cái.');
             $this->line('  Ví dụ: php artisan make:module Course');
+
             return self::FAILURE;
         }
 
@@ -67,12 +68,12 @@ class MakeModuleCommand extends Command
         // ── Kiểm tra module đã tồn tại ──
         if ($this->files->isDirectory($modulePath)) {
             $this->warn("Module [{$name}] đã tồn tại tại: Modules/{$name}");
-            if (!$this->confirm('Bạn có muốn tạo lại các file bên trong? (các file đã có sẽ bị ghi đè)', false)) {
+            if (! $this->confirm('Bạn có muốn tạo lại các file bên trong? (các file đã có sẽ bị ghi đè)', false)) {
                 $this->info('Đã huỷ.');
+
                 return self::SUCCESS;
             }
-        }
-        else {
+        } else {
             // Tạo module base bằng nwidart/laravel-modules
             $this->info("🚀 Đang tạo module [{$name}]...");
             $this->call('module:make', ['name' => [$name]]);
@@ -103,16 +104,16 @@ class MakeModuleCommand extends Command
 
         // ── Tổng kết ──
         $this->newLine();
-        $this->info("═══════════════════════════════════════════════════");
+        $this->info('═══════════════════════════════════════════════════');
         $this->info("      Module [{$name}] đã được tạo đầy đủ!");
-        $this->info("═══════════════════════════════════════════════════");
+        $this->info('═══════════════════════════════════════════════════');
 
         $this->newLine();
-        $this->warn("📌 Việc cần làm tiếp:");
+        $this->warn('📌 Việc cần làm tiếp:');
         $this->line("  1. Chỉnh sửa migration: thêm các cột cần thiết cho bảng [{$tableName}]");
-        $this->line("  2. Chỉnh sửa Model: thêm \$fillable, \$casts, relationships");
-        $this->line("  3. Chỉnh sửa StoreRequest / UpdateRequest: thêm validation rules");
-        $this->line("  4. Chạy: composer dump-autoload && php artisan migrate");
+        $this->line('  2. Chỉnh sửa Model: thêm $fillable, $casts, relationships');
+        $this->line('  3. Chỉnh sửa StoreRequest / UpdateRequest: thêm validation rules');
+        $this->line('  4. Chạy: composer dump-autoload && php artisan migrate');
 
         return self::SUCCESS;
     }

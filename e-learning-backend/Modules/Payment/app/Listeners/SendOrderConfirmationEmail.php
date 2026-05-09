@@ -48,7 +48,7 @@ class SendOrderConfirmationEmail implements ShouldQueue
         Log::error('Không thể gửi email xác nhận đơn hàng sau tất cả các lần retry.', [
             'order_code' => $event->order->order_code,
             'student_id' => $event->order->student_id,
-            'error'      => $exception->getMessage(),
+            'error' => $exception->getMessage(),
         ]);
     }
 }

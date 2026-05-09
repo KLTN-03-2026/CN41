@@ -204,10 +204,10 @@ class CourseController extends Controller
         // Xóa thumbnail trên storage nếu có
         $this->deleteThumbnailFile($course->thumbnail ?? null);
 
-        // Detach categories pivot
-        $course->categories()->detach();
-
-        $course->forceDelete();
+        DB::transaction(function () use ($course) {
+            $course->categories()->detach();
+            $course->forceDelete();
+        });
 
         return $this->success(null, 'Khóa học đã bị xoá vĩnh viễn.');
     }
@@ -384,10 +384,10 @@ class CourseController extends Controller
         $student = auth('api')->user();
 
         if (! $course->students()->where('student_id', $student->id)->exists()) {
-            $course->students()->attach($student->id, ['enrolled_at' => now()]);
-
-            // Cập nhật số lượng học viên (+1)
-            $this->repository->incrementStudentCount($course->id);
+            DB::transaction(function () use ($course, $student) {
+                $course->students()->attach($student->id, ['enrolled_at' => now()]);
+                $this->repository->incrementStudentCount($course->id);
+            });
         }
 
         return $this->success(null, 'Đăng ký thành công! Bạn đã có thể vào học.');

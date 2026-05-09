@@ -9,7 +9,7 @@ export interface ActivityLog {
   subject_type: string
   subject_id: number
   causer_name: string
-  properties: any
+  properties: Record<string, unknown>
   created_at: string
   human_time: string
 }

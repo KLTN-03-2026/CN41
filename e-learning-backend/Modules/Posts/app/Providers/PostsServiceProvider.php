@@ -4,6 +4,14 @@ namespace Modules\Posts\Providers;
 
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
+use Modules\Posts\Repositories\CommentRepository;
+use Modules\Posts\Repositories\CommentRepositoryInterface;
+use Modules\Posts\Repositories\PostCategoryRepository;
+use Modules\Posts\Repositories\PostCategoryRepositoryInterface;
+use Modules\Posts\Repositories\PostRepository;
+use Modules\Posts\Repositories\PostRepositoryInterface;
+use Modules\Posts\Repositories\TagRepository;
+use Modules\Posts\Repositories\TagRepositoryInterface;
 use Nwidart\Modules\Traits\PathNamespace;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
@@ -38,23 +46,23 @@ class PostsServiceProvider extends ServiceProvider
         $this->app->register(RouteServiceProvider::class);
 
         $this->app->bind(
-            \Modules\Posts\Repositories\PostCategoryRepositoryInterface::class,
-            \Modules\Posts\Repositories\PostCategoryRepository::class
+            PostCategoryRepositoryInterface::class,
+            PostCategoryRepository::class
         );
 
         $this->app->bind(
-            \Modules\Posts\Repositories\TagRepositoryInterface::class,
-            \Modules\Posts\Repositories\TagRepository::class
+            TagRepositoryInterface::class,
+            TagRepository::class
         );
 
         $this->app->bind(
-            \Modules\Posts\Repositories\PostRepositoryInterface::class,
-            \Modules\Posts\Repositories\PostRepository::class
+            PostRepositoryInterface::class,
+            PostRepository::class
         );
 
         $this->app->bind(
-            \Modules\Posts\Repositories\CommentRepositoryInterface::class,
-            \Modules\Posts\Repositories\CommentRepository::class
+            CommentRepositoryInterface::class,
+            CommentRepository::class
         );
     }
 
@@ -149,7 +157,7 @@ class PostsServiceProvider extends ServiceProvider
 
         $this->loadViewsFrom(array_merge($this->getPublishableViewPaths(), [$sourcePath]), $this->nameLower);
 
-        Blade::componentNamespace(config('modules.namespace').'\\' . $this->name . '\\View\\Components', $this->nameLower);
+        Blade::componentNamespace(config('modules.namespace').'\\'.$this->name.'\\View\\Components', $this->nameLower);
     }
 
     /**

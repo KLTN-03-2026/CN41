@@ -2,8 +2,8 @@
 
 namespace Modules\Upload\Http\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
 class UploadDocumentRequest extends FormRequest
@@ -24,9 +24,9 @@ class UploadDocumentRequest extends FormRequest
     {
         return [
             'file.required' => 'Vui lòng chọn file tài liệu.',
-            'file.file'     => 'Dữ liệu phải là file.',
-            'file.mimes'    => 'Chỉ chấp nhận định dạng: PDF, DOC, DOCX, TXT.',
-            'file.max'      => 'Dung lượng tài liệu tối đa 20MB.',
+            'file.file' => 'Dữ liệu phải là file.',
+            'file.mimes' => 'Chỉ chấp nhận định dạng: PDF, DOC, DOCX, TXT.',
+            'file.max' => 'Dung lượng tài liệu tối đa 20MB.',
         ];
     }
 
@@ -35,7 +35,7 @@ class UploadDocumentRequest extends FormRequest
         throw new HttpResponseException(response()->json([
             'success' => false,
             'message' => 'Dữ liệu không hợp lệ.',
-            'errors'  => $validator->errors(),
+            'errors' => $validator->errors(),
         ], 422));
     }
 }

@@ -2,8 +2,8 @@
 
 namespace App\Traits;
 
-use Illuminate\Http\JsonResponse;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Http\JsonResponse;
 
 /**
  * Trait ApiResponse
@@ -25,34 +25,32 @@ trait ApiResponse
     /**
      * Trả về response thành công.
      *
-     * @param  mixed   $data     Dữ liệu trả về
+     * @param  mixed  $data  Dữ liệu trả về
      * @param  string  $message  Thông báo
-     * @param  int     $code     HTTP status code
-     * @return JsonResponse
+     * @param  int  $code  HTTP status code
      */
     protected function success(mixed $data = null, string $message = 'Thành công', int $code = 200): JsonResponse
     {
         return response()->json([
             'success' => true,
             'message' => $message,
-            'data'    => $data,
+            'data' => $data,
         ], $code);
     }
 
     /**
      * Trả về response lỗi.
      *
-     * @param  string      $message  Thông báo lỗi
-     * @param  int         $code     HTTP status code
-     * @param  array|null  $errors   Chi tiết lỗi (validation errors, etc.)
-     * @return JsonResponse
+     * @param  string  $message  Thông báo lỗi
+     * @param  int  $code  HTTP status code
+     * @param  array|null  $errors  Chi tiết lỗi (validation errors, etc.)
      */
     protected function error(string $message = 'Có lỗi xảy ra', int $code = 400, ?array $errors = null): JsonResponse
     {
         $response = [
             'success' => false,
             'message' => $message,
-            'data'    => null,
+            'data' => null,
         ];
 
         if ($errors !== null) {
@@ -66,22 +64,21 @@ trait ApiResponse
      * Trả về response có phân trang.
      *
      * @param  LengthAwarePaginator  $paginator  Kết quả phân trang từ Eloquent
-     * @param  string                $message    Thông báo
-     * @return JsonResponse
+     * @param  string  $message  Thông báo
      */
     protected function paginated(LengthAwarePaginator $paginator, string $message = 'Thành công'): JsonResponse
     {
         return response()->json([
-            'success'    => true,
-            'message'    => $message,
-            'data'       => $paginator->items(),
+            'success' => true,
+            'message' => $message,
+            'data' => $paginator->items(),
             'pagination' => [
                 'current_page' => $paginator->currentPage(),
-                'last_page'    => $paginator->lastPage(),
-                'per_page'     => $paginator->perPage(),
-                'total'        => $paginator->total(),
-                'from'         => $paginator->firstItem(),
-                'to'           => $paginator->lastItem(),
+                'last_page' => $paginator->lastPage(),
+                'per_page' => $paginator->perPage(),
+                'total' => $paginator->total(),
+                'from' => $paginator->firstItem(),
+                'to' => $paginator->lastItem(),
             ],
         ], 200);
     }

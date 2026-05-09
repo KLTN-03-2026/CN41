@@ -3,6 +3,7 @@
 namespace Modules\Students\Repositories;
 
 use App\Repositories\BaseRepository;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Modules\Students\Models\Student;
 
 /**
@@ -22,7 +23,7 @@ class StudentsRepository extends BaseRepository implements StudentsRepositoryInt
     /**
      * {@inheritDoc}
      */
-    public function getFiltered(array $filters = [], int $perPage = 15): \Illuminate\Contracts\Pagination\LengthAwarePaginator
+    public function getFiltered(array $filters = [], int $perPage = 15): LengthAwarePaginator
     {
         $perPage = max(1, min($perPage, static::MAX_PER_PAGE));
 
@@ -33,7 +34,7 @@ class StudentsRepository extends BaseRepository implements StudentsRepositoryInt
             $search = $filters['search'];
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', '%'.$search.'%')
-                  ->orWhere('email', 'like', '%'.$search.'%');
+                    ->orWhere('email', 'like', '%'.$search.'%');
             });
         }
 

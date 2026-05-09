@@ -25,12 +25,12 @@ class AdminOrderController extends Controller
     public function index(Request $request): JsonResponse
     {
         $request->validate([
-            'search'         => 'nullable|string|max:100',
-            'status'         => 'nullable|string|in:pending,paid,failed,cancelled,refunded',
-            'from'           => 'nullable|date',
-            'to'             => 'nullable|date',
+            'search' => 'nullable|string|max:100',
+            'status' => 'nullable|string|in:pending,paid,failed,cancelled,refunded',
+            'from' => 'nullable|date',
+            'to' => 'nullable|date',
             'payment_method' => 'nullable|string|in:vnpay,momo,free',
-            'per_page'       => 'nullable|integer|min:1|max:100',
+            'per_page' => 'nullable|integer|min:1|max:100',
         ]);
 
         $perPage = (int) $request->query('per_page', 15);
@@ -59,7 +59,7 @@ class AdminOrderController extends Controller
     {
         $request->validate([
             'status' => 'required|string|in:pending,paid,failed,cancelled,refunded',
-            'note'   => 'nullable|string|max:500',
+            'note' => 'nullable|string|max:500',
         ]);
 
         $order = $this->repository->findOrFail($id);
@@ -129,7 +129,7 @@ class AdminOrderController extends Controller
     public function bulkDelete(Request $request): JsonResponse
     {
         $request->validate([
-            'ids'   => 'required|array|min:1',
+            'ids' => 'required|array|min:1',
             'ids.*' => 'integer|exists:orders,id',
         ]);
 
@@ -151,13 +151,13 @@ class AdminOrderController extends Controller
     {
         $request->validate([
             'period' => 'nullable|string|in:daily,monthly',
-            'from'   => 'nullable|date',
-            'to'     => 'nullable|date',
+            'from' => 'nullable|date',
+            'to' => 'nullable|date',
         ]);
 
         $period = $request->query('period', 'monthly');
-        $from   = $request->query('from');
-        $to     = $request->query('to');
+        $from = $request->query('from');
+        $to = $request->query('to');
 
         $stats = $this->repository->getRevenueStats($period, $from, $to);
 

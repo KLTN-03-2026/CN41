@@ -3,6 +3,7 @@
 namespace Modules\Teachers\Http\Requests;
 
 use Illuminate\Validation\Validator;
+use Modules\Teachers\Models\Teachers;
 
 class BulkForceDeleteTeachersRequest extends BaseBulkRequest
 {
@@ -14,7 +15,7 @@ class BulkForceDeleteTeachersRequest extends BaseBulkRequest
     public function rules(): array
     {
         return [
-            'ids'   => 'required|array|min:1|max:100',
+            'ids' => 'required|array|min:1|max:100',
             'ids.*' => 'required|integer',
         ];
     }
@@ -29,17 +30,17 @@ class BulkForceDeleteTeachersRequest extends BaseBulkRequest
                 return;
             }
 
-            $existingIds = \Modules\Teachers\Models\Teachers::withTrashed()
+            $existingIds = Teachers::withTrashed()
                 ->whereIn('id', $this->ids)
                 ->pluck('id')
                 ->toArray();
 
             $notFound = array_diff($this->ids, $existingIds);
 
-            if (!empty($notFound)) {
+            if (! empty($notFound)) {
                 $validator->errors()->add(
                     'ids',
-                    'Các giảng viên sau không tồn tại: ' . implode(', ', $notFound)
+                    'Các giảng viên sau không tồn tại: '.implode(', ', $notFound)
                 );
             }
         });
@@ -48,10 +49,10 @@ class BulkForceDeleteTeachersRequest extends BaseBulkRequest
     public function messages(): array
     {
         return [
-            'ids.required'  => 'Danh sách ID không được để trống.',
-            'ids.array'     => 'ids phải là mảng.',
-            'ids.min'       => 'Phải chọn ít nhất 1 giảng viên.',
-            'ids.max'       => 'Không thể xử lý quá 100 giảng viên cùng lúc.',
+            'ids.required' => 'Danh sách ID không được để trống.',
+            'ids.array' => 'ids phải là mảng.',
+            'ids.min' => 'Phải chọn ít nhất 1 giảng viên.',
+            'ids.max' => 'Không thể xử lý quá 100 giảng viên cùng lúc.',
             'ids.*.integer' => 'ID phải là số nguyên.',
         ];
     }

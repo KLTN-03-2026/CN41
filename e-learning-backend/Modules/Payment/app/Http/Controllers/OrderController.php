@@ -12,7 +12,6 @@ use Modules\Coupons\Models\Coupon;
 use Modules\Course\Models\Course;
 use Modules\Payment\Http\Requests\CreateOrderRequest;
 use Modules\Payment\Http\Resources\OrderResource;
-use Modules\Payment\Models\Order;
 use Modules\Payment\Models\Transaction;
 use Modules\Payment\Repositories\OrderRepositoryInterface;
 use Modules\Payment\Services\VnpayService;
@@ -148,31 +147,7 @@ class OrderController extends Controller
                 'paid_at' => now(),
             ]);
 
-            // Enroll ngay
-            $this->vnpayService->handleIpn([
-                // Simulate success cho free order — enrollStudent được gọi nội bộ
-            ]);
-
-            // Enroll trực tiếp
-            foreach ($items as $item) {
-                $exists = DB::table('students_course')
-                    ->where('student_id', $studentId)
-                    ->where('course_id', $item['course_id'])
-                    ->exists();
-
-                if (! $exists) {
-                    DB::table('students_course')->insert([
-                        'student_id' => $studentId,
-                        'course_id' => $item['course_id'],
-                        'enrolled_at' => now(),
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ]);
-
-                    Course::where('id', $item['course_id'])
-                        ->increment('total_students');
-                }
-            }
+            $this->vnpayService->enrollStudent($order);
 
             $order->refresh();
             $order->load(['items.course']);

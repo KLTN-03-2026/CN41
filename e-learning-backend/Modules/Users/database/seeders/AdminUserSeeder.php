@@ -12,7 +12,7 @@ class AdminUserSeeder extends Seeder
         $superAdmin = User::firstOrCreate(
             ['email' => 'superadmin@elearning.com'],
             [
-                'name'     => 'Super Admin',
+                'name' => 'Super Admin',
                 'password' => bcrypt('password'),
             ]
         );
@@ -21,7 +21,7 @@ class AdminUserSeeder extends Seeder
         $admin = User::firstOrCreate(
             ['email' => 'admin@elearning.com'],
             [
-                'name'     => 'Admin',
+                'name' => 'Admin',
                 'password' => bcrypt('password'),
             ]
         );

@@ -2,8 +2,10 @@
 
 namespace Modules\Lessons\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Modules\Course\Models\Course;
+use Modules\Students\Models\Student;
 
 class LessonProgress extends Model
 {
@@ -30,12 +32,12 @@ class LessonProgress extends Model
      * Các cột cần cast kiểu dữ liệu.
      */
     protected $casts = [
-        'is_completed'    => 'boolean',
+        'is_completed' => 'boolean',
         'watched_seconds' => 'integer',
-        'completed_at'    => 'datetime',
-        'student_id'      => 'integer',
-        'lesson_id'       => 'integer',
-        'course_id'       => 'integer',
+        'completed_at' => 'datetime',
+        'student_id' => 'integer',
+        'lesson_id' => 'integer',
+        'course_id' => 'integer',
     ];
 
     // ── Relationships ──
@@ -53,7 +55,7 @@ class LessonProgress extends Model
      */
     public function student()
     {
-        return $this->belongsTo(\Modules\Students\Models\Student::class, 'student_id');
+        return $this->belongsTo(Student::class, 'student_id');
     }
 
     /**
@@ -61,6 +63,6 @@ class LessonProgress extends Model
      */
     public function course()
     {
-        return $this->belongsTo(\Modules\Course\Models\Course::class, 'course_id');
+        return $this->belongsTo(Course::class, 'course_id');
     }
 }

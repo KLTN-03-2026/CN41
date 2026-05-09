@@ -24,7 +24,7 @@ class QuizController extends Controller
 
         $data = [
             'quiz' => new QuizResource($quiz),
-            'questions' => QuizQuestionResource::collection($quiz->questions)->map(fn ($q) => new QuizQuestionResource($q->resource, true)),
+            'questions' => $quiz->questions->map(fn ($q) => new QuizQuestionResource($q, true)),
         ];
 
         return $this->success($data, 'Chi tiết quiz');

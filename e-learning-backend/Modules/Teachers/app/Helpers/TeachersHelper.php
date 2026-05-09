@@ -10,5 +10,5 @@ namespace Modules\Teachers\Helpers;
  */
 class TeachersHelper
 {
-//
+    //
 }

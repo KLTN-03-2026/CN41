@@ -287,7 +287,7 @@ class VnpayService
      * Enroll student vào tất cả courses trong order.
      * Tạo records trong students_course + increment total_students.
      */
-    private function enrollStudent(Order $order): void
+    public function enrollStudent(Order $order): void
     {
         $order->load('items');
 

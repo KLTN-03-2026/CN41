@@ -11,8 +11,9 @@ class ServiceProviderGenerator extends BaseGenerator
         $providerPath = "{$this->modulePath}/app/Providers/{$this->name}ServiceProvider.php";
 
         // Nếu ServiceProvider chưa tồn tại → tạo mới hoàn chỉnh
-        if (!$this->files->exists($providerPath)) {
+        if (! $this->files->exists($providerPath)) {
             $this->putFile($providerPath, $this->getFullStub());
+
             return ["  ✔ ServiceProvider: Providers/{$this->name}ServiceProvider.php (created)"];
         }
 
@@ -21,7 +22,7 @@ class ServiceProviderGenerator extends BaseGenerator
 
         // Kiểm tra đã có binding chưa
         if (Str::contains($content, "{$this->name}RepositoryInterface::class")) {
-            return ["  ⏭ ServiceProvider: Repository binding đã tồn tại, bỏ qua."];
+            return ['  ⏭ ServiceProvider: Repository binding đã tồn tại, bỏ qua.'];
         }
 
         $bindingCode = $this->getBindingCode();
@@ -37,10 +38,11 @@ class ServiceProviderGenerator extends BaseGenerator
 
         if ($count > 0) {
             $this->files->put($providerPath, $content);
-            return ["  ✔ ServiceProvider: Đã thêm Repository binding + Helper vào register()"];
+
+            return ['  ✔ ServiceProvider: Đã thêm Repository binding + Helper vào register()'];
         }
 
-        return ["  ⚠ Không tìm thấy method register() trong ServiceProvider. Hãy thêm binding thủ công."];
+        return ['  ⚠ Không tìm thấy method register() trong ServiceProvider. Hãy thêm binding thủ công.'];
     }
 
     /**

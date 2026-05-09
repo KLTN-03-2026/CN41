@@ -154,7 +154,7 @@ function getToken(key) {
 }
 
 // ── Navigation Guard ───────────────────────────────────────
-router.beforeEach(async (to, _from) => {
+router.beforeEach(async (to) => {
   NProgress.start()
   const adminToken = getToken('adminToken')
   const studentToken = getToken('studentToken')

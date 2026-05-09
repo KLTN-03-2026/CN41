@@ -2,8 +2,8 @@
 
 namespace Modules\Upload\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 class MediaFile extends Model
 {
@@ -30,11 +30,11 @@ class MediaFile extends Model
     ];
 
     protected $casts = [
-        'size'            => 'integer',
+        'size' => 'integer',
         'reference_count' => 'integer',
-        'duration'        => 'integer',
-        'width'           => 'integer',
-        'height'          => 'integer',
-        'bitrate'         => 'integer',
+        'duration' => 'integer',
+        'width' => 'integer',
+        'height' => 'integer',
+        'bitrate' => 'integer',
     ];
 }

@@ -57,18 +57,18 @@ export interface PostComment {
 
 const PostService = {
   // Posts
-  getPosts(params?: any) {
+  getPosts(params?: Record<string, unknown>) {
     return axios.get('/admin/posts', { params })
   },
   getPost(id: number | string) {
     return axios.get(`/admin/posts/${id}`)
   },
-  createPost(data: any) {
+  createPost(data: FormData) {
     return axios.post('/admin/posts', data, {
       headers: { 'Content-Type': 'multipart/form-data' },
     })
   },
-  updatePost(id: number | string, data: any) {
+  updatePost(id: number | string, data: FormData | Record<string, unknown>) {
     // Laravel spoofing for PUT with multipart/form-data
     if (data instanceof FormData) {
       data.append('_method', 'PUT')
@@ -86,16 +86,16 @@ const PostService = {
   },
 
   // Categories
-  getCategories(params?: any) {
+  getCategories(params?: Record<string, unknown>) {
     return axios.get('/admin/post-categories', { params })
   },
   getCategory(id: number) {
     return axios.get(`/admin/post-categories/${id}`)
   },
-  createCategory(data: any) {
+  createCategory(data: Record<string, unknown>) {
     return axios.post('/admin/post-categories', data)
   },
-  updateCategory(id: number, data: any) {
+  updateCategory(id: number, data: Record<string, unknown>) {
     return axios.put(`/admin/post-categories/${id}`, data)
   },
   deleteCategory(id: number) {
@@ -103,16 +103,16 @@ const PostService = {
   },
 
   // Tags
-  getTags(params?: any) {
+  getTags(params?: Record<string, unknown>) {
     return axios.get('/admin/tags', { params })
   },
   getTag(id: number) {
     return axios.get(`/admin/tags/${id}`)
   },
-  createTag(data: any) {
+  createTag(data: Record<string, unknown>) {
     return axios.post('/admin/tags', data)
   },
-  updateTag(id: number, data: any) {
+  updateTag(id: number, data: Record<string, unknown>) {
     return axios.put(`/admin/tags/${id}`, data)
   },
   deleteTag(id: number) {
@@ -120,7 +120,7 @@ const PostService = {
   },
 
   // Comments
-  getComments(params?: any) {
+  getComments(params?: Record<string, unknown>) {
     return axios.get('/admin/comments', { params })
   },
   approveComment(id: number) {
@@ -134,7 +134,7 @@ const PostService = {
   },
 
   // Client API
-  getClientPosts(params?: any) {
+  getClientPosts(params?: Record<string, unknown>) {
     return axios.get('/posts', { params })
   },
   getClientPost(slug: string) {

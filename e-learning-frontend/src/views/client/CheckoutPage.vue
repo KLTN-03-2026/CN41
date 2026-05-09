@@ -346,15 +346,6 @@ const availableCoupons = ref<PublicCoupon[]>([])
 const loadingAvailable = ref(false)
 const availableFetched = ref(false)
 
-const totalDiscount = computed(() => {
-  return cartStore.items.reduce((sum, item) => {
-    if (item.sale_price && item.sale_price < item.price) {
-      return sum + (item.price - item.sale_price)
-    }
-    return sum
-  }, 0)
-})
-
 const finalTotal = computed(() => {
   const discountFromCoupon = appliedCoupon.value?.discount_amount || 0
   return Math.max(0, cartStore.total - discountFromCoupon)
@@ -407,8 +398,8 @@ async function applyCoupon() {
     appliedCoupon.value = res.data.data
     couponError.value = ''
     toast.success('Áp dụng mã giảm giá thành công!')
-  } catch (err: any) {
-    const data = err.response?.data
+  } catch (err) {
+    const data = (err as { response?: { data?: { message?: string; errors?: { code?: string | string[]; subtotal?: unknown } } } }).response?.data
     // Ưu tiên lấy lỗi field-level từ errors object
     if (data?.errors?.code) {
       couponError.value = Array.isArray(data.errors.code) ? data.errors.code[0] : data.errors.code
@@ -436,7 +427,7 @@ async function handleCheckout() {
   errorMessage.value = ''
 
   try {
-    const payload: Record<string, any> = {
+    const payload: Record<string, unknown> = {
       course_ids: cartStore.courseIds,
     }
 

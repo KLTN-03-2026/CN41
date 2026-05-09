@@ -331,13 +331,14 @@ async function doGenerate() {
     const jobId: number = res.data.data.job_id
     generatingStep.value = 'AI đang sinh câu hỏi...'
     await pollJobStatus(jobId)
-  } catch (err: any) {
-    const data = err.response?.data
+  } catch (err) {
+    const e = err as { response?: { data?: { message?: string; errors?: Record<string, string[]> } }; message?: string }
+    const data = e.response?.data
     if (data?.errors) {
       const firstError = Object.values(data.errors)[0] as string[]
       toast.error(firstError[0] || data.message || 'Sinh câu hỏi thất bại')
     } else {
-      toast.error(err.message || data?.message || 'Sinh câu hỏi thất bại')
+      toast.error(e.message || data?.message || 'Sinh câu hỏi thất bại')
     }
   } finally {
     generating.value = false

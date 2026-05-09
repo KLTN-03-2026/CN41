@@ -226,7 +226,7 @@ async function loadPage(page = 1) {
     const res = await systemService.getLogs({ page, per_page: pagination.per_page })
     logs.value = res.data.data
     Object.assign(pagination, res.data.pagination)
-  } catch (_err) {
+  } catch {
     toast.error('Không thể tải lịch sử hoạt động.')
   } finally {
     loading.value = false
@@ -257,7 +257,7 @@ async function doClearLogs() {
     toast.success('Đã dọn dẹp lịch sử hoạt động.')
     showClearModal.value = false
     loadPage(1)
-  } catch (_err) {
+  } catch {
     toast.error('Dọn dẹp thất bại.')
   } finally {
     clearLoading.value = false

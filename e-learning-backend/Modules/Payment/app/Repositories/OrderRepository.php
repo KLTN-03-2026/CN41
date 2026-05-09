@@ -32,30 +32,30 @@ class OrderRepository extends BaseRepository implements OrderRepositoryInterface
             ->latest();
 
         // Tìm kiếm theo order_code hoặc email sinh viên
-        if (!empty($filters['search'])) {
+        if (! empty($filters['search'])) {
             $search = $filters['search'];
             $query->where(function ($q) use ($search) {
                 $q->where('order_code', 'like', "%{$search}%")
-                  ->orWhereHas('student', fn($sq) => $sq->where('email', 'like', "%{$search}%")
-                      ->orWhere('name', 'like', "%{$search}%"));
+                    ->orWhereHas('student', fn ($sq) => $sq->where('email', 'like', "%{$search}%")
+                        ->orWhere('name', 'like', "%{$search}%"));
             });
         }
 
         // Filter theo status
-        if (!empty($filters['status'])) {
+        if (! empty($filters['status'])) {
             $query->where('status', $filters['status']);
         }
 
         // Filter theo khoảng thời gian
-        if (!empty($filters['from'])) {
+        if (! empty($filters['from'])) {
             $query->whereDate('created_at', '>=', $filters['from']);
         }
-        if (!empty($filters['to'])) {
+        if (! empty($filters['to'])) {
             $query->whereDate('created_at', '<=', $filters['to']);
         }
 
         // Filter theo payment_method
-        if (!empty($filters['payment_method'])) {
+        if (! empty($filters['payment_method'])) {
             $query->where('payment_method', $filters['payment_method']);
         }
 
@@ -110,7 +110,7 @@ class OrderRepository extends BaseRepository implements OrderRepositoryInterface
     {
         $order = $this->model->newQuery()->findOrFail($orderId);
         $order->update([
-            'status'  => 'paid',
+            'status' => 'paid',
             'paid_at' => now(),
         ]);
         $order->refresh();
@@ -159,20 +159,20 @@ class OrderRepository extends BaseRepository implements OrderRepositoryInterface
 
         // Tổng doanh thu
         $totalRevenue = $this->model->newQuery()->paid()
-            ->when($from, fn($q) => $q->whereDate('paid_at', '>=', $from))
-            ->when($to, fn($q) => $q->whereDate('paid_at', '<=', $to))
+            ->when($from, fn ($q) => $q->whereDate('paid_at', '>=', $from))
+            ->when($to, fn ($q) => $q->whereDate('paid_at', '<=', $to))
             ->sum('total_amount');
 
         $totalOrders = $this->model->newQuery()->paid()
-            ->when($from, fn($q) => $q->whereDate('paid_at', '>=', $from))
-            ->when($to, fn($q) => $q->whereDate('paid_at', '<=', $to))
+            ->when($from, fn ($q) => $q->whereDate('paid_at', '>=', $from))
+            ->when($to, fn ($q) => $q->whereDate('paid_at', '<=', $to))
             ->count();
 
         return [
-            'period'        => $period,
-            'data'          => $results->toArray(),
+            'period' => $period,
+            'data' => $results->toArray(),
             'total_revenue' => (float) $totalRevenue,
-            'total_orders'  => $totalOrders,
+            'total_orders' => $totalOrders,
         ];
     }
 

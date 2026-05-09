@@ -14,9 +14,10 @@ class UpdatePostRequest extends FormRequest
     public function rules(): array
     {
         $id = $this->route('id');
+
         return [
             'title' => 'sometimes|required|string|max:255',
-            'slug' => 'sometimes|required|string|max:255|unique:posts,slug,' . $id,
+            'slug' => 'sometimes|required|string|max:255|unique:posts,slug,'.$id,
             'content' => 'sometimes|required|string',
             'thumbnail' => 'nullable|string',
             'post_category_id' => 'nullable|exists:post_categories,id',

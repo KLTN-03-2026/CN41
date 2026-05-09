@@ -34,8 +34,8 @@ class TeachersController extends Controller
     public function index(Request $request): JsonResponse
     {
         $request->validate([
-            'search'   => 'nullable|string|max:100',
-            'status'   => 'nullable|integer|in:0,1',
+            'search' => 'nullable|string|max:100',
+            'status' => 'nullable|integer|in:0,1',
             'per_page' => 'nullable|integer|min:1|max:100',
         ]);
 
@@ -197,7 +197,7 @@ class TeachersController extends Controller
     public function publicIndex(Request $request): JsonResponse
     {
         $request->validate([
-            'search'   => 'nullable|string|max:100',
+            'search' => 'nullable|string|max:100',
             'per_page' => 'nullable|integer|min:1|max:100',
         ]);
 
@@ -215,13 +215,13 @@ class TeachersController extends Controller
      */
     public function publicShow(string $slug): JsonResponse
     {
-        if (!preg_match('/^[a-z0-9]+(?:-[a-z0-9]+)*$/', $slug)) {
+        if (! preg_match('/^[a-z0-9]+(?:-[a-z0-9]+)*$/', $slug)) {
             return $this->error('Giảng viên không tồn tại.', 404);
         }
 
         $teacher = $this->repository->findBySlug($slug, true);
 
-        if (!$teacher) {
+        if (! $teacher) {
             return $this->error('Giảng viên không tồn tại.', 404);
         }
 

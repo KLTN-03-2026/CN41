@@ -243,8 +243,8 @@ async function submitComment() {
     commentContent.value = ''
     // Reload bài viết để hiển thị bình luận mới
     await fetchPost()
-  } catch (err: any) {
-    const msg = err.response?.data?.message || 'Gửi bình luận thất bại'
+  } catch (err) {
+    const msg = (err as { response?: { data?: { message?: string } } }).response?.data?.message || 'Gửi bình luận thất bại'
     toast.error(msg)
   } finally {
     submittingComment.value = false

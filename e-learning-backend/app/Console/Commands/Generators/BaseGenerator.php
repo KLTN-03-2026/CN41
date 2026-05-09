@@ -19,7 +19,9 @@ use Illuminate\Filesystem\Filesystem;
 abstract class BaseGenerator
 {
     protected Filesystem $files;
+
     protected string $name;
+
     protected string $modulePath;
 
     public function __construct(Filesystem $files, string $name, string $modulePath)
@@ -41,7 +43,7 @@ abstract class BaseGenerator
      */
     protected function ensureDirectory(string $path): void
     {
-        if (!$this->files->isDirectory($path)) {
+        if (! $this->files->isDirectory($path)) {
             $this->files->makeDirectory($path, 0755, true);
         }
     }

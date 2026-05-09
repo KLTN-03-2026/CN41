@@ -35,8 +35,7 @@ interface OrderRepositoryInterface extends RepositoryInterface
      * Tạo order kèm order_items trong 1 transaction.
      *
      * @param  array  $orderData  Dữ liệu order (student_id, subtotal, total_amount, ...)
-     * @param  array  $items      Mảng items [['course_id' => ..., 'price' => ..., 'final_price' => ...], ...]
-     * @return Order
+     * @param  array  $items  Mảng items [['course_id' => ..., 'price' => ..., 'final_price' => ...], ...]
      */
     public function createWithItems(array $orderData, array $items): Order;
 
@@ -48,10 +47,9 @@ interface OrderRepositoryInterface extends RepositoryInterface
     /**
      * Thống kê doanh thu theo khoảng thời gian.
      *
-     * @param  string       $period  'daily' | 'monthly'
-     * @param  string|null  $from    Ngày bắt đầu (Y-m-d)
-     * @param  string|null  $to      Ngày kết thúc (Y-m-d)
-     * @return array
+     * @param  string  $period  'daily' | 'monthly'
+     * @param  string|null  $from  Ngày bắt đầu (Y-m-d)
+     * @param  string|null  $to  Ngày kết thúc (Y-m-d)
      */
     public function getRevenueStats(string $period = 'monthly', ?string $from = null, ?string $to = null): array;
 

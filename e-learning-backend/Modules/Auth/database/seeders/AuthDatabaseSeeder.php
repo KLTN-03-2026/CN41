@@ -4,7 +4,7 @@ namespace Modules\Auth\Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
-use Modules\Auth\Models\User;
+use Modules\Users\Models\User;
 
 /**
  * Seeder tạo tài khoản admin mặc định để test.
@@ -22,7 +22,7 @@ class AuthDatabaseSeeder extends Seeder
         User::firstOrCreate(
             ['email' => 'admin@elearning.com'],
             [
-                'name'     => 'Super Admin',
+                'name' => 'Super Admin',
                 'password' => Hash::make('password'),
             ]
         );

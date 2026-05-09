@@ -3,6 +3,7 @@
 namespace Modules\Course\Http\Requests;
 
 use Illuminate\Validation\Validator;
+use Modules\Course\Models\Course;
 
 class BulkRestoreCourseRequest extends BaseBulkRequest
 {
@@ -14,7 +15,7 @@ class BulkRestoreCourseRequest extends BaseBulkRequest
     public function rules(): array
     {
         return [
-            'ids'   => 'required|array|min:1|max:100',
+            'ids' => 'required|array|min:1|max:100',
             'ids.*' => 'required|integer|exists:courses,id',
         ];
     }
@@ -29,17 +30,17 @@ class BulkRestoreCourseRequest extends BaseBulkRequest
                 return;
             }
 
-            $trashedIds = \Modules\Course\Models\Course::onlyTrashed()
+            $trashedIds = Course::onlyTrashed()
                 ->whereIn('id', $this->ids)
                 ->pluck('id')
                 ->toArray();
 
             $notTrashed = array_diff($this->ids, $trashedIds);
 
-            if (!empty($notTrashed)) {
+            if (! empty($notTrashed)) {
                 $validator->errors()->add(
                     'ids',
-                    'Các khóa học sau chưa bị xoá hoặc không tồn tại: ' . implode(', ', $notTrashed)
+                    'Các khóa học sau chưa bị xoá hoặc không tồn tại: '.implode(', ', $notTrashed)
                 );
             }
         });
@@ -48,12 +49,12 @@ class BulkRestoreCourseRequest extends BaseBulkRequest
     public function messages(): array
     {
         return [
-            'ids.required'  => 'Danh sách ID không được để trống.',
-            'ids.array'     => 'ids phải là mảng.',
-            'ids.min'       => 'Phải chọn ít nhất 1 khóa học.',
-            'ids.max'       => 'Không thể xử lý quá 100 khóa học cùng lúc.',
+            'ids.required' => 'Danh sách ID không được để trống.',
+            'ids.array' => 'ids phải là mảng.',
+            'ids.min' => 'Phải chọn ít nhất 1 khóa học.',
+            'ids.max' => 'Không thể xử lý quá 100 khóa học cùng lúc.',
             'ids.*.integer' => 'ID phải là số nguyên.',
-            'ids.*.exists'  => 'Một hoặc nhiều khóa học không tồn tại.',
+            'ids.*.exists' => 'Một hoặc nhiều khóa học không tồn tại.',
         ];
     }
 }

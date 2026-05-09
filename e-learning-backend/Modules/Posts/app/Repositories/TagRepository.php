@@ -19,8 +19,8 @@ class TagRepository extends BaseRepository implements TagRepositoryInterface
 
         $query = $this->model->newQuery()->latest();
 
-        if (!empty($filters['search'])) {
-            $query->where('name', 'like', '%' . $filters['search'] . '%');
+        if (! empty($filters['search'])) {
+            $query->where('name', 'like', '%'.$filters['search'].'%');
         }
 
         return $query->paginate($perPage);

@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration 
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -14,10 +14,10 @@ return new class extends Migration
         // Table 'users' đã được tạo bởi core migration.
         // Chỉ thêm các cột mở rộng còn thiếu.
         Schema::table('users', function (Blueprint $table) {
-            if (!Schema::hasColumn('users', 'avatar')) {
+            if (! Schema::hasColumn('users', 'avatar')) {
                 $table->string('avatar')->nullable()->after('email');
             }
-            if (!Schema::hasColumn('users', 'deleted_at')) {
+            if (! Schema::hasColumn('users', 'deleted_at')) {
                 $table->softDeletes();
             }
         });

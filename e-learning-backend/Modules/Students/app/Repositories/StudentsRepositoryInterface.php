@@ -3,6 +3,7 @@
 namespace Modules\Students\Repositories;
 
 use App\Repositories\RepositoryInterface;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 /**
  * Interface StudentsRepositoryInterface
@@ -16,5 +17,5 @@ interface StudentsRepositoryInterface extends RepositoryInterface
     /**
      * Lấy danh sách students có filter.
      */
-    public function getFiltered(array $filters = [], int $perPage = 15): \Illuminate\Contracts\Pagination\LengthAwarePaginator;
+    public function getFiltered(array $filters = [], int $perPage = 15): LengthAwarePaginator;
 }

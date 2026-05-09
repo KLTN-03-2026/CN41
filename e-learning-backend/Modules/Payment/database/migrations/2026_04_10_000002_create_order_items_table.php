@@ -29,12 +29,12 @@ return new class extends Migration
 
             // Foreign keys
             $table->foreign('order_id')
-                  ->references('id')->on('orders')
-                  ->onDelete('cascade');
+                ->references('id')->on('orders')
+                ->onDelete('cascade');
 
             $table->foreign('course_id')
-                  ->references('id')->on('courses')
-                  ->onDelete('cascade');
+                ->references('id')->on('courses')
+                ->onDelete('cascade');
         });
     }
 

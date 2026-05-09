@@ -10,6 +10,7 @@ class UploadServiceProvider extends ServiceProvider
     use PathNamespace;
 
     protected string $name = 'Upload';
+
     protected string $nameLower = 'upload';
 
     public function boot(): void

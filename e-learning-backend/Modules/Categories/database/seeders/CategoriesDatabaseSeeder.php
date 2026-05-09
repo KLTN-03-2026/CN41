@@ -3,6 +3,7 @@
 namespace Modules\Categories\Database\Seeders;
 
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 use Modules\Categories\Models\Category;
 
 class CategoriesDatabaseSeeder extends Seeder
@@ -24,7 +25,7 @@ class CategoriesDatabaseSeeder extends Seeder
             ['Ngoại ngữ',          'ngoai-ngu',        'Các khóa học ngoại ngữ',                'fa-language',   null],
 
             ['Web Development',    'web-development',  'Frontend & Backend',                    'fa-globe',      'lap-trinh'],
-            ['Mobile Development', 'mobile-development','Android, iOS, cross-platform',         'fa-mobile-alt', 'lap-trinh'],
+            ['Mobile Development', 'mobile-development', 'Android, iOS, cross-platform',         'fa-mobile-alt', 'lap-trinh'],
             ['Data Science & AI',  'data-science',     'Machine Learning và Data Science',      'fa-chart-bar',  'lap-trinh'],
             ['DevOps & Cloud',     'devops-cloud',     'Docker, CI/CD, AWS',                    'fa-cloud',      'lap-trinh'],
             ['Cơ sở dữ liệu',      'co-so-du-lieu',    'MySQL, MongoDB, Redis',                 'fa-database',   'lap-trinh'],
@@ -56,18 +57,18 @@ class CategoriesDatabaseSeeder extends Seeder
 
             $parentId = $parentSlug ? ($slugToId[$parentSlug] ?? null) : null;
 
-            $id = \Illuminate\Support\Facades\DB::table('categories')->insertGetId([
-                'name'        => $name,
-                'slug'        => $slug,
+            $id = DB::table('categories')->insertGetId([
+                'name' => $name,
+                'slug' => $slug,
                 'description' => $desc,
-                'icon'        => $icon,
-                'status'      => 1,
-                'order'       => 0,
-                'parent_id'   => $parentId,
-                '_lft'        => 0,
-                '_rgt'        => 0,
-                'created_at'  => $now,
-                'updated_at'  => $now,
+                'icon' => $icon,
+                'status' => 1,
+                'order' => 0,
+                'parent_id' => $parentId,
+                '_lft' => 0,
+                '_rgt' => 0,
+                'created_at' => $now,
+                'updated_at' => $now,
             ]);
 
             $slugToId[$slug] = $id;
@@ -76,6 +77,6 @@ class CategoriesDatabaseSeeder extends Seeder
         // Rebuild lft/rgt cho toàn bộ cây
         Category::fixTree();
 
-        $this->command->info('Đã seed ' . Category::count() . ' categories.');
+        $this->command->info('Đã seed '.Category::count().' categories.');
     }
 }

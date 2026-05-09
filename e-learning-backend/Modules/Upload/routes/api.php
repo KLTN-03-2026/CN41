@@ -12,16 +12,16 @@ use Modules\Upload\Http\Controllers\UploadController;
 */
 Route::middleware(['auth:admin'])->prefix('admin')->group(function () {
     // Local flow
-    Route::post('upload/video',          [UploadController::class, 'uploadVideo']);
-    Route::post('upload/document',       [UploadController::class, 'uploadDocument']);
-    Route::post('upload/image',          [UploadController::class, 'uploadImage']);
+    Route::post('upload/video', [UploadController::class, 'uploadVideo']);
+    Route::post('upload/document', [UploadController::class, 'uploadDocument']);
+    Route::post('upload/image', [UploadController::class, 'uploadImage']);
 
     // S3 flow
-    Route::post('upload/presigned',      [UploadController::class, 'presigned']);
-    Route::post('upload/{id}/confirm',   [UploadController::class, 'confirm']);
+    Route::post('upload/presigned', [UploadController::class, 'presigned']);
+    Route::post('upload/{id}/confirm', [UploadController::class, 'confirm']);
 
     // Delete (dùng chung cho cả 2 flow)
-    Route::delete('upload/{id}',         [UploadController::class, 'destroy']);
+    Route::delete('upload/{id}', [UploadController::class, 'destroy']);
 });
 
 // Stream nội dung media — auth được xử lý trong controller (hỗ trợ token qua query param)

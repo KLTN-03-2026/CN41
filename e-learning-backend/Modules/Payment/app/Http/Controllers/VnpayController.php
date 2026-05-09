@@ -37,8 +37,8 @@ class VnpayController extends Controller
         $frontendUrl = config('vnpay.frontend_result_url');
         $queryParams = http_build_query([
             'order_code' => $result['order_code'],
-            'status'     => $result['status'],
-            'message'    => $result['message'],
+            'status' => $result['status'],
+            'message' => $result['message'],
         ]);
 
         return redirect()->away("{$frontendUrl}?{$queryParams}");

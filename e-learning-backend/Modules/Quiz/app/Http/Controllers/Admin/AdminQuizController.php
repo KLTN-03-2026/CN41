@@ -118,8 +118,8 @@ class AdminQuizController extends Controller
 
     public function toggleStatus(int $id): JsonResponse
     {
-        $quiz = Quiz::findOrFail($id);
-        $quiz->update(['status' => ! $quiz->status]);
+        $quiz = $this->repository->findOrFail($id);
+        $quiz = $this->repository->update($id, ['status' => ! $quiz->status]);
 
         return $this->success(
             new QuizResource($quiz),

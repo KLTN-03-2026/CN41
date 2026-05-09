@@ -2,9 +2,10 @@
 
 namespace App\Repositories;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 /**
  * Interface RepositoryInterface
@@ -18,19 +19,16 @@ interface RepositoryInterface
     /**
      * Lấy tất cả bản ghi.
      *
-     * @param  array  $columns    Các cột cần lấy
+     * @param  array  $columns  Các cột cần lấy
      * @param  array  $relations  Các quan hệ cần eager load
-     * @return Collection
      */
     public function getAll(array $columns = ['*'], array $relations = []): Collection;
 
     /**
      * Tìm một bản ghi theo ID, trả null nếu không tìm thấy.
      *
-     * @param  int    $id
-     * @param  array  $columns    Các cột cần lấy
+     * @param  array  $columns  Các cột cần lấy
      * @param  array  $relations  Các quan hệ cần eager load
-     * @return Model|null
      */
     public function find(int $id, array $columns = ['*'], array $relations = []): ?Model;
 
@@ -38,12 +36,10 @@ interface RepositoryInterface
      * Tìm một bản ghi theo ID, throw ModelNotFoundException nếu không tìm thấy.
      * Controller dùng method này thay vì find() + check null.
      *
-     * @param  int    $id
-     * @param  array  $columns    Các cột cần lấy
+     * @param  array  $columns  Các cột cần lấy
      * @param  array  $relations  Các quan hệ cần eager load
-     * @return Model
      *
-     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
+     * @throws ModelNotFoundException
      */
     public function findOrFail(int $id, array $columns = ['*'], array $relations = []): Model;
 
@@ -51,18 +47,15 @@ interface RepositoryInterface
      * Tạo mới một bản ghi.
      *
      * @param  array  $data  Dữ liệu để tạo
-     * @return Model
      */
     public function create(array $data): Model;
 
     /**
      * Cập nhật một bản ghi theo ID.
      *
-     * @param  int    $id
      * @param  array  $data  Dữ liệu cần cập nhật
-     * @return Model
      *
-     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
+     * @throws ModelNotFoundException
      */
     public function update(int $id, array $data): Model;
 
@@ -70,10 +63,8 @@ interface RepositoryInterface
      * Xoá một bản ghi theo ID.
      * Hỗ trợ cả hard delete và soft delete (tuỳ Model có dùng SoftDeletes hay không).
      *
-     * @param  int  $id
-     * @return bool
      *
-     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
+     * @throws ModelNotFoundException
      */
     public function delete(int $id): bool;
 
@@ -81,7 +72,7 @@ interface RepositoryInterface
      * Xoá nhiều bản ghi theo mảng IDs.
      *
      * @param  array  $ids  Mảng ID cần xoá
-     * @return int    Số bản ghi đã xoá
+     * @return int Số bản ghi đã xoá
      */
     public function deleteMany(array $ids): int;
 
@@ -89,10 +80,8 @@ interface RepositoryInterface
      * Xoá vĩnh viễn (force delete) một bản ghi theo ID.
      * Chỉ áp dụng cho Model dùng SoftDeletes.
      *
-     * @param  int  $id
-     * @return bool
      *
-     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
+     * @throws ModelNotFoundException
      */
     public function forceDeleteById(int $id): bool;
 
@@ -100,36 +89,27 @@ interface RepositoryInterface
      * Xoá vĩnh viễn (force delete) nhiều bản ghi theo mảng IDs.
      * Chỉ áp dụng cho Model dùng SoftDeletes.
      *
-     * @param  array  $ids
-     * @return int    Số bản ghi đã xoá vĩnh viễn
+     * @return int Số bản ghi đã xoá vĩnh viễn
      */
     public function forceDeleteMany(array $ids): int;
 
     /**
      * Lấy danh sách bản ghi đã bị soft-delete (phân trang).
-     *
-     * @param  int    $perPage
-     * @param  array  $columns
-     * @param  array  $relations
-     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
      */
-    public function paginateTrashed(int $perPage = 15, array $columns = ['*'], array $relations = []): \Illuminate\Contracts\Pagination\LengthAwarePaginator;
+    public function paginateTrashed(int $perPage = 15, array $columns = ['*'], array $relations = []): LengthAwarePaginator;
 
     /**
      * Khôi phục (restore) một bản ghi đã soft-delete theo ID.
      *
-     * @param  int  $id
-     * @return bool
      *
-     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
+     * @throws ModelNotFoundException
      */
     public function restore(int $id): bool;
 
     /**
      * Khôi phục (restore) nhiều bản ghi đã soft-delete theo mảng IDs.
      *
-     * @param  array  $ids
-     * @return int    Số bản ghi đã khôi phục
+     * @return int Số bản ghi đã khôi phục
      */
     public function restoreMany(array $ids): int;
 
@@ -140,9 +120,9 @@ interface RepositoryInterface
      * Action phải nằm trong whitelist — unknown action sẽ throw InvalidArgumentException.
      * Module con muốn thêm action → override method này trong Repository của module.
      *
-     * @param  array   $ids     Mảng ID cần thao tác
+     * @param  array  $ids  Mảng ID cần thao tác
      * @param  string  $action  Tên hành động (phải nằm trong whitelist)
-     * @return int     Số bản ghi bị ảnh hưởng
+     * @return int Số bản ghi bị ảnh hưởng
      *
      * @throws \InvalidArgumentException Khi action không được hỗ trợ
      */
@@ -152,10 +132,9 @@ interface RepositoryInterface
      * Phân trang danh sách bản ghi.
      * $perPage tự động clamp trong khoảng [1, 100].
      *
-     * @param  int    $perPage    Số bản ghi mỗi trang (max 100)
-     * @param  array  $columns    Các cột cần lấy
+     * @param  int  $perPage  Số bản ghi mỗi trang (max 100)
+     * @param  array  $columns  Các cột cần lấy
      * @param  array  $relations  Các quan hệ cần eager load
-     * @return LengthAwarePaginator
      */
     public function paginate(int $perPage = 15, array $columns = ['*'], array $relations = []): LengthAwarePaginator;
 }

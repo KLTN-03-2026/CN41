@@ -2,8 +2,8 @@
 
 namespace Modules\Auth\Http\Requests\Student;
 
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
 class ForgotPasswordRequest extends FormRequest
@@ -16,7 +16,7 @@ class ForgotPasswordRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'email' => ['required', 'email', 'max:255', 'exists:students,email'],
+            'email' => ['required', 'email', 'max:255'],
         ];
     }
 
@@ -24,8 +24,7 @@ class ForgotPasswordRequest extends FormRequest
     {
         return [
             'email.required' => 'Email không được để trống.',
-            'email.email'    => 'Email không đúng định dạng.',
-            'email.exists'   => 'Email không tồn tại trong hệ thống.',
+            'email.email' => 'Email không đúng định dạng.',
         ];
     }
 
@@ -34,7 +33,7 @@ class ForgotPasswordRequest extends FormRequest
         throw new HttpResponseException(response()->json([
             'success' => false,
             'message' => 'Dữ liệu không hợp lệ.',
-            'errors'  => $validator->errors(),
+            'errors' => $validator->errors(),
         ], 422));
     }
 }

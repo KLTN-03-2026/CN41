@@ -13,8 +13,8 @@ class StudentsDatabaseSeeder extends Seeder
         Student::firstOrCreate(
             ['email' => 'student@elearning.com'],
             [
-                'name'              => 'Student Demo',
-                'password'          => 'password',
+                'name' => 'Student Demo',
+                'password' => 'password',
                 'email_verified_at' => now(),
             ]
         );
@@ -23,8 +23,8 @@ class StudentsDatabaseSeeder extends Seeder
         Student::firstOrCreate(
             ['email' => 'student-unverified@elearning.com'],
             [
-                'name'              => 'Student Unverified',
-                'password'          => 'password',
+                'name' => 'Student Unverified',
+                'password' => 'password',
                 'email_verified_at' => null,
             ]
         );

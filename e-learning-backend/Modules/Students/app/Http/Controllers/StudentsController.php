@@ -31,7 +31,7 @@ class StudentsController extends Controller
     public function index(Request $request): JsonResponse
     {
         $request->validate([
-            'search'   => 'nullable|string|max:100',
+            'search' => 'nullable|string|max:100',
             'per_page' => 'nullable|integer|min:1|max:100',
         ]);
 
@@ -90,7 +90,7 @@ class StudentsController extends Controller
      */
     public function trashed(Request $request): JsonResponse
     {
-        $perPage = (int)$request->query('per_page', 15);
+        $perPage = (int) $request->query('per_page', 15);
         $data = $this->repository->paginateTrashed($perPage);
         $data->setCollection(StudentResource::collection($data->getCollection())->collection);
 
@@ -125,7 +125,7 @@ class StudentsController extends Controller
         $deleted = $this->repository->deleteMany($request->ids);
 
         return $this->success(
-        ['deleted_count' => $deleted, 'deleted_ids' => $request->ids],
+            ['deleted_count' => $deleted, 'deleted_ids' => $request->ids],
             "Đã xoá {$deleted} student thành công."
         );
     }
@@ -138,7 +138,7 @@ class StudentsController extends Controller
         $restored = $this->repository->restoreMany($request->ids);
 
         return $this->success(
-        ['restored_count' => $restored, 'restored_ids' => $request->ids],
+            ['restored_count' => $restored, 'restored_ids' => $request->ids],
             "Đã khôi phục {$restored} student thành công."
         );
     }
@@ -151,7 +151,7 @@ class StudentsController extends Controller
         $deleted = $this->repository->forceDeleteMany($request->ids);
 
         return $this->success(
-        ['deleted_count' => $deleted, 'deleted_ids' => $request->ids],
+            ['deleted_count' => $deleted, 'deleted_ids' => $request->ids],
             "Đã xoá vĩnh viễn {$deleted} student."
         );
     }

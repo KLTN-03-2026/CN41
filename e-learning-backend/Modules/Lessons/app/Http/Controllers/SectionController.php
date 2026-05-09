@@ -7,9 +7,9 @@ use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Modules\Course\Models\Course;
-use Modules\Lessons\Models\Section;
 use Modules\Lessons\Http\Requests\StoreSectionRequest;
 use Modules\Lessons\Http\Requests\UpdateSectionRequest;
+use Modules\Lessons\Models\Section;
 use Modules\Lessons\Repositories\SectionRepositoryInterface;
 
 class SectionController extends Controller
@@ -31,7 +31,7 @@ class SectionController extends Controller
     public function index(Request $request, int $course_id): JsonResponse
     {
         $request->validate([
-            'status'   => 'nullable|in:0,1',
+            'status' => 'nullable|in:0,1',
             'per_page' => 'nullable|integer|min:1|max:100',
         ]);
 
@@ -56,7 +56,7 @@ class SectionController extends Controller
         $validated['course_id'] = $course_id;
 
         // Nếu không truyền order → tự đặt = số sections hiện tại
-        if (!isset($validated['order'])) {
+        if (! isset($validated['order'])) {
             $validated['order'] = Section::where('course_id', $course_id)->count();
         }
 
@@ -156,8 +156,8 @@ class SectionController extends Controller
     public function reorder(Request $request): JsonResponse
     {
         $request->validate([
-            'orders'         => 'required|array',
-            'orders.*.id'    => 'required|integer|exists:sections,id',
+            'orders' => 'required|array',
+            'orders.*.id' => 'required|integer|exists:sections,id',
             'orders.*.order' => 'required|integer|min:0',
         ]);
 
@@ -181,8 +181,8 @@ class SectionController extends Controller
     public function bulkAction(Request $request): JsonResponse
     {
         $request->validate([
-            'ids'    => 'required|array|min:1',
-            'ids.*'  => 'integer|exists:sections,id',
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'integer|exists:sections,id',
             'action' => 'required|string|in:publish,unpublish,activate,deactivate',
         ]);
 
@@ -197,7 +197,7 @@ class SectionController extends Controller
     public function bulkDelete(Request $request): JsonResponse
     {
         $request->validate([
-            'ids'   => 'required|array|min:1',
+            'ids' => 'required|array|min:1',
             'ids.*' => 'integer|exists:sections,id',
         ]);
 
@@ -212,7 +212,7 @@ class SectionController extends Controller
     public function bulkRestore(Request $request): JsonResponse
     {
         $request->validate([
-            'ids'   => 'required|array|min:1',
+            'ids' => 'required|array|min:1',
             'ids.*' => 'integer',
         ]);
 
@@ -227,7 +227,7 @@ class SectionController extends Controller
     public function bulkForceDelete(Request $request): JsonResponse
     {
         $request->validate([
-            'ids'   => 'required|array|min:1',
+            'ids' => 'required|array|min:1',
             'ids.*' => 'integer',
         ]);
 
@@ -245,7 +245,7 @@ class SectionController extends Controller
     {
         $course = Course::where('slug', $slug)->where('status', 1)->first();
 
-        if (!$course) {
+        if (! $course) {
             return $this->error('Khóa học không tồn tại.', 404);
         }
 
@@ -255,22 +255,22 @@ class SectionController extends Controller
             ->with([
                 'lessons' => function ($q) {
                     $q->where('status', 1)
-                      ->ordered()
-                      ->select('id', 'section_id', 'title', 'slug', 'type', 'order', 'is_preview', 'duration');
+                        ->ordered()
+                        ->select('id', 'section_id', 'title', 'slug', 'type', 'order', 'is_preview', 'duration');
                 },
             ])
             ->get()
-            ->map(fn($section) => [
-                'id'          => $section->id,
-                'title'       => $section->title,
+            ->map(fn ($section) => [
+                'id' => $section->id,
+                'title' => $section->title,
                 'description' => $section->description,
-                'order'       => $section->order,
-                'lessons'     => $section->lessons->values(),
+                'order' => $section->order,
+                'lessons' => $section->lessons->values(),
             ]);
 
         return $this->success([
             'course_id' => $course->id,
-            'sections'  => $sections,
+            'sections' => $sections,
         ], 'Lấy curriculum thành công.');
     }
 }

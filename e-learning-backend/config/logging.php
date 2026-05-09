@@ -125,9 +125,9 @@ return [
 
         'vnpay' => [
             'driver' => 'daily',
-            'path'   => storage_path('logs/vnpay.log'),
-            'level'  => 'debug',
-            'days'   => 30,
+            'path' => storage_path('logs/vnpay.log'),
+            'level' => 'debug',
+            'days' => 30,
             'replace_placeholders' => true,
         ],
 

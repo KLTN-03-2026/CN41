@@ -2,13 +2,14 @@
 
 namespace App\Console\Commands;
 
+use App\Services\UploadService;
 use Illuminate\Console\Command;
 use Modules\Upload\Models\MediaFile;
-use App\Services\UploadService;
 
 class PruneOrphanMediaFiles extends Command
 {
-    protected $signature   = 'media:prune-orphans {--dry-run}';
+    protected $signature = 'media:prune-orphans {--dry-run}';
+
     protected $description = 'Xóa media file không được tham chiếu sau 24 giờ';
 
     public function handle(UploadService $uploadService): void
@@ -24,7 +25,7 @@ class PruneOrphanMediaFiles extends Command
         if ($stalePending->isNotEmpty()) {
             $this->info('── File pending quá hạn (>1 giờ) ──');
             foreach ($stalePending as $file) {
-                if (!$dryRun) {
+                if (! $dryRun) {
                     $uploadService->delete($file);
                 }
                 $this->line("  Xóa: [{$file->id}] {$file->original_name} (pending)");
@@ -41,7 +42,7 @@ class PruneOrphanMediaFiles extends Command
         if ($orphanReady->isNotEmpty()) {
             $this->info('── File ready không tham chiếu (>24 giờ) ──');
             foreach ($orphanReady as $file) {
-                if (!$dryRun) {
+                if (! $dryRun) {
                     $uploadService->delete($file);
                 }
                 $this->line("  Xóa: [{$file->id}] {$file->original_name} (orphan)");
@@ -49,6 +50,6 @@ class PruneOrphanMediaFiles extends Command
         }
 
         $total = $stalePending->count() + $orphanReady->count();
-        $this->info("Tổng: {$total} file." . ($dryRun ? ' (dry-run, chưa xóa thật)' : ''));
+        $this->info("Tổng: {$total} file.".($dryRun ? ' (dry-run, chưa xóa thật)' : ''));
     }
 }

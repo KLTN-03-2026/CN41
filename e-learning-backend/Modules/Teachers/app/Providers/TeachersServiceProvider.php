@@ -3,10 +3,14 @@
 namespace Modules\Teachers\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Modules\Teachers\Helpers\TeachersHelper;
+use Modules\Teachers\Repositories\TeachersRepository;
+use Modules\Teachers\Repositories\TeachersRepositoryInterface;
 
 class TeachersServiceProvider extends ServiceProvider
 {
     protected string $name = 'Teachers';
+
     protected string $nameLower = 'teachers';
 
     /**
@@ -24,15 +28,15 @@ class TeachersServiceProvider extends ServiceProvider
     {
         // ── Repository Binding ──
         $this->app->bind(
-            \Modules\Teachers\Repositories\TeachersRepositoryInterface::class,
-            \Modules\Teachers\Repositories\TeachersRepository::class
+            TeachersRepositoryInterface::class,
+            TeachersRepository::class
         );
 
         // ── Helper Binding ──
         $this->app->singleton('TeachersHelper', function () {
-            return new \Modules\Teachers\Helpers\TeachersHelper();
+            return new TeachersHelper;
         });
 
-        $this->app->register(\Modules\Teachers\Providers\RouteServiceProvider::class);
+        $this->app->register(RouteServiceProvider::class);
     }
 }

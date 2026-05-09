@@ -22,25 +22,25 @@ class TestUsersSeeder extends Seeder
         // ── 1. Users active có role ──────────────────────────────────────
         $activeUsers = [
             [
-                'name'     => 'Nguyễn Văn Teacher',
-                'email'    => 'teacher1@elearning.com',
+                'name' => 'Nguyễn Văn Teacher',
+                'email' => 'teacher1@elearning.com',
                 'password' => bcrypt('password'),
-                'avatar'   => null,
-                'role'     => 'teacher',
+                'avatar' => null,
+                'role' => 'teacher',
             ],
             [
-                'name'     => 'Trần Thị Teacher',
-                'email'    => 'teacher2@elearning.com',
+                'name' => 'Trần Thị Teacher',
+                'email' => 'teacher2@elearning.com',
                 'password' => bcrypt('password'),
-                'avatar'   => null,
-                'role'     => 'teacher',
+                'avatar' => null,
+                'role' => 'teacher',
             ],
             [
-                'name'     => 'Lê Văn Admin',
-                'email'    => 'admin2@elearning.com',
+                'name' => 'Lê Văn Admin',
+                'email' => 'admin2@elearning.com',
                 'password' => bcrypt('password'),
-                'avatar'   => null,
-                'role'     => 'admin',
+                'avatar' => null,
+                'role' => 'admin',
             ],
         ];
 
@@ -55,18 +55,18 @@ class TestUsersSeeder extends Seeder
         // ── 2. Users active KHÔNG có role (để test assign-role) ──────────
         $noRoleUsers = [
             [
-                'name'     => 'Phạm Thị No Role A',
-                'email'    => 'norole1@elearning.com',
+                'name' => 'Phạm Thị No Role A',
+                'email' => 'norole1@elearning.com',
                 'password' => bcrypt('password'),
             ],
             [
-                'name'     => 'Hoàng Văn No Role B',
-                'email'    => 'norole2@elearning.com',
+                'name' => 'Hoàng Văn No Role B',
+                'email' => 'norole2@elearning.com',
                 'password' => bcrypt('password'),
             ],
             [
-                'name'     => 'Đỗ Thị No Role C',
-                'email'    => 'norole3@elearning.com',
+                'name' => 'Đỗ Thị No Role C',
+                'email' => 'norole3@elearning.com',
                 'password' => bcrypt('password'),
             ],
         ];
@@ -78,22 +78,22 @@ class TestUsersSeeder extends Seeder
         // ── 3. Users sẽ bị soft-delete (để test trashed / restore) ───────
         $trashedUsers = [
             [
-                'name'     => 'Vũ Văn Deleted A',
-                'email'    => 'deleted1@elearning.com',
+                'name' => 'Vũ Văn Deleted A',
+                'email' => 'deleted1@elearning.com',
                 'password' => bcrypt('password'),
-                'role'     => 'teacher',
+                'role' => 'teacher',
             ],
             [
-                'name'     => 'Bùi Thị Deleted B',
-                'email'    => 'deleted2@elearning.com',
+                'name' => 'Bùi Thị Deleted B',
+                'email' => 'deleted2@elearning.com',
                 'password' => bcrypt('password'),
-                'role'     => 'admin',
+                'role' => 'admin',
             ],
             [
-                'name'     => 'Đinh Văn Deleted C',
-                'email'    => 'deleted3@elearning.com',
+                'name' => 'Đinh Văn Deleted C',
+                'email' => 'deleted3@elearning.com',
                 'password' => bcrypt('password'),
-                'role'     => null,
+                'role' => null,
             ],
         ];
 

@@ -2,8 +2,8 @@
 
 namespace Modules\Payment\Http\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Support\Facades\DB;
 
@@ -23,9 +23,9 @@ class CreateOrderRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'course_ids'   => 'required|array|min:1',
+            'course_ids' => 'required|array|min:1',
             'course_ids.*' => 'integer|exists:courses,id',
-            'coupon_code'  => 'nullable|string|max:50',
+            'coupon_code' => 'nullable|string|max:50',
         ];
     }
 
@@ -40,7 +40,7 @@ class CreateOrderRequest extends FormRequest
             }
 
             $studentId = auth('api')->id();
-            $courseIds  = $this->input('course_ids', []);
+            $courseIds = $this->input('course_ids', []);
 
             // Kiểm tra các khóa học đã enroll
             $enrolledCourseIds = DB::table('students_course')
@@ -49,7 +49,7 @@ class CreateOrderRequest extends FormRequest
                 ->pluck('course_id')
                 ->toArray();
 
-            if (!empty($enrolledCourseIds)) {
+            if (! empty($enrolledCourseIds)) {
                 // Lấy tên các khóa học đã mua để thông báo rõ ràng
                 $courseNames = DB::table('courses')
                     ->whereIn('id', $enrolledCourseIds)
@@ -58,7 +58,7 @@ class CreateOrderRequest extends FormRequest
 
                 $validator->errors()->add(
                     'course_ids',
-                    'Bạn đã sở hữu các khóa học: ' . implode(', ', $courseNames) . '. Vui lòng bỏ chúng khỏi giỏ hàng.'
+                    'Bạn đã sở hữu các khóa học: '.implode(', ', $courseNames).'. Vui lòng bỏ chúng khỏi giỏ hàng.'
                 );
             }
 
@@ -83,12 +83,12 @@ class CreateOrderRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'course_ids.required'   => 'Vui lòng chọn ít nhất một khóa học.',
-            'course_ids.array'      => 'Danh sách khóa học phải là mảng.',
-            'course_ids.min'        => 'Vui lòng chọn ít nhất một khóa học.',
-            'course_ids.*.integer'  => 'ID khóa học phải là số nguyên.',
-            'course_ids.*.exists'   => 'Một hoặc nhiều khóa học không tồn tại.',
-            'coupon_code.max'       => 'Mã giảm giá tối đa 50 ký tự.',
+            'course_ids.required' => 'Vui lòng chọn ít nhất một khóa học.',
+            'course_ids.array' => 'Danh sách khóa học phải là mảng.',
+            'course_ids.min' => 'Vui lòng chọn ít nhất một khóa học.',
+            'course_ids.*.integer' => 'ID khóa học phải là số nguyên.',
+            'course_ids.*.exists' => 'Một hoặc nhiều khóa học không tồn tại.',
+            'coupon_code.max' => 'Mã giảm giá tối đa 50 ký tự.',
         ];
     }
 
@@ -100,7 +100,7 @@ class CreateOrderRequest extends FormRequest
         throw new HttpResponseException(response()->json([
             'success' => false,
             'message' => 'Dữ liệu không hợp lệ.',
-            'errors'  => $validator->errors(),
+            'errors' => $validator->errors(),
         ], 422));
     }
 }

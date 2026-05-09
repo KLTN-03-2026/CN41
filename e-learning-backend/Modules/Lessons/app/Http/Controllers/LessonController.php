@@ -6,13 +6,14 @@ use App\Http\Controllers\Controller;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Modules\Course\Models\Course;
+use Modules\Lessons\Http\Requests\StoreLessonRequest;
+use Modules\Lessons\Http\Requests\UpdateLessonRequest;
 use Modules\Lessons\Models\Lesson;
 use Modules\Lessons\Models\LessonProgress;
 use Modules\Lessons\Models\Section;
-use Illuminate\Support\Str;
-use Modules\Lessons\Http\Requests\StoreLessonRequest;
-use Modules\Lessons\Http\Requests\UpdateLessonRequest;
 use Modules\Lessons\Repositories\LessonRepositoryInterface;
 
 class LessonController extends Controller
@@ -34,8 +35,8 @@ class LessonController extends Controller
     public function index(Request $request, int $course_id): JsonResponse
     {
         $request->validate([
-            'status'   => 'nullable|in:0,1',
-            'type'     => 'nullable|in:video,document,text',
+            'status' => 'nullable|in:0,1',
+            'type' => 'nullable|in:video,document,text',
             'per_page' => 'nullable|integer|min:1|max:100',
         ]);
 
@@ -60,31 +61,33 @@ class LessonController extends Controller
 
         $validated = $request->validated();
         $validated['course_id'] = $course_id;
-        $validated['slug'] = Str::slug($validated['title']) . '-' . uniqid();
+        $validated['slug'] = Str::slug($validated['title']).'-'.uniqid();
 
         // Validate section thuộc đúng course này (nếu có truyền section_id)
-        if (!empty($validated['section_id'])) {
+        if (! empty($validated['section_id'])) {
             $sectionExists = Section::where('id', $validated['section_id'])
                 ->where('course_id', $course_id)
                 ->exists();
-            if (!$sectionExists) {
+            if (! $sectionExists) {
                 return $this->error('Chương không thuộc khóa học này.', 422);
             }
         }
 
         // Nếu không truyền order → tự đặt = số lessons hiện tại của section (hoặc course nếu không có section)
-        if (!isset($validated['order'])) {
+        if (! isset($validated['order'])) {
             $orderQuery = Lesson::where('course_id', $course_id);
-            if (!empty($validated['section_id'])) {
+            if (! empty($validated['section_id'])) {
                 $orderQuery->where('section_id', $validated['section_id']);
             }
             $validated['order'] = $orderQuery->count();
         }
 
-        $lesson = $this->repository->create($validated);
+        $lesson = DB::transaction(function () use ($validated, $course_id) {
+            $lesson = $this->repository->create($validated);
+            Course::where('id', $course_id)->increment('total_lessons');
 
-        // Cập nhật counter total_lessons trên Course (cross-module)
-        Course::where('id', $course_id)->increment('total_lessons');
+            return $lesson;
+        });
 
         return $this->success($lesson, 'Tạo bài giảng thành công.', 201);
     }
@@ -112,10 +115,11 @@ class LessonController extends Controller
     public function destroy(int $id): JsonResponse
     {
         $lesson = $this->repository->findOrFail($id);
-        $this->repository->delete($id);
 
-        // Giảm counter total_lessons trên Course (cross-module)
-        Course::where('id', $lesson->course_id)->decrement('total_lessons');
+        DB::transaction(function () use ($lesson, $id) {
+            $this->repository->delete($id);
+            Course::where('id', $lesson->course_id)->decrement('total_lessons');
+        });
 
         return $this->success(null, 'Xóa bài giảng thành công.');
     }
@@ -155,12 +159,12 @@ class LessonController extends Controller
      */
     public function restore(int $id): JsonResponse
     {
-        // Dùng withTrashed để tìm lesson đã bị xóa mềm
         $lesson = Lesson::withTrashed()->findOrFail($id);
-        $this->repository->restore($id);
 
-        // Tăng lại counter total_lessons trên Course (cross-module)
-        Course::where('id', $lesson->course_id)->increment('total_lessons');
+        DB::transaction(function () use ($lesson, $id) {
+            $this->repository->restore($id);
+            Course::where('id', $lesson->course_id)->increment('total_lessons');
+        });
 
         return $this->success(null, 'Khôi phục bài giảng thành công.');
     }
@@ -183,9 +187,9 @@ class LessonController extends Controller
     public function reorder(Request $request): JsonResponse
     {
         $request->validate([
-            'orders'          => 'required|array',
-            'orders.*.id'     => 'required|integer|exists:lessons,id',
-            'orders.*.order'  => 'required|integer|min:0',
+            'orders' => 'required|array',
+            'orders.*.id' => 'required|integer|exists:lessons,id',
+            'orders.*.order' => 'required|integer|min:0',
         ]);
 
         // Đảm bảo tất cả lesson trong array thuộc cùng 1 course
@@ -208,9 +212,9 @@ class LessonController extends Controller
     public function bulkAction(Request $request): JsonResponse
     {
         $request->validate([
-            'ids'        => 'required|array|min:1',
-            'ids.*'      => 'integer|exists:lessons,id',
-            'action'     => 'required|string|in:publish,unpublish,activate,deactivate,assign-section',
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'integer|exists:lessons,id',
+            'action' => 'required|string|in:publish,unpublish,activate,deactivate,assign-section',
             'section_id' => 'nullable|integer|exists:sections,id',
         ]);
 
@@ -230,7 +234,7 @@ class LessonController extends Controller
                 $sectionBelongsToCourse = Section::where('id', $sectionId)
                     ->where('course_id', $courseId)
                     ->exists();
-                if (!$sectionBelongsToCourse) {
+                if (! $sectionBelongsToCourse) {
                     return $this->error('Chương không thuộc khóa học này.', 422);
                 }
             }
@@ -257,17 +261,20 @@ class LessonController extends Controller
     public function bulkDelete(Request $request): JsonResponse
     {
         $request->validate([
-            'ids'   => 'required|array|min:1',
+            'ids' => 'required|array|min:1',
             'ids.*' => 'integer|exists:lessons,id',
         ]);
 
         $lessons = Lesson::whereIn('id', $request->ids)->get();
-        $count = $this->repository->deleteMany($request->ids);
 
-        // Giảm counter total_lessons trên Course (cross-module)
-        foreach ($lessons->groupBy('course_id') as $courseId => $group) {
-            Course::where('id', $courseId)->decrement('total_lessons', $group->count());
-        }
+        $count = DB::transaction(function () use ($request, $lessons) {
+            $count = $this->repository->deleteMany($request->ids);
+            foreach ($lessons->groupBy('course_id') as $courseId => $group) {
+                Course::where('id', $courseId)->decrement('total_lessons', $group->count());
+            }
+
+            return $count;
+        });
 
         return $this->success(null, "Xóa hàng loạt {$count} bài giảng thành công.");
     }
@@ -278,17 +285,20 @@ class LessonController extends Controller
     public function bulkRestore(Request $request): JsonResponse
     {
         $request->validate([
-            'ids'   => 'required|array|min:1',
+            'ids' => 'required|array|min:1',
             'ids.*' => 'integer',
         ]);
 
         $lessons = Lesson::withTrashed()->whereIn('id', $request->ids)->get();
-        $count = $this->repository->restoreMany($request->ids);
 
-        // Tăng lại counter total_lessons trên Course (cross-module)
-        foreach ($lessons->groupBy('course_id') as $courseId => $group) {
-            Course::where('id', $courseId)->increment('total_lessons', $group->count());
-        }
+        $count = DB::transaction(function () use ($request, $lessons) {
+            $count = $this->repository->restoreMany($request->ids);
+            foreach ($lessons->groupBy('course_id') as $courseId => $group) {
+                Course::where('id', $courseId)->increment('total_lessons', $group->count());
+            }
+
+            return $count;
+        });
 
         return $this->success(null, "Khôi phục hàng loạt {$count} bài giảng thành công.");
     }
@@ -299,7 +309,7 @@ class LessonController extends Controller
     public function bulkForceDelete(Request $request): JsonResponse
     {
         $request->validate([
-            'ids'   => 'required|array|min:1',
+            'ids' => 'required|array|min:1',
             'ids.*' => 'integer',
         ]);
 
@@ -317,14 +327,14 @@ class LessonController extends Controller
     {
         $course = Course::where('slug', $slug)->where('status', 1)->first();
 
-        if (!$course) {
+        if (! $course) {
             return $this->error('Khóa học không tồn tại.', 404);
         }
 
         // Kiểm tra student đã enroll
         $enrolled = $course->students()->where('student_id', auth('api')->id())->exists();
 
-        if (!$enrolled) {
+        if (! $enrolled) {
             return $this->error('Bạn chưa mua khóa học này.', 403);
         }
 
@@ -341,15 +351,15 @@ class LessonController extends Controller
             ->where('status', 1)
             ->ordered()
             ->with([
-                'lessons' => fn($q) => $q->where('status', 1)->ordered(),
+                'lessons' => fn ($q) => $q->where('status', 1)->ordered(),
             ])
             ->get()
             ->map(function ($section) use ($progressMap) {
                 return [
-                    'id'      => $section->id,
-                    'title'   => $section->title,
-                    'order'   => $section->order,
-                    'lessons' => $section->lessons->map(fn($lesson) => $this->formatLesson($lesson, $progressMap)),
+                    'id' => $section->id,
+                    'title' => $section->title,
+                    'order' => $section->order,
+                    'lessons' => $section->lessons->map(fn ($lesson) => $this->formatLesson($lesson, $progressMap)),
                 ];
             });
 
@@ -359,10 +369,10 @@ class LessonController extends Controller
             ->where('status', 1)
             ->ordered()
             ->get()
-            ->map(fn($lesson) => $this->formatLesson($lesson, $progressMap));
+            ->map(fn ($lesson) => $this->formatLesson($lesson, $progressMap));
 
         $result = [
-            'sections'       => $sections,
+            'sections' => $sections,
             'orphan_lessons' => $orphanLessons, // bài học chưa gán chương
         ];
 
@@ -376,14 +386,14 @@ class LessonController extends Controller
     {
         $course = Course::where('slug', $slug)->where('status', 1)->first();
 
-        if (!$course) {
+        if (! $course) {
             return $this->error('Khóa học không tồn tại.', 404);
         }
 
         // Kiểm tra student đã enroll
         $enrolled = $course->students()->where('student_id', auth('api')->id())->exists();
 
-        if (!$enrolled) {
+        if (! $enrolled) {
             return $this->error('Bạn chưa mua khóa học này.', 403);
         }
 
@@ -393,18 +403,18 @@ class LessonController extends Controller
             ->with(['video', 'document'])
             ->first();
 
-        if (!$lesson) {
+        if (! $lesson) {
             return $this->error('Bài học không tồn tại.', 404);
         }
 
         return $this->success([
-            'id'           => $lesson->id,
-            'title'        => $lesson->title,
-            'type'         => $lesson->type,
-            'video_url'    => $lesson->video ? $lesson->video->url : null,
+            'id' => $lesson->id,
+            'title' => $lesson->title,
+            'type' => $lesson->type,
+            'video_url' => $lesson->video ? $lesson->video->url : null,
             'document_url' => $lesson->document ? $lesson->document->url : null,
-            'content'      => $lesson->content,
-            'course_name'  => $course->name,
+            'content' => $lesson->content,
+            'course_name' => $course->name,
         ], 'Lấy chi tiết bài học thành công.');
     }
 
@@ -415,21 +425,21 @@ class LessonController extends Controller
     {
         $request->validate([
             'watched_seconds' => 'required|integer|min:0',
-            'is_completed'    => 'nullable|boolean',
+            'is_completed' => 'nullable|boolean',
         ]);
 
         $lesson = Lesson::find($id);
 
-        if (!$lesson) {
+        if (! $lesson) {
             return $this->error('Bài giảng không tồn tại.', 404);
         }
 
         // Kiểm tra student đã enroll course chứa lesson
         $enrolled = Course::where('id', $lesson->course_id)
-            ->whereHas('students', fn($q) => $q->where('student_id', auth('api')->id()))
+            ->whereHas('students', fn ($q) => $q->where('student_id', auth('api')->id()))
             ->exists();
 
-        if (!$enrolled) {
+        if (! $enrolled) {
             return $this->error('Bạn chưa mua khóa học này.', 403);
         }
 
@@ -443,26 +453,26 @@ class LessonController extends Controller
         $isCompleted = $request->boolean('is_completed', false);
 
         // completed_at chỉ set lần đầu khi is_completed=true, không ghi đè nếu đã có
-        $completedAt = $isCompleted && !$existingProgress?->completed_at
+        $completedAt = $isCompleted && ! $existingProgress?->completed_at
             ? now()
             : ($existingProgress?->completed_at ?? null);
 
         $progress = LessonProgress::updateOrCreate(
             ['student_id' => $studentId, 'lesson_id' => $id],
             [
-                'course_id'       => $lesson->course_id,
+                'course_id' => $lesson->course_id,
                 'watched_seconds' => $request->watched_seconds,
-                'is_completed'    => $isCompleted,
-                'completed_at'    => $completedAt,
+                'is_completed' => $isCompleted,
+                'completed_at' => $completedAt,
             ]
         );
 
         return $this->success([
-            'lesson_id'       => $id,
-            'course_id'       => $lesson->course_id,
-            'is_completed'    => (bool) $progress->is_completed,
+            'lesson_id' => $id,
+            'course_id' => $lesson->course_id,
+            'is_completed' => (bool) $progress->is_completed,
             'watched_seconds' => $progress->watched_seconds,
-            'completed_at'    => $progress->completed_at,
+            'completed_at' => $progress->completed_at,
         ], 'Cập nhật tiến độ thành công.');
     }
 
@@ -473,17 +483,17 @@ class LessonController extends Controller
         $progress = $progressMap->get($lesson->id);
 
         return [
-            'id'         => $lesson->id,
-            'title'      => $lesson->title,
-            'slug'       => $lesson->slug,
-            'type'       => $lesson->type,
-            'order'      => $lesson->order,
+            'id' => $lesson->id,
+            'title' => $lesson->title,
+            'slug' => $lesson->slug,
+            'type' => $lesson->type,
+            'order' => $lesson->order,
             'is_preview' => $lesson->is_preview,
-            'duration'   => $lesson->duration,
-            'progress'   => $progress ? [
-                'is_completed'    => (bool) $progress->is_completed,
+            'duration' => $lesson->duration,
+            'progress' => $progress ? [
+                'is_completed' => (bool) $progress->is_completed,
                 'watched_seconds' => $progress->watched_seconds,
-                'completed_at'    => $progress->completed_at,
+                'completed_at' => $progress->completed_at,
             ] : null,
         ];
     }
@@ -495,14 +505,14 @@ class LessonController extends Controller
     {
         $course = Course::where('slug', $slug)->where('status', 1)->first();
 
-        if (!$course) {
+        if (! $course) {
             return $this->error('Khóa học không tồn tại.', 404);
         }
 
         // Kiểm tra student đã enroll
         $enrolled = $course->students()->where('student_id', auth('api')->id())->exists();
 
-        if (!$enrolled) {
+        if (! $enrolled) {
             return $this->error('Bạn chưa mua khóa học này.', 403);
         }
 
@@ -521,9 +531,9 @@ class LessonController extends Controller
             ->keyBy('lesson_id');
 
         // Tính toán tiến độ tổng
-        $totalLessons     = $lessons->count();
+        $totalLessons = $lessons->count();
         $completedLessons = $progressMap->where('is_completed', 1)->count();
-        $percent          = $totalLessons > 0 ? round($completedLessons / $totalLessons * 100) : 0;
+        $percent = $totalLessons > 0 ? round($completedLessons / $totalLessons * 100) : 0;
 
         // Group lessons theo section
         $sections = Section::where('course_id', $course->id)
@@ -534,26 +544,26 @@ class LessonController extends Controller
                 $sectionLessons = $lessons->where('section_id', $section->id)->values();
 
                 return [
-                    'id'              => $section->id,
-                    'title'           => $section->title,
-                    'order'           => $section->order,
-                    'total'           => $sectionLessons->count(),
-                    'completed'       => $sectionLessons->filter(fn($l) => $progressMap->has($l->id) && $progressMap[$l->id]->is_completed)->count(),
-                    'lessons'         => $sectionLessons->map(fn($lesson) => [
-                        'id'              => $lesson->id,
-                        'title'           => $lesson->title,
-                        'is_completed'    => $progressMap->has($lesson->id) && (bool) $progressMap[$lesson->id]->is_completed,
+                    'id' => $section->id,
+                    'title' => $section->title,
+                    'order' => $section->order,
+                    'total' => $sectionLessons->count(),
+                    'completed' => $sectionLessons->filter(fn ($l) => $progressMap->has($l->id) && $progressMap[$l->id]->is_completed)->count(),
+                    'lessons' => $sectionLessons->map(fn ($lesson) => [
+                        'id' => $lesson->id,
+                        'title' => $lesson->title,
+                        'is_completed' => $progressMap->has($lesson->id) && (bool) $progressMap[$lesson->id]->is_completed,
                         'watched_seconds' => $progressMap[$lesson->id]->watched_seconds ?? 0,
                     ]),
                 ];
             });
 
         return $this->success([
-            'course_id'         => $course->id,
-            'total_lessons'     => $totalLessons,
+            'course_id' => $course->id,
+            'total_lessons' => $totalLessons,
             'completed_lessons' => $completedLessons,
-            'percent'           => $percent,
-            'sections'          => $sections,
+            'percent' => $percent,
+            'sections' => $sections,
         ], 'Lấy tiến độ học thành công.');
     }
 }

@@ -4,6 +4,9 @@ namespace Modules\Categories\Providers;
 
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
+use Modules\Categories\Helpers\CategoriesHelper;
+use Modules\Categories\Repositories\CategoriesRepository;
+use Modules\Categories\Repositories\CategoriesRepositoryInterface;
 use Nwidart\Modules\Traits\PathNamespace;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
@@ -36,13 +39,13 @@ class CategoriesServiceProvider extends ServiceProvider
     {
         // ── Repository Binding ──
         $this->app->bind(
-            \Modules\Categories\Repositories\CategoriesRepositoryInterface::class,
-            \Modules\Categories\Repositories\CategoriesRepository::class
+            CategoriesRepositoryInterface::class,
+            CategoriesRepository::class
         );
 
         // ── Helper Binding ──
         $this->app->singleton('CategoriesHelper', function () {
-            return new \Modules\Categories\Helpers\CategoriesHelper();
+            return new CategoriesHelper;
         });
 
         $this->app->register(EventServiceProvider::class);
@@ -140,7 +143,7 @@ class CategoriesServiceProvider extends ServiceProvider
 
         $this->loadViewsFrom(array_merge($this->getPublishableViewPaths(), [$sourcePath]), $this->nameLower);
 
-        Blade::componentNamespace(config('modules.namespace').'\\' . $this->name . '\\View\\Components', $this->nameLower);
+        Blade::componentNamespace(config('modules.namespace').'\\'.$this->name.'\\View\\Components', $this->nameLower);
     }
 
     /**

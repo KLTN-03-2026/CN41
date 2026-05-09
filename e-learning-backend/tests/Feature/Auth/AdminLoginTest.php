@@ -17,40 +17,40 @@ class AdminLoginTest extends TestCase
         $response = $this->postJson($this->loginUrl, []);
 
         $response->assertStatus(422)
-                 ->assertJsonValidationErrors(['email', 'password']);
+            ->assertJsonValidationErrors(['email', 'password']);
     }
 
     public function test_admin_login_invalid_email_format()
     {
         $response = $this->postJson($this->loginUrl, [
             'email' => 'invalid-email',
-            'password' => 'password123'
+            'password' => 'password123',
         ]);
 
         $response->assertStatus(422)
-                 ->assertJsonValidationErrors(['email']);
+            ->assertJsonValidationErrors(['email']);
     }
 
     public function test_admin_login_short_password()
     {
         $response = $this->postJson($this->loginUrl, [
             'email' => 'admin@example.com',
-            'password' => '12345'
+            'password' => '12345',
         ]);
 
         $response->assertStatus(422)
-                 ->assertJsonValidationErrors(['password']);
+            ->assertJsonValidationErrors(['password']);
     }
 
     public function test_admin_login_wrong_credentials()
     {
         $response = $this->postJson($this->loginUrl, [
             'email' => 'notfound@example.com',
-            'password' => 'password123'
+            'password' => 'password123',
         ]);
 
         $response->assertStatus(401)
-                 ->assertJsonFragment(['message' => 'Email hoặc mật khẩu không đúng.']);
+            ->assertJsonFragment(['message' => 'Email hoặc mật khẩu không đúng.']);
     }
 
     public function test_admin_login_wrong_password()
@@ -63,11 +63,11 @@ class AdminLoginTest extends TestCase
 
         $response = $this->postJson($this->loginUrl, [
             'email' => 'admin@example.com',
-            'password' => 'wrongpassword'
+            'password' => 'wrongpassword',
         ]);
 
         $response->assertStatus(401)
-                 ->assertJsonFragment(['message' => 'Email hoặc mật khẩu không đúng.']);
+            ->assertJsonFragment(['message' => 'Email hoặc mật khẩu không đúng.']);
     }
 
     public function test_admin_login_success()
@@ -80,17 +80,17 @@ class AdminLoginTest extends TestCase
 
         $response = $this->postJson($this->loginUrl, [
             'email' => 'admin@example.com',
-            'password' => 'password123'
+            'password' => 'password123',
         ]);
 
         $response->assertStatus(200)
-                 ->assertJsonPath('success', true)
-                 ->assertJsonStructure([
-                     'data' => [
-                         'token',
-                         'user' => ['id', 'name', 'email']
-                     ]
-                 ]);
+            ->assertJsonPath('success', true)
+            ->assertJsonStructure([
+                'data' => [
+                    'token',
+                    'user' => ['id', 'name', 'email'],
+                ],
+            ]);
     }
 
     public function test_admin_logout_success()
@@ -106,6 +106,6 @@ class AdminLoginTest extends TestCase
         $response = $this->postJson('/api/v1/admin/auth/logout');
 
         $response->assertStatus(200)
-                 ->assertJsonPath('success', true);
+            ->assertJsonPath('success', true);
     }
 }

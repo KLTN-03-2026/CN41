@@ -4,6 +4,9 @@ namespace Modules\Users\Providers;
 
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
+use Modules\Users\Helpers\UsersHelper;
+use Modules\Users\Repositories\UsersRepository;
+use Modules\Users\Repositories\UsersRepositoryInterface;
 use Nwidart\Modules\Traits\PathNamespace;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
@@ -36,13 +39,13 @@ class UsersServiceProvider extends ServiceProvider
     {
         // ── Repository Binding ──
         $this->app->bind(
-            \Modules\Users\Repositories\UsersRepositoryInterface::class,
-            \Modules\Users\Repositories\UsersRepository::class
+            UsersRepositoryInterface::class,
+            UsersRepository::class
         );
 
         // ── Helper Binding ──
         $this->app->singleton('UsersHelper', function () {
-            return new \Modules\Users\Helpers\UsersHelper();
+            return new UsersHelper;
         });
 
         $this->app->register(EventServiceProvider::class);
@@ -140,7 +143,7 @@ class UsersServiceProvider extends ServiceProvider
 
         $this->loadViewsFrom(array_merge($this->getPublishableViewPaths(), [$sourcePath]), $this->nameLower);
 
-        Blade::componentNamespace(config('modules.namespace').'\\' . $this->name . '\\View\\Components', $this->nameLower);
+        Blade::componentNamespace(config('modules.namespace').'\\'.$this->name.'\\View\\Components', $this->nameLower);
     }
 
     /**

@@ -38,8 +38,8 @@ return new class extends Migration
 
             // Foreign key
             $table->foreign('order_id')
-                  ->references('id')->on('orders')
-                  ->onDelete('cascade');
+                ->references('id')->on('orders')
+                ->onDelete('cascade');
         });
     }
 

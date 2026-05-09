@@ -3,9 +3,9 @@
 namespace Modules\Lessons\Repositories;
 
 use App\Repositories\BaseRepository;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Modules\Lessons\Models\Lesson;
 
@@ -39,7 +39,7 @@ class LessonRepository extends BaseRepository implements LessonRepositoryInterfa
         }
 
         // Filter theo type
-        if (!empty($filters['type'])) {
+        if (! empty($filters['type'])) {
             $query->where('type', $filters['type']);
         }
 

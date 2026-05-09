@@ -4,6 +4,7 @@ namespace Modules\Categories\Repositories;
 
 use App\Repositories\RepositoryInterface;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
 
 /**
  * Interface CategoriesRepositoryInterface
@@ -41,16 +42,16 @@ interface CategoriesRepositoryInterface extends RepositoryInterface
      * Di chuyển category thành con của parent mới.
      * Nếu $parentId = null → đưa lên root.
      */
-    public function moveToParent(int $id, ?int $parentId): \Illuminate\Database\Eloquent\Model;
+    public function moveToParent(int $id, ?int $parentId): Model;
 
     /**
      * Tìm category theo slug.
      * Chỉ lấy active nếu $activeOnly = true.
      */
-    public function findBySlug(string $slug, bool $activeOnly = false): ?\Illuminate\Database\Eloquent\Model;
+    public function findBySlug(string $slug, bool $activeOnly = false): ?Model;
 
     /**
      * Cập nhật trạng thái (status) cho một category.
      */
-    public function toggleStatus(int $id): \Illuminate\Database\Eloquent\Model;
+    public function toggleStatus(int $id): Model;
 }

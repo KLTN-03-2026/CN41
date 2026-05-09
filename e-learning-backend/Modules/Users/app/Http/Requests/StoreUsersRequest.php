@@ -2,8 +2,8 @@
 
 namespace Modules\Users\Http\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
 class StoreUsersRequest extends FormRequest
@@ -23,11 +23,11 @@ class StoreUsersRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name'     => 'required|string|max:255',
-            'email'    => 'required|email|max:255|unique:users,email',
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255|unique:users,email',
             'password' => 'required|string|min:8|max:100',
-            'avatar'   => 'nullable|string|max:255',
-            'role'     => 'nullable|string|exists:roles,name',
+            'avatar' => 'nullable|string|max:255',
+            'role' => 'nullable|string|exists:roles,name',
         ];
     }
 
@@ -37,13 +37,13 @@ class StoreUsersRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'name.required'     => 'Tên không được để trống.',
-            'email.required'    => 'Email không được để trống.',
-            'email.email'       => 'Email không đúng định dạng.',
-            'email.unique'      => 'Email đã được sử dụng.',
+            'name.required' => 'Tên không được để trống.',
+            'email.required' => 'Email không được để trống.',
+            'email.email' => 'Email không đúng định dạng.',
+            'email.unique' => 'Email đã được sử dụng.',
             'password.required' => 'Mật khẩu không được để trống.',
-            'password.min'      => 'Mật khẩu tối thiểu 8 ký tự.',
-            'role.exists'       => 'Role không hợp lệ.',
+            'password.min' => 'Mật khẩu tối thiểu 8 ký tự.',
+            'role.exists' => 'Role không hợp lệ.',
         ];
     }
 
@@ -55,7 +55,7 @@ class StoreUsersRequest extends FormRequest
         throw new HttpResponseException(response()->json([
             'success' => false,
             'message' => 'Dữ liệu không hợp lệ.',
-            'errors'  => $validator->errors(),
+            'errors' => $validator->errors(),
         ], 422));
     }
 }

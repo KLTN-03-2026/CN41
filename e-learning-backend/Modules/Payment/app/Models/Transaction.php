@@ -22,12 +22,12 @@ class Transaction extends Model
     ];
 
     protected $casts = [
-        'order_id'         => 'integer',
+        'order_id' => 'integer',
         'gateway_response' => 'json',
-        'amount'           => 'decimal:2',
-        'paid_at'          => 'datetime',
-        'created_at'       => 'datetime',
-        'updated_at'       => 'datetime',
+        'amount' => 'decimal:2',
+        'paid_at' => 'datetime',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
     // ── Relationships ──

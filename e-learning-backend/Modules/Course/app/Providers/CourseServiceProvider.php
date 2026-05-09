@@ -3,10 +3,14 @@
 namespace Modules\Course\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Modules\Course\Helpers\CourseHelper;
+use Modules\Course\Repositories\CourseRepository;
+use Modules\Course\Repositories\CourseRepositoryInterface;
 
 class CourseServiceProvider extends ServiceProvider
 {
     protected string $name = 'Course';
+
     protected string $nameLower = 'course';
 
     /**
@@ -24,13 +28,13 @@ class CourseServiceProvider extends ServiceProvider
     {
         // ── Repository Binding ──
         $this->app->bind(
-            \Modules\Course\Repositories\CourseRepositoryInterface::class,
-            \Modules\Course\Repositories\CourseRepository::class
+            CourseRepositoryInterface::class,
+            CourseRepository::class
         );
 
         // ── Helper Binding ──
         $this->app->singleton('CourseHelper', function () {
-            return new \Modules\Course\Helpers\CourseHelper();
+            return new CourseHelper;
         });
 
         $this->app->register(RouteServiceProvider::class);

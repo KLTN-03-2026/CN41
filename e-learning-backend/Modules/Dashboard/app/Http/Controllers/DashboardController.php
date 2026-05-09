@@ -31,9 +31,9 @@ class DashboardController extends Controller
 
         // 5. Monthly revenue (current year)
         $currentYear = date('Y');
-        $monthExpression = DB::getDriverName() === 'sqlite' 
-            ? "CAST(strftime('%m', created_at) AS INTEGER)" 
-            : "MONTH(created_at)";
+        $monthExpression = DB::getDriverName() === 'sqlite'
+            ? "CAST(strftime('%m', created_at) AS INTEGER)"
+            : 'MONTH(created_at)';
 
         $monthlyRevenueQuery = Order::select(
             DB::raw("$monthExpression as month"),

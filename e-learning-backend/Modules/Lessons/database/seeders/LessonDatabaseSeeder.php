@@ -4,14 +4,15 @@ namespace Modules\Lessons\Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
-use Modules\Lessons\Models\Section;
-use Modules\Lessons\Models\Lesson;
 use Modules\Course\Models\Course;
+use Modules\Lessons\Models\Lesson;
+use Modules\Lessons\Models\Section;
 use Modules\Upload\Models\MediaFile;
 
 class LessonDatabaseSeeder extends Seeder
 {
-    private array $videoIds   = [];
+    private array $videoIds = [];
+
     private array $documentIds = [];
 
     public function run(): void
@@ -20,15 +21,17 @@ class LessonDatabaseSeeder extends Seeder
 
         if ($courses->isEmpty()) {
             $this->command->warn('Không có khóa học. Seed Course trước.');
+
             return;
         }
 
         // Lấy IDs từ media_files đã seed
-        $this->videoIds    = MediaFile::where('type', 'video')->pluck('id')->toArray();
+        $this->videoIds = MediaFile::where('type', 'video')->pluck('id')->toArray();
         $this->documentIds = MediaFile::where('type', 'document')->pluck('id')->toArray();
 
         if (empty($this->videoIds)) {
             $this->command->warn('Không có video nào trong media_files. Seed MediaFile trước.');
+
             return;
         }
 
@@ -36,53 +39,53 @@ class LessonDatabaseSeeder extends Seeder
 
         foreach ($courses as $course) {
             $sectionTitles = $this->getSectionTitles($course->name);
-            $numSections   = count($sectionTitles); // 3-5 sections
+            $numSections = count($sectionTitles); // 3-5 sections
 
             foreach ($sectionTitles as $sIdx => $sectionTitle) {
                 $section = Section::create([
-                    'course_id'   => $course->id,
-                    'title'       => $sectionTitle,
-                    'description' => 'Nội dung của ' . $sectionTitle,
-                    'order'       => $sIdx + 1,
-                    'status'      => 1,
+                    'course_id' => $course->id,
+                    'title' => $sectionTitle,
+                    'description' => 'Nội dung của '.$sectionTitle,
+                    'order' => $sIdx + 1,
+                    'status' => 1,
                 ]);
 
                 $lessonTitles = $this->getLessonTitles($sectionTitle);
-                $numLessons   = count($lessonTitles); // 6-8 lessons
+                $numLessons = count($lessonTitles); // 6-8 lessons
 
                 foreach ($lessonTitles as $lIdx => $lessonTitle) {
                     $isFirstLesson = ($sIdx === 0 && $lIdx === 0);
                     $type = $this->pickType($lIdx);
 
-                    $videoId    = null;
+                    $videoId = null;
                     $documentId = null;
 
                     if ($type === 'video') {
                         $videoId = $this->videoIds[array_rand($this->videoIds)];
                     } elseif ($type === 'document') {
-                        $documentId = !empty($this->documentIds)
+                        $documentId = ! empty($this->documentIds)
                             ? $this->documentIds[array_rand($this->documentIds)]
                             : null;
                     }
 
-                    $slug = Str::slug($lessonTitle) . '-' . Str::random(6);
+                    $slug = Str::slug($lessonTitle).'-'.Str::random(6);
 
                     Lesson::create([
-                        'course_id'   => $course->id,
-                        'section_id'  => $section->id,
-                        'title'       => $lessonTitle,
-                        'slug'        => $slug,
-                        'description' => 'Mô tả chi tiết cho bài: ' . $lessonTitle,
-                        'type'        => $type,
-                        'content'     => $type === 'text'
-                            ? '<p>Đây là nội dung text của bài <strong>' . $lessonTitle . '</strong>. Bạn sẽ học các khái niệm quan trọng và thực hành ngay trong bài học này.</p>'
+                        'course_id' => $course->id,
+                        'section_id' => $section->id,
+                        'title' => $lessonTitle,
+                        'slug' => $slug,
+                        'description' => 'Mô tả chi tiết cho bài: '.$lessonTitle,
+                        'type' => $type,
+                        'content' => $type === 'text'
+                            ? '<p>Đây là nội dung text của bài <strong>'.$lessonTitle.'</strong>. Bạn sẽ học các khái niệm quan trọng và thực hành ngay trong bài học này.</p>'
                             : null,
-                        'video_id'    => $videoId,
+                        'video_id' => $videoId,
                         'document_id' => $documentId,
-                        'order'       => $lIdx + 1,
-                        'is_preview'  => $isFirstLesson, // Bài đầu tiên mỗi khóa xem thử miễn phí
-                        'duration'    => $type === 'video' ? rand(300, 1200) : null,
-                        'status'      => 1,
+                        'order' => $lIdx + 1,
+                        'is_preview' => $isFirstLesson, // Bài đầu tiên mỗi khóa xem thử miễn phí
+                        'duration' => $type === 'video' ? rand(300, 1200) : null,
+                        'status' => 1,
                     ]);
 
                     $totalLessons++;
@@ -105,8 +108,8 @@ class LessonDatabaseSeeder extends Seeder
     private function pickType(int $lIdx): string
     {
         // 0,1 → video | 2 → document | 3,4 → video | 5 → document | 6,7 → video
-        return match($lIdx % 3) {
-            2       => 'document',
+        return match ($lIdx % 3) {
+            2 => 'document',
             default => 'video',
         };
     }
