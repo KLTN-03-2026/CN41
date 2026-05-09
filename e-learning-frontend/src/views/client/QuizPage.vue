@@ -232,6 +232,14 @@ import { useRouter, useRoute } from 'vue-router'
 import { useToast } from 'vue-toastification'
 import { quizService } from '@/services/quiz.service'
 import type { Quiz, QuizQuestion, QuizAttempt } from '@/services/quiz.service'
+import {
+  getCorrectAnswer as getCorrectAnswerUtil,
+  getStudentAnswer as getStudentAnswerUtil,
+  isQuestionCorrect,
+  optionResultClass as optionResultClassUtil,
+  optionBadgeClass as optionBadgeClassUtil,
+} from '@/utils/quizResult'
+import type { Option } from '@/utils/quizResult'
 
 const router = useRouter()
 const route = useRoute()
@@ -317,40 +325,35 @@ async function submitQuiz() {
   }
 }
 
-// ── Helpers for result display ──────────────────────────────────
+// ── Helpers for result display — delegate to @/utils/quizResult ──
 
-function getCorrectAnswer(questionId: number): string | undefined {
-  if (!resultData.value?.correct_answers) return undefined
-  // correct_answers keys may be numbers or strings — normalise to string
-  const map = resultData.value.correct_answers as Record<string, string>
-  return map[String(questionId)]
+function getCorrectAnswer(questionId: number) {
+  return getCorrectAnswerUtil(resultData.value?.correct_answers, questionId)
 }
 
-function getStudentAnswer(questionId: number): string | undefined {
-  if (!resultData.value?.answers) return undefined
-  const map = resultData.value.answers as Record<string, string>
-  return map[String(questionId)]
+function getStudentAnswer(questionId: number) {
+  return getStudentAnswerUtil(resultData.value?.answers, questionId)
 }
 
 function isCorrect(questionId: number): boolean {
-  const correct = getCorrectAnswer(questionId)
-  const student = getStudentAnswer(questionId)
-  return !!correct && !!student && correct === student
+  return isQuestionCorrect(resultData.value?.correct_answers, resultData.value?.answers, questionId)
 }
 
 function optionResultClass(questionId: number, opt: 'A' | 'B' | 'C' | 'D'): string {
-  const correct = getCorrectAnswer(questionId)
-  const student = getStudentAnswer(questionId)
-  if (opt === correct) return 'border-green-400 bg-green-50 text-green-800'
-  if (opt === student && student !== correct) return 'border-red-400 bg-red-50 text-red-800'
-  return 'border-gray-100 text-gray-500'
+  return optionResultClassUtil(
+    resultData.value?.correct_answers,
+    resultData.value?.answers,
+    questionId,
+    opt as Option,
+  )
 }
 
 function optionBadgeClass(questionId: number, opt: 'A' | 'B' | 'C' | 'D'): string {
-  const correct = getCorrectAnswer(questionId)
-  const student = getStudentAnswer(questionId)
-  if (opt === correct) return 'bg-green-500 text-white'
-  if (opt === student && student !== correct) return 'bg-red-500 text-white'
-  return 'bg-gray-100 text-gray-400'
+  return optionBadgeClassUtil(
+    resultData.value?.correct_answers,
+    resultData.value?.answers,
+    questionId,
+    opt as Option,
+  )
 }
 </script>
