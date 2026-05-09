@@ -332,7 +332,10 @@ async function doGenerate() {
     generatingStep.value = 'AI đang sinh câu hỏi...'
     await pollJobStatus(jobId)
   } catch (err) {
-    const e = err as { response?: { data?: { message?: string; errors?: Record<string, string[]> } }; message?: string }
+    const e = err as {
+      response?: { data?: { message?: string; errors?: Record<string, string[]> } }
+      message?: string
+    }
     const data = e.response?.data
     if (data?.errors) {
       const firstError = Object.values(data.errors)[0] as string[]

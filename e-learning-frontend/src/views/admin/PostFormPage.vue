@@ -282,7 +282,9 @@ async function submitForm() {
     }
     router.push('/admin/posts')
   } catch (err) {
-    const e = err as { response?: { status?: number; data?: { errors?: Record<string, string[]>; message?: string } } }
+    const e = err as {
+      response?: { status?: number; data?: { errors?: Record<string, string[]>; message?: string } }
+    }
     if (e.response?.status === 422) {
       formErrors.value = e.response.data?.errors ?? {}
     } else {

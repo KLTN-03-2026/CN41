@@ -638,7 +638,9 @@ async function submitForm() {
     showModal.value = false
     loadPage(pagination.current_page)
   } catch (err) {
-    const errData = (err as { response?: { data?: { message?: string; errors?: Record<string, unknown[]> } } }).response?.data
+    const errData = (
+      err as { response?: { data?: { message?: string; errors?: Record<string, unknown[]> } } }
+    ).response?.data
     // Hiển thị lỗi field-level đầu tiên nếu có
     if (errData?.errors) {
       const firstFieldErrors = Object.values(errData.errors)[0]
@@ -675,7 +677,10 @@ async function doDelete() {
     loadPage(pagination.current_page)
     fetchTrashedCount()
   } catch (err) {
-    toast.error((err as { response?: { data?: { message?: string } } }).response?.data?.message || 'Xoá thất bại.')
+    toast.error(
+      (err as { response?: { data?: { message?: string } } }).response?.data?.message ||
+        'Xoá thất bại.',
+    )
   } finally {
     deleteLoading.value = false
   }

@@ -399,7 +399,13 @@ async function applyCoupon() {
     couponError.value = ''
     toast.success('Áp dụng mã giảm giá thành công!')
   } catch (err) {
-    const data = (err as { response?: { data?: { message?: string; errors?: { code?: string | string[]; subtotal?: unknown } } } }).response?.data
+    const data = (
+      err as {
+        response?: {
+          data?: { message?: string; errors?: { code?: string | string[]; subtotal?: unknown } }
+        }
+      }
+    ).response?.data
     // Ưu tiên lấy lỗi field-level từ errors object
     if (data?.errors?.code) {
       couponError.value = Array.isArray(data.errors.code) ? data.errors.code[0] : data.errors.code

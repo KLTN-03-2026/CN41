@@ -467,7 +467,9 @@ async function submitForm() {
     showModal.value = false
     fetchData()
   } catch (err) {
-    const error = err as { response?: { status?: number; data?: { message?: string; errors?: Record<string, string[]> } } }
+    const error = err as {
+      response?: { status?: number; data?: { message?: string; errors?: Record<string, string[]> } }
+    }
     if (error.response?.status === 422) {
       formErrors.value = error.response.data?.errors ?? {}
     } else {

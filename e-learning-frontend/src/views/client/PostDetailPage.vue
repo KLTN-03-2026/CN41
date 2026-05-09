@@ -244,7 +244,9 @@ async function submitComment() {
     // Reload bài viết để hiển thị bình luận mới
     await fetchPost()
   } catch (err) {
-    const msg = (err as { response?: { data?: { message?: string } } }).response?.data?.message || 'Gửi bình luận thất bại'
+    const msg =
+      (err as { response?: { data?: { message?: string } } }).response?.data?.message ||
+      'Gửi bình luận thất bại'
     toast.error(msg)
   } finally {
     submittingComment.value = false

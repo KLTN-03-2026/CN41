@@ -974,7 +974,9 @@ async function submitForm() {
     loadPage(pagination.current_page)
     fetchTrashedCount()
   } catch (err) {
-    const error = err as { response?: { status?: number; data?: { message?: string; errors?: Record<string, string[]> } } }
+    const error = err as {
+      response?: { status?: number; data?: { message?: string; errors?: Record<string, string[]> } }
+    }
     if (error.response?.status === 422 && error.response.data?.errors) {
       formErrors.value = error.response.data.errors
     } else {
