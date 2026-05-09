@@ -10,44 +10,35 @@ use Modules\Quiz\Http\Requests\SubmitQuizRequest;
 use Modules\Quiz\Http\Resources\QuizAttemptResource;
 use Modules\Quiz\Http\Resources\QuizQuestionResource;
 use Modules\Quiz\Http\Resources\QuizResource;
-use Modules\Quiz\Models\Quiz;
-use Modules\Quiz\Models\QuizAttempt;
+use Modules\Quiz\Repositories\QuizRepositoryInterface;
 
 class QuizController extends Controller
 {
     use ApiResponse;
 
+    public function __construct(private QuizRepositoryInterface $repository) {}
+
     public function show(int $lessonId): JsonResponse
     {
-        $quiz = Quiz::where('lesson_id', $lessonId)->published()->firstOrFail();
-        $quiz->load('questions');
+        $quiz = $this->repository->findPublishedByLesson($lessonId);
 
-        $data = [
+        return $this->success([
             'quiz' => new QuizResource($quiz),
             'questions' => $quiz->questions->map(fn ($q) => new QuizQuestionResource($q, true)),
-        ];
-
-        return $this->success($data, 'Chi tiết quiz');
+        ], 'Chi tiết quiz');
     }
 
     public function submit(SubmitQuizRequest $request, int $id): JsonResponse
     {
-        $quiz = Quiz::where('status', 1)->findOrFail($id);
+        $quiz = $this->repository->findPublishedWithQuestions($id);
         $student = auth('api')->user();
 
-        // Check max attempts
-        $attemptCount = QuizAttempt::where('quiz_id', $id)
-            ->where('student_id', $student->id)
-            ->count();
-
+        $attemptCount = $this->repository->countStudentAttempts($id, $student->id);
         if ($attemptCount >= $quiz->max_attempts) {
             return $this->error('Bạn đã hết lượt làm bài.', 403);
         }
 
-        $quiz->load('questions');
         $answers = $request->input('answers');
-
-        // Calculate score
         $score = 0;
         foreach ($answers as $questionId => $answer) {
             $question = $quiz->questions->firstWhere('id', $questionId);
@@ -56,17 +47,14 @@ class QuizController extends Controller
             }
         }
 
-        // Save attempt
-        $attempt = DB::transaction(function () use ($quiz, $student, $score, $answers) {
-            return QuizAttempt::create([
-                'quiz_id' => $quiz->id,
-                'student_id' => $student->id,
-                'score' => $score,
-                'total_questions' => $quiz->questions->count(),
-                'answers' => array_map(fn ($a) => strtoupper($a), $answers),
-                'completed_at' => now(),
-            ]);
-        });
+        $attempt = DB::transaction(fn () => $this->repository->createAttempt([
+            'quiz_id' => $quiz->id,
+            'student_id' => $student->id,
+            'score' => $score,
+            'total_questions' => $quiz->questions->count(),
+            'answers' => array_map(fn ($a) => strtoupper($a), $answers),
+            'completed_at' => now(),
+        ]));
 
         $attempt->load(['quiz.questions']);
 
@@ -81,16 +69,12 @@ class QuizController extends Controller
     {
         $student = auth('api')->user();
 
-        $quiz = Quiz::with('questions')->findOrFail($id);
-
-        $attempts = QuizAttempt::with(['quiz.questions'])
-            ->where('quiz_id', $id)
-            ->where('student_id', $student->id)
-            ->orderBy('created_at', 'desc')
-            ->get();
+        $this->repository->findOrFail($id);
 
         return $this->success(
-            QuizAttemptResource::collection($attempts),
+            QuizAttemptResource::collection(
+                $this->repository->getStudentAttempts($id, $student->id)
+            ),
             'Lịch sử làm bài'
         );
     }

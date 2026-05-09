@@ -5,8 +5,9 @@ namespace Modules\Quiz\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Modules\Lessons\Models\Lesson;
+use Modules\Quiz\Http\Requests\GenerateQuizRequest;
+use Modules\Quiz\Http\Requests\UpdateQuizQuestionRequest;
 use Modules\Quiz\Http\Resources\QuizQuestionResource;
 use Modules\Quiz\Http\Resources\QuizResource;
 use Modules\Quiz\Jobs\GenerateQuizJob;
@@ -44,17 +45,8 @@ class QuizGenerateController extends Controller
      * Sinh câu hỏi quiz từ PDF upload hoặc PDF trong chương (async via queue).
      * POST /admin/lesson-quiz/{lessonId}/generate
      */
-    public function generate(Request $request, int $lessonId): JsonResponse
+    public function generate(GenerateQuizRequest $request, int $lessonId): JsonResponse
     {
-        $request->validate([
-            'source' => 'required|in:upload,chapter',
-            'count' => 'nullable|integer|min:1|max:20',
-            'file' => 'required_if:source,upload|nullable|file|mimes:pdf|max:20480',
-            'custom_prompt' => 'nullable|string|max:500',
-            'max_attempts' => 'nullable|integer|min:1|max:10',
-            'time_limit' => 'nullable|integer|min:1',
-        ]);
-
         Lesson::findOrFail($lessonId);
 
         $tempPath = null;
@@ -110,17 +102,8 @@ class QuizGenerateController extends Controller
      * Cập nhật một câu hỏi (admin sửa sau khi AI sinh).
      * PATCH /admin/quiz-questions/{questionId}
      */
-    public function updateQuestion(Request $request, int $questionId): JsonResponse
+    public function updateQuestion(UpdateQuizQuestionRequest $request, int $questionId): JsonResponse
     {
-        $request->validate([
-            'question' => 'sometimes|string',
-            'option_a' => 'sometimes|string',
-            'option_b' => 'sometimes|string',
-            'option_c' => 'sometimes|string',
-            'option_d' => 'sometimes|string',
-            'correct_option' => 'sometimes|in:A,B,C,D',
-        ]);
-
         $question = QuizQuestion::findOrFail($questionId);
         $question->update($request->only(['question', 'option_a', 'option_b', 'option_c', 'option_d', 'correct_option']));
 

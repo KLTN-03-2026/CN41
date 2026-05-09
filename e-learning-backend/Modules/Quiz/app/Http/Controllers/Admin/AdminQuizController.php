@@ -12,7 +12,6 @@ use Modules\Quiz\Http\Requests\StoreQuizRequest;
 use Modules\Quiz\Http\Requests\UpdateQuizRequest;
 use Modules\Quiz\Http\Resources\QuizQuestionResource;
 use Modules\Quiz\Http\Resources\QuizResource;
-use Modules\Quiz\Models\Quiz;
 use Modules\Quiz\Repositories\QuizRepositoryInterface;
 use Modules\Quiz\Services\AIQuizService;
 
@@ -27,15 +26,10 @@ class AdminQuizController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $perPage = max(1, min($request->get('per_page', 15), 100));
-        $lessonId = $request->get('lesson_id');
-
-        $query = Quiz::withCount('questions');
-        if ($lessonId) {
-            $query->where('lesson_id', $lessonId);
-        }
-
-        $quizzes = $query->paginate($perPage);
+        $quizzes = $this->repository->getFiltered(
+            $request->only(['lesson_id']),
+            (int) $request->get('per_page', 15)
+        );
         $quizzes->setCollection(QuizResource::collection($quizzes->getCollection())->collection);
 
         return $this->paginated($quizzes, 'Danh sách quiz');
@@ -112,7 +106,7 @@ class AdminQuizController extends Controller
         } catch (\Exception $e) {
             Log::error('Quiz generation failed', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
 
-            return $this->error($e->getMessage(), 500);
+            return $this->error('Sinh câu hỏi thất bại. Vui lòng thử lại.', 500);
         }
     }
 
