@@ -5,10 +5,11 @@ namespace Modules\Students\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Modules\Students\Http\Requests\BulkDeleteStudentsRequest;
 use Modules\Students\Http\Requests\BulkForceDeleteStudentsRequest;
 use Modules\Students\Http\Requests\BulkRestoreStudentsRequest;
+use Modules\Students\Http\Requests\IndexStudentsRequest;
 use Modules\Students\Http\Requests\StoreStudentsRequest;
 use Modules\Students\Http\Requests\UpdateStudentsRequest;
 use Modules\Students\Http\Resources\StudentResource;
@@ -28,13 +29,8 @@ class StudentsController extends Controller
     /**
      * Danh sách Students (có phân trang).
      */
-    public function index(Request $request): JsonResponse
+    public function index(IndexStudentsRequest $request): JsonResponse
     {
-        $request->validate([
-            'search' => 'nullable|string|max:100',
-            'per_page' => 'nullable|integer|min:1|max:100',
-        ]);
-
         $perPage = (int) $request->query('per_page', 15);
         $filters = $request->only(['search']);
 
@@ -88,7 +84,7 @@ class StudentsController extends Controller
     /**
      * Danh sách Students đã bị soft-delete (thùng rác).
      */
-    public function trashed(Request $request): JsonResponse
+    public function trashed(IndexStudentsRequest $request): JsonResponse
     {
         $perPage = (int) $request->query('per_page', 15);
         $data = $this->repository->paginateTrashed($perPage);
@@ -122,7 +118,7 @@ class StudentsController extends Controller
      */
     public function bulkDelete(BulkDeleteStudentsRequest $request): JsonResponse
     {
-        $deleted = $this->repository->deleteMany($request->ids);
+        $deleted = DB::transaction(fn () => $this->repository->deleteMany($request->ids));
 
         return $this->success(
             ['deleted_count' => $deleted, 'deleted_ids' => $request->ids],
@@ -135,7 +131,7 @@ class StudentsController extends Controller
      */
     public function bulkRestore(BulkRestoreStudentsRequest $request): JsonResponse
     {
-        $restored = $this->repository->restoreMany($request->ids);
+        $restored = DB::transaction(fn () => $this->repository->restoreMany($request->ids));
 
         return $this->success(
             ['restored_count' => $restored, 'restored_ids' => $request->ids],
@@ -148,7 +144,7 @@ class StudentsController extends Controller
      */
     public function bulkForceDelete(BulkForceDeleteStudentsRequest $request): JsonResponse
     {
-        $deleted = $this->repository->forceDeleteMany($request->ids);
+        $deleted = DB::transaction(fn () => $this->repository->forceDeleteMany($request->ids));
 
         return $this->success(
             ['deleted_count' => $deleted, 'deleted_ids' => $request->ids],

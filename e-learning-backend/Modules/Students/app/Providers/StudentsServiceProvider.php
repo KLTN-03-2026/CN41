@@ -4,7 +4,6 @@ namespace Modules\Students\Providers;
 
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
-use Modules\Students\Helpers\StudentsHelper;
 use Modules\Students\Repositories\StudentsRepository;
 use Modules\Students\Repositories\StudentsRepositoryInterface;
 use Nwidart\Modules\Traits\PathNamespace;
@@ -42,11 +41,6 @@ class StudentsServiceProvider extends ServiceProvider
             StudentsRepositoryInterface::class,
             StudentsRepository::class
         );
-
-        // ── Helper Binding ──
-        $this->app->singleton('StudentsHelper', function () {
-            return new StudentsHelper;
-        });
 
         $this->app->register(EventServiceProvider::class);
         $this->app->register(RouteServiceProvider::class);
