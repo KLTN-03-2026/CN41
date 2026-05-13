@@ -23,7 +23,6 @@ Route::middleware(['auth:admin'])->prefix('admin')->group(function () {
     Route::get('categories', [CategoriesController::class, 'index'])->middleware('permission:categories.view');
     Route::post('categories', [CategoriesController::class, 'store'])->middleware('permission:categories.create');
     Route::get('categories/{category}', [CategoriesController::class, 'show'])->middleware('permission:categories.view');
-    Route::put('categories/{category}', [CategoriesController::class, 'update'])->middleware('permission:categories.edit');
     Route::patch('categories/{category}', [CategoriesController::class, 'update'])->middleware('permission:categories.edit');
     Route::delete('categories/{category}', [CategoriesController::class, 'destroy'])->middleware('permission:categories.delete');
 

@@ -13,14 +13,8 @@ class Category extends Model
 {
     use HasActivityLog, HasFactory, NodeTrait, SoftDeletes;
 
-    /**
-     * Bảng tương ứng trong database.
-     */
     protected $table = 'categories';
 
-    /**
-     * Các cột được phép mass-assign.
-     */
     protected $fillable = [
         'name',
         'slug',
@@ -31,9 +25,6 @@ class Category extends Model
         'parent_id',
     ];
 
-    /**
-     * Các cột cần cast kiểu dữ liệu.
-     */
     protected $casts = [
         'status' => 'integer',
         'order' => 'integer',
@@ -43,39 +34,21 @@ class Category extends Model
         'deleted_at' => 'datetime',
     ];
 
-    /**
-     * Các cột ẩn khi serialize (JSON).
-     */
     protected $hidden = [
         '_lft',
         '_rgt',
     ];
 
-    // ── Scopes ──
-
-    /**
-     * Scope: chỉ lấy categories đang active.
-     */
     public function scopeActive($query)
     {
         return $query->where('status', 1);
     }
 
-    // ── Accessors ──
-
-    /**
-     * Check category có phải root (không có parent) hay không.
-     */
     public function getIsRootAttribute(): bool
     {
         return is_null($this->parent_id);
     }
 
-    // ── Relationships ──
-
-    /**
-     * Category có nhiều Courses (many-to-many qua categories_courses).
-     */
     public function courses()
     {
         return $this->belongsToMany(

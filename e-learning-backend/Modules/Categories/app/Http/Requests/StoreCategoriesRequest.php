@@ -8,18 +8,11 @@ use Illuminate\Http\Exceptions\HttpResponseException;
 
 class StoreCategoriesRequest extends FormRequest
 {
-    /**
-     * Xác định user có quyền thực hiện request này không.
-     * Routes đã có middleware auth:admin nên return true.
-     */
     public function authorize(): bool
     {
         return true;
     }
 
-    /**
-     * Validation rules cho việc tạo mới Category.
-     */
     public function rules(): array
     {
         return [
@@ -33,9 +26,6 @@ class StoreCategoriesRequest extends FormRequest
         ];
     }
 
-    /**
-     * Custom messages cho validation errors.
-     */
     public function messages(): array
     {
         return [
@@ -51,9 +41,6 @@ class StoreCategoriesRequest extends FormRequest
         ];
     }
 
-    /**
-     * Override: trả về JSON thay vì redirect khi validation fail (API-only).
-     */
     protected function failedValidation(Validator $validator): void
     {
         throw new HttpResponseException(response()->json([

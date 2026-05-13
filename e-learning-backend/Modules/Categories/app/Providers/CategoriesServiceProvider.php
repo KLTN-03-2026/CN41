@@ -4,7 +4,6 @@ namespace Modules\Categories\Providers;
 
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
-use Modules\Categories\Helpers\CategoriesHelper;
 use Modules\Categories\Repositories\CategoriesRepository;
 use Modules\Categories\Repositories\CategoriesRepositoryInterface;
 use Nwidart\Modules\Traits\PathNamespace;
@@ -37,16 +36,10 @@ class CategoriesServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        // ── Repository Binding ──
         $this->app->bind(
             CategoriesRepositoryInterface::class,
             CategoriesRepository::class
         );
-
-        // ── Helper Binding ──
-        $this->app->singleton('CategoriesHelper', function () {
-            return new CategoriesHelper;
-        });
 
         $this->app->register(EventServiceProvider::class);
         $this->app->register(RouteServiceProvider::class);
