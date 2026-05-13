@@ -2,10 +2,10 @@
 
 namespace App\Repositories;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 /**
  * Class BaseRepository
@@ -30,15 +30,11 @@ class BaseRepository implements RepositoryInterface
 
     /**
      * Eloquent Model instance.
-     *
-     * @var Model
      */
     protected Model $model;
 
     /**
      * BaseRepository constructor.
-     *
-     * @param Model $model
      */
     public function __construct(Model $model)
     {
@@ -180,7 +176,7 @@ class BaseRepository implements RepositoryInterface
      *
      * Lấy danh sách bản ghi đã soft-delete, phân trang.
      */
-    public function paginateTrashed(int $perPage = 15, array $columns = ['*'], array $relations = []): \Illuminate\Contracts\Pagination\LengthAwarePaginator
+    public function paginateTrashed(int $perPage = 15, array $columns = ['*'], array $relations = []): LengthAwarePaginator
     {
         $perPage = max(1, min($perPage, static::MAX_PER_PAGE));
 
@@ -231,12 +227,12 @@ class BaseRepository implements RepositoryInterface
     public function actionMany(array $ids, string $action): int
     {
         $updateData = match ($action) {
-            'activate'   => ['status' => 1],
+            'activate' => ['status' => 1],
             'deactivate' => ['status' => 0],
-            'publish'    => ['status' => 1],
-            'unpublish'  => ['status' => 0],
-            'archive'    => ['status' => -1],
-            default      => throw new \InvalidArgumentException("Unsupported action: {$action}"),
+            'publish' => ['status' => 1],
+            'unpublish' => ['status' => 0],
+            'archive' => ['status' => -1],
+            default => throw new \InvalidArgumentException("Unsupported action: {$action}"),
         };
 
         return $this->model->newQuery()

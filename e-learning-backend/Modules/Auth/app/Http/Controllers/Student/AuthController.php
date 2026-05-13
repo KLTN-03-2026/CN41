@@ -5,6 +5,7 @@ namespace Modules\Auth\Http\Controllers\Student;
 use App\Http\Controllers\Controller;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -50,16 +51,16 @@ class AuthController extends Controller
         // Wrap trong transaction để đảm bảo atomicity
         $student = DB::transaction(function () use ($data, &$verifyToken) {
             $student = Student::create([
-                'name'     => $data['name'],
-                'email'    => $data['email'],
+                'name' => $data['name'],
+                'email' => $data['email'],
                 'password' => $data['password'], // model cast 'hashed'
             ]);
 
             // Tạo token xác thực email (cryptographically secure)
             $verifyToken = bin2hex(random_bytes(32));
             DB::table('student_email_verifications')->insert([
-                'email'      => $student->email,
-                'token'      => $verifyToken,
+                'email' => $student->email,
+                'token' => $verifyToken,
                 'expires_at' => now()->addHours(24),
                 'created_at' => now(),
                 'updated_at' => now(),
@@ -74,11 +75,11 @@ class AuthController extends Controller
         $token = $student->createToken('student-token')->plainTextToken;
 
         return $this->success([
-            'token'   => $token,
+            'token' => $token,
             'student' => [
-                'id'                => $student->id,
-                'name'              => $student->name,
-                'email'             => $student->email,
+                'id' => $student->id,
+                'name' => $student->name,
+                'email' => $student->email,
                 'email_verified_at' => $student->email_verified_at,
             ],
         ], 'Đăng ký thành công. Vui lòng kiểm tra email để xác thực tài khoản.', 201);
@@ -93,12 +94,12 @@ class AuthController extends Controller
 
         $student = Student::where('email', $credentials['email'])->first();
 
-        if (!$student || !Hash::check($credentials['password'], $student->password)) {
+        if (! $student || ! Hash::check($credentials['password'], $student->password)) {
             return $this->error('Email hoặc mật khẩu không đúng.', 401);
         }
 
         // Kiểm tra tài khoản đã xác thực email chưa
-        if (!$student->email_verified_at) {
+        if (! $student->email_verified_at) {
             return $this->error(
                 'Tài khoản chưa được kích hoạt. Vui lòng kiểm tra email để xác thực tài khoản.',
                 403,
@@ -109,11 +110,11 @@ class AuthController extends Controller
         $token = $student->createToken('student-token')->plainTextToken;
 
         return $this->success([
-            'token'   => $token,
+            'token' => $token,
             'student' => [
-                'id'                => $student->id,
-                'name'              => $student->name,
-                'email'             => $student->email,
+                'id' => $student->id,
+                'name' => $student->name,
+                'email' => $student->email,
                 'email_verified_at' => $student->email_verified_at,
             ],
         ], 'Đăng nhập thành công.');
@@ -140,13 +141,13 @@ class AuthController extends Controller
         $student = $request->user('api');
 
         return $this->success([
-            'id'                => $student->id,
-            'name'              => $student->name,
-            'email'             => $student->email,
-            'avatar'            => $student->avatar,
-            'date_of_birth'     => $student->date_of_birth,
+            'id' => $student->id,
+            'name' => $student->name,
+            'email' => $student->email,
+            'avatar' => $student->avatar,
+            'date_of_birth' => $student->date_of_birth,
             'email_verified_at' => $student->email_verified_at,
-            'created_at'        => $student->created_at,
+            'created_at' => $student->created_at,
         ]);
     }
 
@@ -155,38 +156,41 @@ class AuthController extends Controller
      *
      * GET /api/v1/auth/verify-email/{token}
      */
-    public function verifyEmail(string $token): \Illuminate\Http\RedirectResponse
+    public function verifyEmail(string $token): RedirectResponse
     {
         $frontendUrl = config('app.frontend_url', 'http://localhost:5173');
-        $resultUrl   = $frontendUrl . '/verify-email/result';
+        $resultUrl = $frontendUrl.'/verify-email/result';
 
         $record = DB::table('student_email_verifications')
             ->where('token', $token)
             ->first();
 
-        if (!$record) {
-            return redirect($resultUrl . '?status=invalid');
+        if (! $record) {
+            return redirect($resultUrl.'?status=invalid');
         }
 
         if (now()->isAfter($record->expires_at)) {
             DB::table('student_email_verifications')->where('token', $token)->delete();
-            return redirect($resultUrl . '?status=expired');
+
+            return redirect($resultUrl.'?status=expired');
         }
 
         $student = Student::where('email', $record->email)->first();
 
-        if (!$student) {
-            return redirect($resultUrl . '?status=invalid');
+        if (! $student) {
+            return redirect($resultUrl.'?status=invalid');
         }
 
         if ($student->email_verified_at) {
-            return redirect($resultUrl . '?status=already');
+            DB::table('student_email_verifications')->where('token', $token)->delete();
+
+            return redirect($resultUrl.'?status=already');
         }
 
         $student->update(['email_verified_at' => now()]);
         DB::table('student_email_verifications')->where('token', $token)->delete();
 
-        return redirect($resultUrl . '?status=success');
+        return redirect($resultUrl.'?status=success');
     }
 
     /**
@@ -212,8 +216,8 @@ class AuthController extends Controller
             DB::table('student_email_verifications')->where('email', $email)->delete();
 
             DB::table('student_email_verifications')->insert([
-                'email'      => $email,
-                'token'      => $verifyToken,
+                'email' => $email,
+                'token' => $verifyToken,
                 'expires_at' => now()->addHours(24),
                 'created_at' => now(),
                 'updated_at' => now(),
@@ -260,7 +264,7 @@ class AuthController extends Controller
             $request->only('email', 'password', 'password_confirmation', 'token'),
             function (Student $student, string $password) {
                 $student->update([
-                    'password'       => $password, // model cast 'hashed'
+                    'password' => $password, // model cast 'hashed'
                     'remember_token' => Str::random(60),
                 ]);
             }
@@ -272,8 +276,8 @@ class AuthController extends Controller
 
         $message = match ($status) {
             Password::INVALID_TOKEN => 'Token không hợp lệ hoặc đã hết hạn.',
-            Password::INVALID_USER  => 'Email không tồn tại trong hệ thống.',
-            default                 => 'Không thể đặt lại mật khẩu. Vui lòng thử lại sau.',
+            Password::INVALID_USER => 'Email không tồn tại trong hệ thống.',
+            default => 'Không thể đặt lại mật khẩu. Vui lòng thử lại sau.',
         };
 
         return $this->error($message, 400);

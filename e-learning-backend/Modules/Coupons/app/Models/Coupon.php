@@ -2,8 +2,8 @@
 
 namespace Modules\Coupons\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Coupon extends Model
@@ -27,32 +27,24 @@ class Coupon extends Model
     ];
 
     protected $casts = [
-        'value'           => 'decimal:2',
+        'value' => 'decimal:2',
         'min_order_value' => 'decimal:2',
-        'max_discount'    => 'decimal:2',
-        'usage_limit'     => 'integer',
-        'used_count'      => 'integer',
-        'status'          => 'integer',
-        'start_date'      => 'datetime',
-        'end_date'        => 'datetime',
-        'created_at'      => 'datetime',
-        'updated_at'      => 'datetime',
-        'deleted_at'      => 'datetime',
+        'max_discount' => 'decimal:2',
+        'usage_limit' => 'integer',
+        'used_count' => 'integer',
+        'status' => 'integer',
+        'start_date' => 'datetime',
+        'end_date' => 'datetime',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+        'deleted_at' => 'datetime',
     ];
 
-    // ── Scopes ──
-
-    /**
-     * Scope: chỉ lấy coupons đang active.
-     */
     public function scopeActive($query)
     {
         return $query->where('status', 1);
     }
 
-    /**
-     * Scope: chỉ lấy coupons còn hiệu lực (chưa hết hạn, chưa hết lượt).
-     */
     public function scopeValid($query)
     {
         return $query->active()
@@ -67,27 +59,29 @@ class Coupon extends Model
             });
     }
 
-    // ── Business Logic ──
-
-    /**
-     * Kiểm tra coupon còn hợp lệ không.
-     */
     public function isValid(): bool
     {
-        if ($this->status !== 1) return false;
-        if ($this->start_date && $this->start_date->isFuture()) return false;
-        if ($this->end_date && $this->end_date->isPast()) return false;
-        if ($this->usage_limit !== null && $this->used_count >= $this->usage_limit) return false;
+        if ($this->status !== 1) {
+            return false;
+        }
+        if ($this->start_date && $this->start_date->isFuture()) {
+            return false;
+        }
+        if ($this->end_date && $this->end_date->isPast()) {
+            return false;
+        }
+        if ($this->usage_limit !== null && $this->used_count >= $this->usage_limit) {
+            return false;
+        }
 
         return true;
     }
 
-    /**
-     * Tính giá trị giảm giá thực tế dựa trên subtotal.
-     */
     public function calculateDiscount(float $subtotal): float
     {
-        if (!$this->isValid()) return 0;
+        if (! $this->isValid()) {
+            return 0;
+        }
 
         // Kiểm tra giá trị đơn hàng tối thiểu
         if ($this->min_order_value && $subtotal < (float) $this->min_order_value) {

@@ -3,8 +3,8 @@
 namespace Modules\Posts\Models;
 
 use Illuminate\Database\Eloquent\Model;
-
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Modules\Users\Models\User;
 
 class Post extends Model
 {
@@ -29,7 +29,7 @@ class Post extends Model
 
     public function author()
     {
-        return $this->belongsTo(\Modules\Users\Models\User::class, 'author_id');
+        return $this->belongsTo(User::class, 'author_id');
     }
 
     public function category()

@@ -686,8 +686,8 @@ async function submitForm() {
     showModal.value = false
     loadPage(pagination.current_page)
     fetchTrashedCount()
-  } catch (err: unknown) {
-    const error = err as any
+  } catch (err) {
+    const error = err as { response?: { data?: { message?: string } } }
     formError.value = error.response?.data?.message || 'Có lỗi xảy ra.'
   } finally {
     submitting.value = false
@@ -719,8 +719,8 @@ async function doDelete() {
     showDeleteModal.value = false
     loadPage(pagination.current_page)
     fetchTrashedCount()
-  } catch (err: unknown) {
-    const error = err as any
+  } catch (err) {
+    const error = err as { response?: { data?: { message?: string } } }
     toast.error(error.response?.data?.message || 'Xoá thất bại.')
   } finally {
     deleteLoading.value = false

@@ -2,8 +2,8 @@
 
 namespace Modules\Users\Http\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
 class UpdateUsersRequest extends FormRequest
@@ -25,11 +25,11 @@ class UpdateUsersRequest extends FormRequest
         $id = $this->route('user');
 
         return [
-            'name'     => 'sometimes|string|max:255',
-            'email'    => "sometimes|email|max:255|unique:users,email,{$id}",
+            'name' => 'sometimes|string|max:255',
+            'email' => "sometimes|email|max:255|unique:users,email,{$id}",
             'password' => 'sometimes|string|min:8|max:100',
-            'avatar'   => 'nullable|string|max:255',
-            'role'     => 'nullable|string|exists:roles,name',
+            'avatar' => 'nullable|string|max:255',
+            'role' => 'nullable|string|exists:roles,name',
         ];
     }
 
@@ -39,10 +39,10 @@ class UpdateUsersRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'email.email'   => 'Email không đúng định dạng.',
-            'email.unique'  => 'Email đã được sử dụng.',
-            'password.min'  => 'Mật khẩu tối thiểu 8 ký tự.',
-            'role.exists'   => 'Role không hợp lệ.',
+            'email.email' => 'Email không đúng định dạng.',
+            'email.unique' => 'Email đã được sử dụng.',
+            'password.min' => 'Mật khẩu tối thiểu 8 ký tự.',
+            'role.exists' => 'Role không hợp lệ.',
         ];
     }
 
@@ -54,7 +54,7 @@ class UpdateUsersRequest extends FormRequest
         throw new HttpResponseException(response()->json([
             'success' => false,
             'message' => 'Dữ liệu không hợp lệ.',
-            'errors'  => $validator->errors(),
+            'errors' => $validator->errors(),
         ], 422));
     }
 }

@@ -62,7 +62,7 @@
           </div>
         </div>
 
-        <p class="text-xs text-gray-400">Nộp lúc: {{ formatDate(viewingAttempt.completed_at) }}</p>
+        <p class="text-xs text-gray-400">Nộp lúc: {{ formatDatetime(viewingAttempt.completed_at) }}</p>
       </div>
 
       <!-- Per-question breakdown -->
@@ -117,7 +117,7 @@
                 </p>
                 <p class="text-xs text-gray-400 mt-0.5">
                   {{ attempt.score }}/{{ attempt.total_questions }} câu đúng ·
-                  {{ formatDate(attempt.completed_at) }}
+                  {{ formatDatetime(attempt.completed_at) }}
                 </p>
               </div>
             </div>
@@ -185,7 +185,7 @@
         </div>
 
         <div class="flex flex-col gap-1 text-xs text-gray-400 mb-5">
-          <span>Nộp lúc: {{ formatDate(lastAttempt.completed_at) }}</span>
+          <span>Nộp lúc: {{ formatDatetime(lastAttempt.completed_at) }}</span>
           <span v-if="attemptsLeft > 0">Còn {{ attemptsLeft }} lượt làm lại</span>
           <span v-else class="text-orange-400">Đã dùng hết lượt làm bài</span>
         </div>
@@ -323,127 +323,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, defineComponent, h } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useToast } from 'vue-toastification'
 import { quizService } from '@/services/quiz.service'
 import type { Quiz, QuizQuestion, QuizAttempt } from '@/services/quiz.service'
-import {
-  optionResultClass,
-  optionBadgeClass,
-  optionLabel,
-  isQuestionCorrect,
-} from '@/utils/quizResult'
-import type { Option } from '@/utils/quizResult'
-
-// ── Inline sub-component: Chi tiết từng câu ─────────────────────────────────
-const QuestionBreakdown = defineComponent({
-  props: {
-    questions: { type: Array as () => QuizQuestion[], required: true },
-    attempt: { type: Object as () => QuizAttempt, required: true },
-  },
-  setup(props) {
-    function optionClass(q: QuizQuestion, opt: string) {
-      return optionResultClass(
-        props.attempt.correct_answers,
-        props.attempt.answers,
-        q.id,
-        opt as Option,
-        'dark',
-      )
-    }
-    function badgeClass(q: QuizQuestion, opt: string) {
-      return optionBadgeClass(
-        props.attempt.correct_answers,
-        props.attempt.answers,
-        q.id,
-        opt as Option,
-      )
-    }
-    return () =>
-      h(
-        'div',
-        {
-          class:
-            'bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-800',
-        },
-        [
-          h(
-            'h3',
-            { class: 'text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3' },
-            'Chi tiết từng câu',
-          ),
-          h(
-            'div',
-            { class: 'space-y-4' },
-            props.questions.map((q, i) =>
-              h('div', { key: q.id }, [
-                h('div', { class: 'flex items-start gap-2 mb-2' }, [
-                  h(
-                    'span',
-                    {
-                      class: `flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-white text-xs font-bold mt-0.5 ${isQuestionCorrect(props.attempt.correct_answers, props.attempt.answers, q.id) ? 'bg-green-500' : 'bg-red-500'}`,
-                    },
-                    isQuestionCorrect(props.attempt.correct_answers, props.attempt.answers, q.id)
-                      ? '✓'
-                      : '✗',
-                  ),
-                  h(
-                    'p',
-                    { class: 'text-xs font-medium text-gray-700 dark:text-gray-300' },
-                    `${i + 1}. ${q.question}`,
-                  ),
-                ]),
-                h(
-                  'div',
-                  { class: 'space-y-1.5 pl-7' },
-                  (['A', 'B', 'C', 'D'] as const).map((opt) =>
-                    h(
-                      'div',
-                      {
-                        key: opt,
-                        class: `flex items-center gap-2.5 px-3 py-2 rounded-xl border text-xs ${optionClass(q, opt)}`,
-                      },
-                      [
-                        h(
-                          'span',
-                          {
-                            class: `w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${badgeClass(q, opt)}`,
-                          },
-                          opt,
-                        ),
-                        h(
-                          'span',
-                          {},
-                          String(q[`option_${opt.toLowerCase()}` as keyof typeof q] ?? ''),
-                        ),
-                        (() => {
-                          const lbl = optionLabel(
-                            props.attempt.correct_answers,
-                            props.attempt.answers,
-                            q.id,
-                            opt as Option,
-                          )
-                          if (lbl === '✓ Đúng')
-                            return h(
-                              'span',
-                              { class: 'ml-auto text-green-600 dark:text-green-400 font-medium' },
-                              lbl,
-                            )
-                          if (lbl === '✗ Bạn chọn')
-                            return h('span', { class: 'ml-auto text-red-500 font-medium' }, lbl)
-                          return null
-                        })(),
-                      ],
-                    ),
-                  ),
-                ),
-              ]),
-            ),
-          ),
-        ],
-      )
-  },
-})
+import QuestionBreakdown from '@/components/shared/client/QuestionBreakdown.vue'
+import { formatDatetime } from '@/utils/formatDate'
 
 // ── Main component ────────────────────────────────────────────────────────────
 const props = defineProps<{ lessonId: number }>()
@@ -478,16 +363,6 @@ function attemptEmoji(a: QuizAttempt | null) {
 function attemptLabel(a: QuizAttempt | null) {
   const p = a?.percentage ?? 0
   return p >= 80 ? 'Xuất sắc!' : p >= 50 ? 'Đạt yêu cầu' : 'Chưa đạt'
-}
-
-function formatDate(iso: string) {
-  if (!iso) return ''
-  const d = new Date(iso)
-  return (
-    d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }) +
-    ' ' +
-    d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
-  )
 }
 
 onMounted(async () => {

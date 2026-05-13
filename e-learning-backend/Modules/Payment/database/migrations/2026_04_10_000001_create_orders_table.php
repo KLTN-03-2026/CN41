@@ -42,8 +42,8 @@ return new class extends Migration
 
             // Foreign key
             $table->foreign('student_id')
-                  ->references('id')->on('students')
-                  ->onDelete('cascade');
+                ->references('id')->on('students')
+                ->onDelete('cascade');
         });
     }
 

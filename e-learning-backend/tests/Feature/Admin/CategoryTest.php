@@ -103,7 +103,7 @@ class CategoryTest extends TestCase
             'slug' => 'ky-nang-mem',
         ]);
 
-        $response = $this->putJson($this->baseUrl.'/'.$category->id, [
+        $response = $this->patchJson($this->baseUrl.'/'.$category->id, [
             'name' => 'Kỹ Năng Mềm (Updated)',
             'slug' => 'ky-nang-mem-updated',
         ]);
@@ -132,7 +132,7 @@ class CategoryTest extends TestCase
             'slug' => 'cat-2',
         ]);
 
-        $response = $this->putJson($this->baseUrl.'/'.$categoryToUpdate->id, [
+        $response = $this->patchJson($this->baseUrl.'/'.$categoryToUpdate->id, [
             'name' => 'Cat 2 Updated',
             'slug' => 'cat-1',
         ]);

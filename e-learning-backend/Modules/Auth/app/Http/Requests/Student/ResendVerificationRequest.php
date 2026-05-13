@@ -2,8 +2,8 @@
 
 namespace Modules\Auth\Http\Requests\Student;
 
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
 class ResendVerificationRequest extends FormRequest
@@ -24,8 +24,8 @@ class ResendVerificationRequest extends FormRequest
     {
         return [
             'email.required' => 'Email không được để trống.',
-            'email.email'    => 'Email không đúng định dạng.',
-            'email.exists'   => 'Email không tồn tại trong hệ thống.',
+            'email.email' => 'Email không đúng định dạng.',
+            'email.exists' => 'Email không tồn tại trong hệ thống.',
         ];
     }
 
@@ -34,7 +34,7 @@ class ResendVerificationRequest extends FormRequest
         throw new HttpResponseException(response()->json([
             'success' => false,
             'message' => 'Dữ liệu không hợp lệ.',
-            'errors'  => $validator->errors(),
+            'errors' => $validator->errors(),
         ], 422));
     }
 }

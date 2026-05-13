@@ -12,7 +12,7 @@ class TeacherResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
-            'email' => $this->user->email ?? null,
+            'email' => $this->whenLoaded('user', fn () => $this->user->email),
             'slug' => $this->slug,
             'description' => $this->description,
             'exp' => $this->exp,

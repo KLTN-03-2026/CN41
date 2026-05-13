@@ -27,7 +27,6 @@ class Course extends Model
      */
     protected $fillable = [
         'teacher_id',
-        'category_id',
         'name',
         'slug',
         'description',
@@ -52,65 +51,36 @@ class Course extends Model
         'total_students' => 'integer',
         'status' => 'integer',
         'teacher_id' => 'integer',
-        'category_id' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'deleted_at' => 'datetime',
     ];
 
-    // ── Cascade delete ──
-
-    /**
-     * Đăng ký model events để cascade soft/force delete xuống sections & lessons.
-     */
     protected static function booted(): void
     {
-        // Soft delete Course → soft delete tất cả Sections + Lessons thuộc course
         static::deleting(function (Course $course) {
             if (! $course->isForceDeleting()) {
-                // Soft delete sections
                 $course->sections()->each(fn (Section $section) => $section->delete());
-
-                // Soft delete lessons (qua section_id, bao gồm cả lesson chưa có section)
                 Lesson::where('course_id', $course->id)->each(fn (Lesson $lesson) => $lesson->delete());
             }
         });
 
-        // Force delete Course → force delete vĩnh viễn tất cả Sections + Lessons (kể cả đã soft-deleted)
         static::forceDeleting(function (Course $course) {
-            // Force delete lessons trước (FK section_id)
+            $course->categories()->detach();
             Lesson::withTrashed()->where('course_id', $course->id)->each(fn (Lesson $lesson) => $lesson->forceDelete());
-
-            // Force delete sections
             Section::withTrashed()->where('course_id', $course->id)->each(fn (Section $section) => $section->forceDelete());
         });
 
-        // Restore Course → restore tất cả Sections + Lessons đã bị soft-delete cùng thời điểm
         static::restoring(function (Course $course) {
             Section::withTrashed()->where('course_id', $course->id)->each(fn (Section $section) => $section->restore());
             Lesson::withTrashed()->where('course_id', $course->id)->each(fn (Lesson $lesson) => $lesson->restore());
         });
     }
 
-    // ── Scopes ──
-
-    /**
-     * Scope: chỉ lấy courses đã published (status = 1).
-     */
     public function scopePublished($query)
     {
         return $query->where('status', 1);
     }
-
-    /**
-     * Scope: alias cho published.
-     */
-    public function scopeActive($query)
-    {
-        return $query->where('status', 1);
-    }
-
-    // ── Relationships ──
 
     /**
      * Course thuộc về một Teacher.
@@ -154,9 +124,6 @@ class Course extends Model
         return $this->hasMany(Section::class, 'course_id')->ordered();
     }
 
-    /**
-     * Course có nhiều Lessons (phẳng) qua section. Tạm thời có thể giữ lại nếu logic cũ cần.
-     */
     public function lessons()
     {
         return $this->hasManyThrough(Lesson::class, Section::class, 'course_id', 'section_id');

@@ -20,7 +20,7 @@ export function usePosts() {
   async function fetchPosts(page = 1) {
     loading.value = true
     try {
-      const params: any = {
+      const params: Record<string, unknown> = {
         page,
         per_page: pagination.per_page,
         search: search.value || undefined,

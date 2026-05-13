@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Modules\Posts\Http\Requests\Admin\BulkDeletePostsRequest;
 use Modules\Posts\Http\Requests\Admin\StorePostRequest;
 use Modules\Posts\Http\Requests\Admin\UpdatePostRequest;
 use Modules\Posts\Http\Resources\PostResource;
@@ -16,14 +18,14 @@ class PostController extends Controller
     use ApiResponse;
 
     public function __construct(
-        protected PostRepositoryInterface $repository
+        private PostRepositoryInterface $repository
     ) {}
 
     public function index(Request $request): JsonResponse
     {
         $posts = $this->repository->getFiltered(
             $request->all(),
-            $request->get('per_page', 15)
+            (int) $request->query('per_page', 15)
         );
 
         $posts->setCollection(PostResource::collection($posts->getCollection())->collection);
@@ -34,17 +36,21 @@ class PostController extends Controller
     public function store(StorePostRequest $request): JsonResponse
     {
         $data = $request->validated();
-        $data['author_id'] = auth()->id();
+        $data['author_id'] = auth('admin')->id();
 
         if (! empty($data['is_published'])) {
             $data['published_at'] = now();
         }
 
-        $post = $this->repository->create($data);
+        $post = DB::transaction(function () use ($data) {
+            $post = $this->repository->create($data);
 
-        if (! empty($data['tag_ids'])) {
-            $post->tags()->sync($data['tag_ids']);
-        }
+            if (! empty($data['tag_ids'])) {
+                $post->tags()->sync($data['tag_ids']);
+            }
+
+            return $post;
+        });
 
         return $this->success(
             new PostResource($post->load(['author', 'category', 'tags'])),
@@ -73,11 +79,15 @@ class PostController extends Controller
             $data['published_at'] = now();
         }
 
-        $post = $this->repository->update($id, $data);
+        $post = DB::transaction(function () use ($data, $id) {
+            $post = $this->repository->update($id, $data);
 
-        if (isset($data['tag_ids'])) {
-            $post->tags()->sync($data['tag_ids']);
-        }
+            if (isset($data['tag_ids'])) {
+                $post->tags()->sync($data['tag_ids']);
+            }
+
+            return $post;
+        });
 
         return $this->success(
             new PostResource($post->load(['author', 'category', 'tags'])),
@@ -102,15 +112,36 @@ class PostController extends Controller
         );
     }
 
-    public function bulkDelete(Request $request): JsonResponse
+    public function bulkDelete(BulkDeletePostsRequest $request): JsonResponse
     {
-        $ids = $request->validate([
-            'ids' => 'required|array',
-            'ids.*' => 'integer|exists:posts,id',
-        ])['ids'];
+        $deleted = $this->repository->deleteMany($request->ids);
 
-        $this->repository->getModel()->whereIn('id', $ids)->delete();
+        return $this->success(
+            ['deleted_count' => $deleted, 'deleted_ids' => $request->ids],
+            "Đã xoá {$deleted} bài viết thành công."
+        );
+    }
 
-        return $this->success(null, 'Xóa các bài viết đã chọn thành công.');
+    public function trashed(Request $request): JsonResponse
+    {
+        $perPage = (int) $request->query('per_page', 15);
+        $data = $this->repository->paginateTrashed($perPage, ['*'], ['author', 'category', 'tags']);
+        $data->setCollection(PostResource::collection($data->getCollection())->collection);
+
+        return $this->paginated($data, 'Lấy danh sách bài viết đã xóa thành công.');
+    }
+
+    public function restore(int $id): JsonResponse
+    {
+        $this->repository->restore($id);
+
+        return $this->success(null, 'Khôi phục bài viết thành công.');
+    }
+
+    public function forceDelete(int $id): JsonResponse
+    {
+        $this->repository->forceDeleteById($id);
+
+        return $this->success(null, 'Xóa vĩnh viễn bài viết thành công.');
     }
 }

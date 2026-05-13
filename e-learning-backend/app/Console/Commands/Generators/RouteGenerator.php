@@ -25,6 +25,6 @@ PHP;
 
         $this->putFile($path, $content);
 
-        return ["  ✔ Routes: routes/api.php"];
+        return ['  ✔ Routes: routes/api.php'];
     }
 }

@@ -19,9 +19,9 @@ class UpdateCouponRequest extends FormRequest
         $id = $this->route('coupon');
 
         return [
-            'code' => "required|string|max:50|unique:coupons,code,{$id}",
-            'type' => 'required|string|in:fixed,percentage',
-            'value' => 'required|numeric|min:0',
+            'code' => "sometimes|required|string|max:50|unique:coupons,code,{$id}",
+            'type' => 'sometimes|required|string|in:fixed,percentage',
+            'value' => 'sometimes|required|numeric|min:0',
             'min_order_value' => 'nullable|numeric|min:0',
             'max_discount' => 'nullable|numeric|min:0',
             'usage_limit' => 'nullable|integer|min:1',

@@ -27,9 +27,9 @@ return new class extends Migration
             $table->unsignedBigInteger('parent_id')->nullable();
 
             $table->foreign('parent_id')
-                  ->references('id')
-                  ->on('categories')
-                  ->onDelete('set null');
+                ->references('id')
+                ->on('categories')
+                ->onDelete('set null');
 
             $table->index(['_lft', '_rgt', 'parent_id']);
 

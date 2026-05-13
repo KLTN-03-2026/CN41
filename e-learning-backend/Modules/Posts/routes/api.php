@@ -25,17 +25,20 @@ Route::prefix('v1/admin')->middleware(['auth:admin'])->group(function () {
     Route::patch('tags/{id}', [AdminTagController::class, 'update'])->middleware('permission:tags.edit');
     Route::delete('tags/{id}', [AdminTagController::class, 'destroy'])->middleware('permission:tags.delete');
 
-    // Posts
-    Route::post('posts/bulk-delete', [AdminPostController::class, 'bulkDelete'])->middleware('permission:posts.delete');
+    // Posts — static routes BEFORE parameterized
+    Route::get('posts/trashed', [AdminPostController::class, 'trashed'])->middleware('permission:posts.view');
+    Route::delete('posts/bulk-delete', [AdminPostController::class, 'bulkDelete'])->middleware('permission:posts.delete');
     Route::get('posts', [AdminPostController::class, 'index'])->middleware('permission:posts.view');
     Route::post('posts', [AdminPostController::class, 'store'])->middleware('permission:posts.create');
     Route::get('posts/{id}', [AdminPostController::class, 'show'])->middleware('permission:posts.view');
-    Route::match(['put', 'patch'], 'posts/{id}', [AdminPostController::class, 'update'])->middleware('permission:posts.edit');
+    Route::patch('posts/{id}', [AdminPostController::class, 'update'])->middleware('permission:posts.edit');
     Route::delete('posts/{id}', [AdminPostController::class, 'destroy'])->middleware('permission:posts.delete');
     Route::patch('posts/{id}/toggle-publish', [AdminPostController::class, 'togglePublish'])->middleware('permission:posts.edit');
+    Route::patch('posts/{id}/restore', [AdminPostController::class, 'restore'])->middleware('permission:posts.edit');
+    Route::delete('posts/{id}/force-delete', [AdminPostController::class, 'forceDelete'])->middleware('permission:posts.delete');
 
-    // Comments
-    Route::post('comments/bulk-delete', [AdminCommentController::class, 'bulkDelete'])->middleware('permission:comments.delete');
+    // Comments — static routes BEFORE parameterized
+    Route::delete('comments/bulk-delete', [AdminCommentController::class, 'bulkDelete'])->middleware('permission:comments.delete');
     Route::get('comments', [AdminCommentController::class, 'index'])->middleware('permission:comments.view');
     Route::patch('comments/{id}/toggle-approval', [AdminCommentController::class, 'toggleApproval'])->middleware('permission:comments.delete');
     Route::delete('comments/{id}', [AdminCommentController::class, 'destroy'])->middleware('permission:comments.delete');
@@ -47,7 +50,6 @@ Route::prefix('v1')->group(function () {
     Route::get('posts/{slug}', [PostController::class, 'show']);
     Route::post('posts/{id}/increment-views', [PostController::class, 'incrementViews']);
 
-    // Public Categories & Tags
     Route::get('post-categories', [PostCategoryController::class, 'index']);
     Route::get('tags', [TagController::class, 'index']);
 });

@@ -253,8 +253,7 @@ const toggleSelect = (id: number) => {
   else selectedIds.value.add(id)
 }
 
-// Fetch
-let debounceTimer: any
+let debounceTimer: ReturnType<typeof setTimeout> | undefined
 const debouncedFetch = () => {
   clearTimeout(debounceTimer)
   debounceTimer = setTimeout(() => fetchComments(1), 300)

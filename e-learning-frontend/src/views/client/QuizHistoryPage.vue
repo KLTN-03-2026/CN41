@@ -47,7 +47,7 @@
             <div class="flex-1 min-w-0">
               <div class="flex items-center justify-between mb-2">
                 <span class="text-sm font-medium text-gray-700">Lần {{ attempts.length - i }}</span>
-                <span class="text-xs text-gray-400">{{ formatDate(attempt.created_at) }}</span>
+                <span class="text-xs text-gray-400">{{ formatDatetime(attempt.created_at) }}</span>
               </div>
               <div class="flex items-center gap-3">
                 <div class="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
@@ -146,6 +146,15 @@ import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { quizService } from '@/services/quiz.service'
 import type { QuizAttempt } from '@/services/quiz.service'
+import { formatDatetime } from '@/utils/formatDate'
+import {
+  getCorrectAnswer,
+  getStudentAnswer,
+  isQuestionCorrect,
+  optionResultClass,
+  optionBadgeClass,
+} from '@/utils/quizResult'
+import type { Option } from '@/utils/quizResult'
 
 const route = useRoute()
 const router = useRouter()
@@ -168,10 +177,6 @@ function toggleExpand(id: number) {
   expandedId.value = expandedId.value === id ? null : id
 }
 
-function formatDate(str: string) {
-  return new Date(str).toLocaleString('vi-VN', { dateStyle: 'short', timeStyle: 'short' })
-}
-
 function scoreColorBg(pct: number) {
   if (pct >= 80) return 'bg-green-500'
   if (pct >= 50) return 'bg-yellow-500'
@@ -184,37 +189,25 @@ function scoreColorText(pct: number) {
   return 'text-red-600'
 }
 
-// ── Helpers ──────────────────────────────────────────────────────
+// ── Helpers — delegate to @/utils/quizResult ─────────────────────
 
-function getCorrect(attempt: QuizAttempt, questionId: number): string | undefined {
-  if (!attempt.correct_answers) return undefined
-  return (attempt.correct_answers as Record<string, string>)[String(questionId)]
+function getCorrect(attempt: QuizAttempt, questionId: number) {
+  return getCorrectAnswer(attempt.correct_answers, questionId)
 }
 
-function getStudent(attempt: QuizAttempt, questionId: number): string | undefined {
-  if (!attempt.answers) return undefined
-  return (attempt.answers as Record<string, string>)[String(questionId)]
+function getStudent(attempt: QuizAttempt, questionId: number) {
+  return getStudentAnswer(attempt.answers, questionId)
 }
 
 function isCorrectInAttempt(attempt: QuizAttempt, questionId: number): boolean {
-  const c = getCorrect(attempt, questionId)
-  const s = getStudent(attempt, questionId)
-  return !!c && !!s && c === s
+  return isQuestionCorrect(attempt.correct_answers, attempt.answers, questionId)
 }
 
 function optionClass(attempt: QuizAttempt, questionId: number, opt: 'A' | 'B' | 'C' | 'D'): string {
-  const correct = getCorrect(attempt, questionId)
-  const student = getStudent(attempt, questionId)
-  if (opt === correct) return 'border-green-400 bg-green-50 text-green-800'
-  if (opt === student && student !== correct) return 'border-red-400 bg-red-50 text-red-800'
-  return 'border-gray-100 text-gray-500'
+  return optionResultClass(attempt.correct_answers, attempt.answers, questionId, opt as Option)
 }
 
 function optionBadge(attempt: QuizAttempt, questionId: number, opt: 'A' | 'B' | 'C' | 'D'): string {
-  const correct = getCorrect(attempt, questionId)
-  const student = getStudent(attempt, questionId)
-  if (opt === correct) return 'bg-green-500 text-white'
-  if (opt === student && student !== correct) return 'bg-red-500 text-white'
-  return 'bg-gray-100 text-gray-400'
+  return optionBadgeClass(attempt.correct_answers, attempt.answers, questionId, opt as Option)
 }
 </script>

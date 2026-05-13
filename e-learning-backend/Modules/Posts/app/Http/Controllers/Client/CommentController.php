@@ -14,16 +14,16 @@ class CommentController extends Controller
     use ApiResponse;
 
     public function __construct(
-        protected CommentRepositoryInterface $repository
+        private CommentRepositoryInterface $repository
     ) {}
 
     public function store(StoreCommentRequest $request, int $postId): JsonResponse
     {
         $data = $request->validated();
         $data['post_id'] = $postId;
-        $data['user_id'] = auth()->id();
+        $data['user_id'] = auth('api')->id();
         $data['user_type'] = 'student';
-        $data['is_approved'] = true; // Mặc định duyệt, có thể đổi lại nếu cần filter spam
+        $data['is_approved'] = true;
 
         $comment = $this->repository->create($data);
 

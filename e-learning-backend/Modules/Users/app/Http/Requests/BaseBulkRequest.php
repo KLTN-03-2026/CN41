@@ -3,8 +3,8 @@
 namespace Modules\Users\Http\Requests;
 
 use App\Traits\ApiResponse;
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
 abstract class BaseBulkRequest extends FormRequest

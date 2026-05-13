@@ -28,7 +28,7 @@ return new class extends Migration
             $table->integer('bitrate')->nullable(); // bps
             $table->string('codec', 50)->nullable();
             $table->unsignedBigInteger('uploaded_by')->nullable();
-            
+
             // Foreign keys if necessary
             $table->foreign('uploaded_by')->references('id')->on('users')->nullOnDelete();
 

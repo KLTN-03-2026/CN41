@@ -5,8 +5,8 @@ namespace Modules\Students\Database\Seeders;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Modules\Students\Models\Student;
 use Modules\Course\Models\Course;
+use Modules\Students\Models\Student;
 
 class StudentEnrollmentSeeder extends Seeder
 {
@@ -31,8 +31,8 @@ class StudentEnrollmentSeeder extends Seeder
             $createdStudents[] = Student::firstOrCreate(
                 ['email' => $data['email']],
                 [
-                    'name'              => $data['name'],
-                    'password'          => Hash::make('password'),
+                    'name' => $data['name'],
+                    'password' => Hash::make('password'),
                     'email_verified_at' => now(),
                 ]
             );
@@ -41,13 +41,15 @@ class StudentEnrollmentSeeder extends Seeder
         // Enroll mỗi student vào 2-5 khóa học ngẫu nhiên
         $courseIds = Course::where('status', 1)->pluck('id')->toArray();
 
-        if (empty($courseIds)) return;
+        if (empty($courseIds)) {
+            return;
+        }
 
         foreach ($createdStudents as $student) {
             $numCourses = rand(2, min(5, count($courseIds)));
-            $shuffled   = $courseIds;
+            $shuffled = $courseIds;
             shuffle($shuffled);
-            $toEnroll   = array_slice($shuffled, 0, $numCourses);
+            $toEnroll = array_slice($shuffled, 0, $numCourses);
 
             foreach ($toEnroll as $courseId) {
                 $exists = DB::table('students_course')
@@ -55,18 +57,18 @@ class StudentEnrollmentSeeder extends Seeder
                     ->where('course_id', $courseId)
                     ->exists();
 
-                if (!$exists) {
+                if (! $exists) {
                     DB::table('students_course')->insert([
-                        'student_id'  => $student->id,
-                        'course_id'   => $courseId,
+                        'student_id' => $student->id,
+                        'course_id' => $courseId,
                         'enrolled_at' => now()->subDays(rand(1, 90)),
-                        'created_at'  => now(),
-                        'updated_at'  => now(),
+                        'created_at' => now(),
+                        'updated_at' => now(),
                     ]);
                 }
             }
         }
 
-        $this->command->info('Đã seed ' . count($createdStudents) . ' students và enrollments.');
+        $this->command->info('Đã seed '.count($createdStudents).' students và enrollments.');
     }
 }

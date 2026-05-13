@@ -4,6 +4,8 @@ namespace Modules\Students\Providers;
 
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
+use Modules\Students\Repositories\StudentsRepository;
+use Modules\Students\Repositories\StudentsRepositoryInterface;
 use Nwidart\Modules\Traits\PathNamespace;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
@@ -36,14 +38,9 @@ class StudentsServiceProvider extends ServiceProvider
     {
         // ── Repository Binding ──
         $this->app->bind(
-            \Modules\Students\Repositories\StudentsRepositoryInterface::class,
-            \Modules\Students\Repositories\StudentsRepository::class
+            StudentsRepositoryInterface::class,
+            StudentsRepository::class
         );
-
-        // ── Helper Binding ──
-        $this->app->singleton('StudentsHelper', function () {
-            return new \Modules\Students\Helpers\StudentsHelper();
-        });
 
         $this->app->register(EventServiceProvider::class);
         $this->app->register(RouteServiceProvider::class);
@@ -140,7 +137,7 @@ class StudentsServiceProvider extends ServiceProvider
 
         $this->loadViewsFrom(array_merge($this->getPublishableViewPaths(), [$sourcePath]), $this->nameLower);
 
-        Blade::componentNamespace(config('modules.namespace').'\\' . $this->name . '\\View\\Components', $this->nameLower);
+        Blade::componentNamespace(config('modules.namespace').'\\'.$this->name.'\\View\\Components', $this->nameLower);
     }
 
     /**

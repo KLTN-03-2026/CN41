@@ -3,10 +3,13 @@
 namespace Modules\Payment\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Modules\Payment\Repositories\OrderRepository;
+use Modules\Payment\Repositories\OrderRepositoryInterface;
 
 class PaymentServiceProvider extends ServiceProvider
 {
     protected string $name = 'Payment';
+
     protected string $nameLower = 'payment';
 
     /**
@@ -24,10 +27,9 @@ class PaymentServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        // ── Repository Binding ──
         $this->app->bind(
-            \Modules\Payment\Repositories\OrderRepositoryInterface::class,
-            \Modules\Payment\Repositories\OrderRepository::class
+            OrderRepositoryInterface::class,
+            OrderRepository::class
         );
 
         $this->app->register(EventServiceProvider::class);

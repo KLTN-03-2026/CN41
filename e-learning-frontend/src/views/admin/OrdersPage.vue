@@ -124,7 +124,7 @@
                 <OrderStatusBadge :status="order.status" />
               </td>
               <td class="px-4 py-3 text-gray-500 text-xs">
-                {{ formatDate(order.created_at) }}
+                {{ formatDatetime(order.created_at) }}
               </td>
               <td class="px-4 py-3 text-center">
                 <div class="flex justify-center gap-1">
@@ -206,6 +206,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { useToast } from 'vue-toastification'
 import { orderService } from '@/services/order.service'
 import { formatCurrency } from '@/utils/formatCurrency'
+import { formatDatetime } from '@/utils/formatDate'
 import OrderStatusBadge from '@/components/common/OrderStatusBadge.vue'
 import OrderDetailModal from '@/components/shared/admin/OrderDetailModal.vue'
 import ConfirmModal from '@/components/common/ConfirmModal.vue'
@@ -229,11 +230,6 @@ const filters = reactive({
 
 const showDetail = ref(false)
 const selectedOrderId = ref<number | null>(null)
-
-function formatDate(iso: string) {
-  if (!iso) return ''
-  return new Date(iso).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
-}
 
 // ── Fetch with usePagination ──────────────────────────────────
 async function loadPage(page = 1) {

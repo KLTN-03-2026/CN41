@@ -3,6 +3,7 @@
 namespace Modules\Coupons\Http\Requests;
 
 use Illuminate\Validation\Validator;
+use Modules\Coupons\Models\Coupon;
 
 class BulkDeleteCouponsRequest extends BaseBulkRequest
 {
@@ -14,7 +15,7 @@ class BulkDeleteCouponsRequest extends BaseBulkRequest
     public function rules(): array
     {
         return [
-            'ids'   => 'required|array|min:1|max:100',
+            'ids' => 'required|array|min:1|max:100',
             'ids.*' => 'required|integer|exists:coupons,id',
         ];
     }
@@ -22,17 +23,19 @@ class BulkDeleteCouponsRequest extends BaseBulkRequest
     public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $validator) {
-            if ($validator->errors()->isNotEmpty()) return;
+            if ($validator->errors()->isNotEmpty()) {
+                return;
+            }
 
-            $alreadyTrashed = \Modules\Coupons\Models\Coupon::onlyTrashed()
+            $alreadyTrashed = Coupon::onlyTrashed()
                 ->whereIn('id', $this->ids)
                 ->pluck('id')
                 ->toArray();
 
-            if (!empty($alreadyTrashed)) {
+            if (! empty($alreadyTrashed)) {
                 $validator->errors()->add(
                     'ids',
-                    'Các mã giảm giá sau đã bị xoá: ' . implode(', ', $alreadyTrashed)
+                    'Các mã giảm giá sau đã bị xoá: '.implode(', ', $alreadyTrashed)
                 );
             }
         });
@@ -41,12 +44,12 @@ class BulkDeleteCouponsRequest extends BaseBulkRequest
     public function messages(): array
     {
         return [
-            'ids.required'  => 'Danh sách ID không được để trống.',
-            'ids.array'     => 'ids phải là mảng.',
-            'ids.min'       => 'Phải chọn ít nhất 1 mã giảm giá.',
-            'ids.max'       => 'Không thể xử lý quá 100 mã giảm giá cùng lúc.',
+            'ids.required' => 'Danh sách ID không được để trống.',
+            'ids.array' => 'ids phải là mảng.',
+            'ids.min' => 'Phải chọn ít nhất 1 mã giảm giá.',
+            'ids.max' => 'Không thể xử lý quá 100 mã giảm giá cùng lúc.',
             'ids.*.integer' => 'ID phải là số nguyên.',
-            'ids.*.exists'  => 'Một hoặc nhiều mã giảm giá không tồn tại.',
+            'ids.*.exists' => 'Một hoặc nhiều mã giảm giá không tồn tại.',
         ];
     }
 }

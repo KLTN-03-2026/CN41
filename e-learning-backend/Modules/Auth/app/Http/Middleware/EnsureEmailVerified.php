@@ -27,14 +27,14 @@ class EnsureEmailVerified
     {
         $student = $request->user('api');
 
-        if (!$student || !$student->email_verified_at) {
+        if (! $student || ! $student->email_verified_at) {
             return response()->json([
                 'success' => false,
                 'message' => 'Tài khoản chưa được kích hoạt. Vui lòng kiểm tra email để xác thực tài khoản.',
-                'data'    => null,
-                'errors'  => [
+                'data' => null,
+                'errors' => [
                     'email_not_verified' => true,
-                    'email'              => $student?->email,
+                    'email' => $student?->email,
                 ],
             ], 403);
         }

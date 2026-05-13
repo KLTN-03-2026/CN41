@@ -30,13 +30,13 @@ class SendVerificationEmail implements ShouldQueue
 
     public function handle(StudentRegistered $event): void
     {
-        $verifyUrl = config('app.url') . '/api/v1/auth/verify-email/' . $event->verifyToken;
+        $verifyUrl = config('app.url').'/api/v1/auth/verify-email/'.$event->verifyToken;
 
         Mail::send(
             'auth::emails.verify-email',
             [
                 'studentName' => $event->student->name,
-                'verifyUrl'   => $verifyUrl,
+                'verifyUrl' => $verifyUrl,
             ],
             function ($message) use ($event) {
                 $message->to($event->student->email)
@@ -52,8 +52,8 @@ class SendVerificationEmail implements ShouldQueue
     {
         Log::error('Không thể gửi email xác thực sau tất cả các lần retry.', [
             'student_id' => $event->student->id,
-            'email'      => $event->student->email,
-            'error'      => $exception->getMessage(),
+            'email' => $event->student->email,
+            'error' => $exception->getMessage(),
         ]);
     }
 }

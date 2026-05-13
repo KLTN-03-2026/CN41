@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Modules\Posts\Http\Requests\Admin\BulkDeleteCommentsRequest;
 use Modules\Posts\Http\Resources\PostCommentResource;
 use Modules\Posts\Repositories\CommentRepositoryInterface;
 
@@ -14,17 +15,17 @@ class CommentController extends Controller
     use ApiResponse;
 
     public function __construct(
-        protected CommentRepositoryInterface $repository
+        private CommentRepositoryInterface $repository
     ) {}
 
     public function index(Request $request): JsonResponse
     {
         $comments = $this->repository->getFiltered(
             $request->all(),
-            $request->get('per_page', 15)
+            (int) $request->query('per_page', 15)
         );
 
-        $comments->setCollection(PostCommentResource::collection($comments->load(['adminUser', 'student', 'post']))->collection);
+        $comments->setCollection(PostCommentResource::collection($comments->getCollection())->collection);
 
         return $this->paginated($comments, 'Lấy danh sách bình luận thành công.');
     }
@@ -46,15 +47,13 @@ class CommentController extends Controller
         return $this->success(null, 'Xóa bình luận thành công.');
     }
 
-    public function bulkDelete(Request $request): JsonResponse
+    public function bulkDelete(BulkDeleteCommentsRequest $request): JsonResponse
     {
-        $ids = $request->validate([
-            'ids' => 'required|array',
-            'ids.*' => 'integer|exists:post_comments,id',
-        ])['ids'];
+        $deleted = $this->repository->deleteMany($request->ids);
 
-        $this->repository->getModel()->whereIn('id', $ids)->delete();
-
-        return $this->success(null, 'Xóa các bình luận đã chọn thành công.');
+        return $this->success(
+            ['deleted_count' => $deleted, 'deleted_ids' => $request->ids],
+            "Đã xoá {$deleted} bình luận thành công."
+        );
     }
 }

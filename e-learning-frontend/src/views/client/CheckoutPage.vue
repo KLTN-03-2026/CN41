@@ -221,7 +221,7 @@
                           Đơn tối thiểu {{ formatCurrency(Number(coupon.min_order_value)) }}
                         </span>
                         <span v-if="coupon.end_date" class="text-[10px] text-orange-500">
-                          HSD: {{ formatDate(coupon.end_date) }}
+                          HSD: {{ formatDatetime(coupon.end_date) }}
                         </span>
                         <span v-if="coupon.remaining !== null" class="text-[10px] text-gray-400">
                           Còn {{ coupon.remaining }} lượt
@@ -316,175 +316,30 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
-import { useToast } from 'vue-toastification'
 import { useCartStore } from '@/stores/cart.store'
-import { orderService } from '@/services/order.service'
-import { couponService } from '@/services/coupon.service'
-import type { CouponValidation, PublicCoupon } from '@/services/coupon.service'
 import { formatCurrency } from '@/utils/formatCurrency'
+import { formatDatetime } from '@/utils/formatDate'
+import { useCheckout } from '@/composables/useCheckout'
 import PaymentMethodSelector from '@/components/forms/PaymentMethodSelector.vue'
 
-const router = useRouter()
-const toast = useToast()
 const cartStore = useCartStore()
 
-const paymentMethod = ref('vnpay')
-const isProcessing = ref(false)
-const errorMessage = ref('')
-
-// Coupon State
-const couponCode = ref('')
-const couponError = ref('')
-const isValidating = ref(false)
-const appliedCoupon = ref<CouponValidation | null>(null)
-
-// Available Coupons State
-const showAvailableCoupons = ref(false)
-const availableCoupons = ref<PublicCoupon[]>([])
-const loadingAvailable = ref(false)
-const availableFetched = ref(false)
-
-const totalDiscount = computed(() => {
-  return cartStore.items.reduce((sum, item) => {
-    if (item.sale_price && item.sale_price < item.price) {
-      return sum + (item.price - item.sale_price)
-    }
-    return sum
-  }, 0)
-})
-
-const finalTotal = computed(() => {
-  const discountFromCoupon = appliedCoupon.value?.discount_amount || 0
-  return Math.max(0, cartStore.total - discountFromCoupon)
-})
-
-function formatDate(isoDate: string | null): string {
-  if (!isoDate) return ''
-  const d = new Date(isoDate)
-  return d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })
-}
-
-async function fetchAvailableCoupons() {
-  if (availableFetched.value) return
-  loadingAvailable.value = true
-  try {
-    const res = await couponService.getAvailable()
-    availableCoupons.value = res.data.data as PublicCoupon[]
-    availableFetched.value = true
-  } catch {
-    availableCoupons.value = []
-  } finally {
-    loadingAvailable.value = false
-  }
-}
-
-async function toggleAvailableCoupons() {
-  showAvailableCoupons.value = !showAvailableCoupons.value
-  if (showAvailableCoupons.value) {
-    await fetchAvailableCoupons()
-  }
-}
-
-function selectAvailableCoupon(code: string) {
-  couponCode.value = code
-  showAvailableCoupons.value = false
-  couponError.value = ''
-}
-
-async function applyCoupon() {
-  if (!couponCode.value.trim() || isValidating.value) return
-
-  isValidating.value = true
-  couponError.value = ''
-
-  try {
-    const res = await couponService.validate({
-      code: couponCode.value.trim().toUpperCase(),
-      subtotal: Number(cartStore.total),
-    })
-    appliedCoupon.value = res.data.data
-    couponError.value = ''
-    toast.success('Áp dụng mã giảm giá thành công!')
-  } catch (err: any) {
-    const data = err.response?.data
-    // Ưu tiên lấy lỗi field-level từ errors object
-    if (data?.errors?.code) {
-      couponError.value = Array.isArray(data.errors.code) ? data.errors.code[0] : data.errors.code
-    } else if (data?.errors?.subtotal) {
-      couponError.value = 'Giá trị đơn hàng không hợp lệ.'
-    } else {
-      couponError.value = data?.message || 'Mã giảm giá không hợp lệ.'
-    }
-    appliedCoupon.value = null
-  } finally {
-    isValidating.value = false
-  }
-}
-
-function removeCoupon() {
-  appliedCoupon.value = null
-  couponCode.value = ''
-  couponError.value = ''
-}
-
-async function handleCheckout() {
-  if (cartStore.count === 0) return
-
-  isProcessing.value = true
-  errorMessage.value = ''
-
-  try {
-    const payload: Record<string, any> = {
-      course_ids: cartStore.courseIds,
-    }
-
-    if (appliedCoupon.value) {
-      payload.coupon_code = appliedCoupon.value.code
-    }
-
-    const res = await orderService.createOrder(payload)
-
-    const { payment_url, order } = res.data.data
-
-    if (payment_url) {
-      // Redirect đến VNPAY — lưu order_code để clear cart sau khi thành công
-      localStorage.setItem('pending_order_code', order.order_code)
-      window.location.href = payment_url
-    } else {
-      // Free order — đã auto enroll
-      cartStore.clear()
-      toast.success('Đơn hàng miễn phí đã được xử lý thành công!')
-      router.push(
-        `/payment/result?order_code=${order.order_code}&status=success&message=Đăng+ký+thành+công`,
-      )
-    }
-  } catch (err: unknown) {
-    const axiosError = err as {
-      response?: {
-        data?: {
-          message?: string
-          errors?: { course_ids?: string | string[]; coupon_code?: string | string[] }
-        }
-      }
-    }
-    const data = axiosError.response?.data
-    if (data?.errors?.course_ids) {
-      // Student đã sở hữu khóa học
-      errorMessage.value = Array.isArray(data.errors.course_ids)
-        ? data.errors.course_ids[0]
-        : data.errors.course_ids
-    } else if (data?.errors?.coupon_code) {
-      errorMessage.value = Array.isArray(data.errors.coupon_code)
-        ? data.errors.coupon_code[0]
-        : data.errors.coupon_code
-    } else {
-      errorMessage.value = data?.message || 'Có lỗi xảy ra khi tạo đơn hàng.'
-    }
-    toast.error(errorMessage.value)
-  } finally {
-    isProcessing.value = false
-  }
-}
+const {
+  paymentMethod,
+  isProcessing,
+  errorMessage,
+  couponCode,
+  couponError,
+  isValidating,
+  appliedCoupon,
+  showAvailableCoupons,
+  availableCoupons,
+  loadingAvailable,
+  finalTotal,
+  toggleAvailableCoupons,
+  selectAvailableCoupon,
+  applyCoupon,
+  removeCoupon,
+  handleCheckout,
+} = useCheckout()
 </script>

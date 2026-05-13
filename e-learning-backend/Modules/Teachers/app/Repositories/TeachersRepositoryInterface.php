@@ -3,8 +3,8 @@
 namespace Modules\Teachers\Repositories;
 
 use App\Repositories\RepositoryInterface;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Model;
 
 /**
  * Interface TeachersRepositoryInterface

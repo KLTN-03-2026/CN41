@@ -2,8 +2,8 @@
 
 namespace Modules\Students\Http\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
 class StoreStudentsRequest extends FormRequest
@@ -19,26 +19,26 @@ class StoreStudentsRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name'                  => 'required|string|max:255',
-            'email'                 => 'required|email|max:255|unique:students,email',
-            'password'              => 'required|string|min:8|confirmed',
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255|unique:students,email',
+            'password' => 'required|string|min:8|confirmed',
             'password_confirmation' => 'required|string',
-            'avatar'                => 'nullable|url|max:2048',
-            'date_of_birth'         => 'nullable|date|before:today',
+            'avatar' => 'nullable|url|max:2048',
+            'date_of_birth' => 'nullable|date|before:today',
         ];
     }
 
     public function messages(): array
     {
         return [
-            'name.required'                  => 'Tên là bắt buộc.',
-            'email.required'                 => 'Email là bắt buộc.',
-            'email.unique'                   => 'Email đã tồn tại.',
-            'password.required'              => 'Mật khẩu là bắt buộc.',
-            'password.min'                   => 'Mật khẩu tối thiểu 8 ký tự.',
-            'password.confirmed'             => 'Xác nhận mật khẩu không khớp.',
+            'name.required' => 'Tên là bắt buộc.',
+            'email.required' => 'Email là bắt buộc.',
+            'email.unique' => 'Email đã tồn tại.',
+            'password.required' => 'Mật khẩu là bắt buộc.',
+            'password.min' => 'Mật khẩu tối thiểu 8 ký tự.',
+            'password.confirmed' => 'Xác nhận mật khẩu không khớp.',
             'password_confirmation.required' => 'Xác nhận mật khẩu là bắt buộc.',
-            'date_of_birth.before'           => 'Ngày sinh phải trước hôm nay.',
+            'date_of_birth.before' => 'Ngày sinh phải trước hôm nay.',
         ];
     }
 
@@ -50,7 +50,7 @@ class StoreStudentsRequest extends FormRequest
         throw new HttpResponseException(response()->json([
             'success' => false,
             'message' => 'Dữ liệu không hợp lệ.',
-            'errors'  => $validator->errors(),
+            'errors' => $validator->errors(),
         ], 422));
     }
 }

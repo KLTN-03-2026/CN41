@@ -11,11 +11,15 @@ use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Storage;
 use Modules\Students\Http\Requests\ChangePasswordRequest;
 use Modules\Students\Http\Requests\UpdateMyProfileRequest;
+use Modules\Students\Http\Requests\UploadAvatarRequest;
 use Modules\Students\Http\Resources\StudentResource;
+use Modules\Students\Repositories\StudentsRepositoryInterface;
 
 class StudentProfileController extends Controller
 {
     use ApiResponse;
+
+    public function __construct(private StudentsRepositoryInterface $repository) {}
 
     /**
      * Lấy thông tin profile học viên hiện tại.
@@ -31,29 +35,19 @@ class StudentProfileController extends Controller
     public function update(UpdateMyProfileRequest $request): JsonResponse
     {
         $student = $request->user('api');
-        $student->update($request->validated());
+        $updated = $this->repository->update($student->id, $request->validated());
 
-        return $this->success(new StudentResource($student->fresh()), 'Cập nhật thông tin thành công.');
+        return $this->success(new StudentResource($updated), 'Cập nhật thông tin thành công.');
     }
 
     /**
      * Upload avatar cho học viên.
      * Xoá file cũ nếu đã tồn tại.
      */
-    public function uploadAvatar(Request $request): JsonResponse
+    public function uploadAvatar(UploadAvatarRequest $request): JsonResponse
     {
-        $request->validate([
-            'file' => 'required|image|mimes:jpg,jpeg,png,webp|max:2048',
-        ], [
-            'file.required' => 'Vui lòng chọn ảnh.',
-            'file.image' => 'File phải là ảnh.',
-            'file.mimes' => 'Chỉ chấp nhận định dạng jpg, jpeg, png, webp.',
-            'file.max' => 'Ảnh không được vượt quá 2MB.',
-        ]);
-
         $student = $request->user('api');
 
-        // Xoá avatar cũ nếu là file local (không phải URL ngoài)
         if ($student->avatar) {
             $oldPath = str_replace(asset('storage').'/', '', $student->avatar);
             if (Storage::disk('public')->exists($oldPath)) {
@@ -64,7 +58,7 @@ class StudentProfileController extends Controller
         $path = $request->file('file')->store('avatars', 'public');
         $url = asset('storage/'.$path);
 
-        $student->update(['avatar' => $url]);
+        $this->repository->update($student->id, ['avatar' => $url]);
 
         return $this->success(['avatar' => $url], 'Cập nhật avatar thành công.');
     }

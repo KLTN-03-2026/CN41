@@ -3,7 +3,6 @@
 use App\Models\User;
 use Modules\Students\Models\Student;
 
-
 return [
 
     /*
@@ -84,13 +83,13 @@ return [
         // Provider cho Student (học viên)
         'students' => [
             'driver' => 'eloquent',
-            'model' => Student::class ,
+            'model' => Student::class,
         ],
 
         // Provider cho Admin/Instructor
         'admins' => [
             'driver' => 'eloquent',
-            'model' => Modules\Users\Models\User::class ,
+            'model' => Modules\Users\Models\User::class,
         ],
     ],
 

@@ -2,7 +2,8 @@
 
 namespace Modules\Course\Http\Requests;
 
-use Illuminate\Validation\Validator;
+use Illuminate\Contracts\Validation\Validator;
+use Modules\Course\Models\Course;
 
 class BulkDeleteCourseRequest extends BaseBulkRequest
 {
@@ -14,7 +15,7 @@ class BulkDeleteCourseRequest extends BaseBulkRequest
     public function rules(): array
     {
         return [
-            'ids'   => 'required|array|min:1|max:100',
+            'ids' => 'required|array|min:1|max:100',
             'ids.*' => 'required|integer|exists:courses,id',
         ];
     }
@@ -29,15 +30,15 @@ class BulkDeleteCourseRequest extends BaseBulkRequest
                 return;
             }
 
-            $alreadyTrashed = \Modules\Course\Models\Course::onlyTrashed()
+            $alreadyTrashed = Course::onlyTrashed()
                 ->whereIn('id', $this->ids)
                 ->pluck('id')
                 ->toArray();
 
-            if (!empty($alreadyTrashed)) {
+            if (! empty($alreadyTrashed)) {
                 $validator->errors()->add(
                     'ids',
-                    'Các khóa học sau đã bị xoá: ' . implode(', ', $alreadyTrashed)
+                    'Các khóa học sau đã bị xoá: '.implode(', ', $alreadyTrashed)
                 );
             }
         });
@@ -46,12 +47,12 @@ class BulkDeleteCourseRequest extends BaseBulkRequest
     public function messages(): array
     {
         return [
-            'ids.required'  => 'Danh sách ID không được để trống.',
-            'ids.array'     => 'ids phải là mảng.',
-            'ids.min'       => 'Phải chọn ít nhất 1 khóa học.',
-            'ids.max'       => 'Không thể xử lý quá 100 khóa học cùng lúc.',
+            'ids.required' => 'Danh sách ID không được để trống.',
+            'ids.array' => 'ids phải là mảng.',
+            'ids.min' => 'Phải chọn ít nhất 1 khóa học.',
+            'ids.max' => 'Không thể xử lý quá 100 khóa học cùng lúc.',
             'ids.*.integer' => 'ID phải là số nguyên.',
-            'ids.*.exists'  => 'Một hoặc nhiều khóa học không tồn tại.',
+            'ids.*.exists' => 'Một hoặc nhiều khóa học không tồn tại.',
         ];
     }
 }

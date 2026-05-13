@@ -11,35 +11,14 @@ use Modules\Payment\Events\OrderPlaced;
 use Modules\Payment\Models\Order;
 use Modules\Payment\Models\Transaction;
 
-/**
- * Class VnpayService
- *
- * Xử lý logic tích hợp VNPAY:
- * - Tạo payment URL (createPaymentUrl)
- * - Verify checksum (verifyChecksum)
- * - Xử lý IPN callback (handleIpn)
- * - Xử lý return URL (handleReturn)
- *
- * QUAN TRỌNG:
- * - Timezone: luôn dùng 'Asia/Ho_Chi_Minh' cho vnp_CreateDate / vnp_ExpireDate
- * - Checksum: params phải ksort() trước khi hash HMAC-SHA512
- * - Logging: toàn bộ IPN payload được ghi vào channel 'vnpay'
- */
 class VnpayService
 {
-    /**
-     * Tạo payment URL để redirect user sang VNPAY.
-     *
-     * @param  Order  $order  Order cần thanh toán
-     * @param  string  $ipAddress  IP address của user
-     * @return string URL VNPAY để redirect
-     */
     public function createPaymentUrl(Order $order, string $ipAddress): string
     {
         $vnpUrl = config('vnpay.url');
         $secretKey = config('vnpay.hash_secret');
 
-        // Thời gian tạo — BẮT BUỘC dùng GMT+7 (Asia/Ho_Chi_Minh)
+        // BẮT BUỘC dùng GMT+7 (Asia/Ho_Chi_Minh) cho vnp_CreateDate / vnp_ExpireDate
         $createDate = Carbon::now('Asia/Ho_Chi_Minh')->format('YmdHis');
         $expireDate = Carbon::now('Asia/Ho_Chi_Minh')->addMinutes(15)->format('YmdHis');
 
@@ -62,7 +41,7 @@ class VnpayService
             'vnp_ExpireDate' => $expireDate,
         ];
 
-        // QUAN TRỌNG: sort params theo alphabet trước khi hash
+        // params phải ksort() trước khi hash HMAC-SHA512
         ksort($inputData);
 
         $hashData = '';
@@ -79,28 +58,19 @@ class VnpayService
             $query .= urlencode($key).'='.urlencode($value).'&';
         }
 
-        // Tạo secure hash HMAC-SHA512
         $vnpSecureHash = hash_hmac('sha512', $hashData, $secretKey);
-        $paymentUrl = $vnpUrl.'?'.$query.'vnp_SecureHash='.$vnpSecureHash;
 
-        return $paymentUrl;
+        return $vnpUrl.'?'.$query.'vnp_SecureHash='.$vnpSecureHash;
     }
 
-    /**
-     * Verify checksum từ VNPAY response.
-     *
-     * @param  array  $vnpData  Query params từ VNPAY
-     */
     public function verifyChecksum(array $vnpData): bool
     {
         $secretKey = config('vnpay.hash_secret');
         $secureHash = $vnpData['vnp_SecureHash'] ?? '';
 
-        // Loại bỏ các tham số hash/type trước khi tính checksum
         unset($vnpData['vnp_SecureHash']);
         unset($vnpData['vnp_SecureHashType']);
 
-        // Sort theo alphabet
         ksort($vnpData);
 
         $hashData = '';
@@ -117,30 +87,13 @@ class VnpayService
             }
         }
 
-        $checkSum = hash_hmac('sha512', $hashData, $secretKey);
-
-        return hash_equals($checkSum, $secureHash);
+        return hash_equals(hash_hmac('sha512', $hashData, $secretKey), $secureHash);
     }
 
-    /**
-     * Xử lý IPN callback từ VNPAY (server-to-server).
-     *
-     * Logic:
-     * 1. Verify checksum
-     * 2. Tìm order theo vnp_TxnRef
-     * 3. Kiểm tra amount khớp
-     * 4. Kiểm tra idempotent (đã xử lý chưa)
-     * 5. Cập nhật transaction + order + enroll
-     *
-     * @param  array  $vnpData  Query params từ VNPAY IPN
-     * @return array ['RspCode' => string, 'Message' => string]
-     */
     public function handleIpn(array $vnpData): array
     {
-        // Log toàn bộ payload — "phao cứu sinh" khi debug
         Log::channel('vnpay')->info('IPN received', $vnpData);
 
-        // 1. Verify checksum
         if (! $this->verifyChecksum($vnpData)) {
             Log::channel('vnpay')->warning('IPN checksum invalid', $vnpData);
 
@@ -152,7 +105,6 @@ class VnpayService
         $responseCode = $vnpData['vnp_ResponseCode'] ?? '';
         $transCode = $vnpData['vnp_TransactionNo'] ?? '';
 
-        // 2. Tìm order
         $order = Order::where('order_code', $orderCode)->first();
 
         if (! $order) {
@@ -161,7 +113,6 @@ class VnpayService
             return ['RspCode' => '01', 'Message' => 'Order not Found'];
         }
 
-        // 3. Kiểm tra amount (VNPAY gửi amount × 100)
         $expectedAmount = (int) ($order->total_amount * 100);
 
         if ($vnpAmount !== $expectedAmount) {
@@ -174,7 +125,7 @@ class VnpayService
             return ['RspCode' => '04', 'Message' => 'Invalid Amount'];
         }
 
-        // 4. Kiểm tra idempotent — order đã xử lý chưa
+        // Optimistic check trước khi acquire lock
         if ($order->status !== 'pending') {
             Log::channel('vnpay')->info('IPN order already processed', [
                 'order_code' => $orderCode,
@@ -184,25 +135,22 @@ class VnpayService
             return ['RspCode' => '02', 'Message' => 'Order already confirmed'];
         }
 
-        // 5. Xử lý kết quả thanh toán
-        // Dùng lockForUpdate() tránh race condition khi nhận duplicate IPN
-        $order = Order::where('order_code', $orderCode)->lockForUpdate()->first();
+        // lockForUpdate() phải nằm trong DB::transaction() để lock có hiệu lực
+        // cho đến khi cả block commit — tránh race condition khi nhận duplicate IPN
+        $paid = DB::transaction(function () use ($orderCode, $responseCode, $transCode, $vnpData) {
+            $order = Order::where('order_code', $orderCode)->lockForUpdate()->first();
 
-        // Double check sau lock
-        if ($order->status !== 'pending') {
-            return ['RspCode' => '02', 'Message' => 'Order already confirmed'];
-        }
+            if ($order->status !== 'pending') {
+                return null;
+            }
 
-        // Tìm transaction pending mới nhất
-        $transaction = Transaction::where('order_id', $order->id)
-            ->where('status', 'pending')
-            ->latest()
-            ->first();
+            $transaction = Transaction::where('order_id', $order->id)
+                ->where('status', 'pending')
+                ->latest()
+                ->first();
 
-        if ($responseCode === '00') {
-            // Thanh toán thành công
-            if ($transaction) {
-                $transaction->update([
+            if ($responseCode === '00') {
+                $transaction?->update([
                     'status' => 'success',
                     'transaction_code' => $transCode,
                     'bank_code' => $vnpData['vnp_BankCode'] ?? null,
@@ -211,27 +159,9 @@ class VnpayService
                     'gateway_response' => $vnpData,
                     'paid_at' => now(),
                 ]);
-            }
-
-            $order->update([
-                'status' => 'paid',
-                'paid_at' => now(),
-            ]);
-
-            // Enroll student — tạo records trong students_course
-            $this->enrollStudent($order);
-
-            // Dispatch event — Listener SendOrderConfirmationEmail chạy async qua queue
-            OrderPlaced::dispatch($order);
-
-            // Dispatch Event cho Activity Log
-            event(new PaymentSuccessful($order, $vnpData));
-
-            Log::channel('vnpay')->info('IPN payment SUCCESS', ['order_code' => $orderCode]);
-        } else {
-            // Thanh toán thất bại
-            if ($transaction) {
-                $transaction->update([
+                $order->update(['status' => 'paid', 'paid_at' => now()]);
+            } else {
+                $transaction?->update([
                     'status' => 'failed',
                     'transaction_code' => $transCode,
                     'bank_code' => $vnpData['vnp_BankCode'] ?? null,
@@ -239,10 +169,22 @@ class VnpayService
                     'response_code' => $responseCode,
                     'gateway_response' => $vnpData,
                 ]);
+                $order->update(['status' => 'failed']);
             }
 
-            $order->update(['status' => 'failed']);
+            return $order;
+        });
 
+        if ($paid === null) {
+            return ['RspCode' => '02', 'Message' => 'Order already confirmed'];
+        }
+
+        if ($responseCode === '00') {
+            $this->enrollStudent($paid);
+            OrderPlaced::dispatch($paid);
+            event(new PaymentSuccessful($paid, $vnpData));
+            Log::channel('vnpay')->info('IPN payment SUCCESS', ['order_code' => $orderCode]);
+        } else {
             Log::channel('vnpay')->info('IPN payment FAILED', [
                 'order_code' => $orderCode,
                 'response_code' => $responseCode,
@@ -252,13 +194,6 @@ class VnpayService
         return ['RspCode' => '00', 'Message' => 'Confirm Success'];
     }
 
-    /**
-     * Xử lý return URL (user redirect về từ VNPAY).
-     * CHỈ verify + redirect FE, KHÔNG cập nhật order (để IPN xử lý).
-     *
-     * @param  array  $vnpData  Query params từ VNPAY return
-     * @return array ['order_code' => string, 'status' => 'success'|'failed']
-     */
     public function handleReturn(array $vnpData): array
     {
         Log::channel('vnpay')->info('Return URL received', $vnpData);
@@ -283,16 +218,11 @@ class VnpayService
         ];
     }
 
-    /**
-     * Enroll student vào tất cả courses trong order.
-     * Tạo records trong students_course + increment total_students.
-     */
-    private function enrollStudent(Order $order): void
+    public function enrollStudent(Order $order): void
     {
         $order->load('items');
 
         foreach ($order->items as $item) {
-            // Kiểm tra đã enroll chưa (tránh duplicate)
             $exists = DB::table('students_course')
                 ->where('student_id', $order->student_id)
                 ->where('course_id', $item->course_id)
@@ -307,9 +237,7 @@ class VnpayService
                     'updated_at' => now(),
                 ]);
 
-                // Increment total_students trên bảng courses
-                Course::where('id', $item->course_id)
-                    ->increment('total_students');
+                Course::where('id', $item->course_id)->increment('total_students');
             }
         }
     }

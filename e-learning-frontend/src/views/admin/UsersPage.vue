@@ -973,8 +973,10 @@ async function submitForm() {
     showModal.value = false
     loadPage(pagination.current_page)
     fetchTrashedCount()
-  } catch (err: unknown) {
-    const error = err as any
+  } catch (err) {
+    const error = err as {
+      response?: { status?: number; data?: { message?: string; errors?: Record<string, string[]> } }
+    }
     if (error.response?.status === 422 && error.response.data?.errors) {
       formErrors.value = error.response.data.errors
     } else {
@@ -1013,8 +1015,8 @@ async function submitResetPassword() {
     await userService.update(resetTarget.value!.id, { password: resetPasswordForm.password })
     toast.success('Đã đổi mật khẩu thành công!')
     showResetModal.value = false
-  } catch (err: unknown) {
-    const error = err as any
+  } catch (err) {
+    const error = err as { response?: { data?: { message?: string } } }
     resetPasswordError.value = error.response?.data?.message || 'Đổi mật khẩu thất bại.'
   } finally {
     resetting.value = false
@@ -1046,8 +1048,8 @@ async function doDelete() {
     showDeleteModal.value = false
     loadPage(pagination.current_page)
     fetchTrashedCount()
-  } catch (err: unknown) {
-    const error = err as any
+  } catch (err) {
+    const error = err as { response?: { data?: { message?: string } } }
     toast.error(error.response?.data?.message || 'Xoá thất bại.')
   } finally {
     deleteLoading.value = false

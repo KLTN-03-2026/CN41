@@ -238,7 +238,7 @@ async function fetchPosts(page = 1) {
   }
 }
 
-function toggleCategory(id: any) {
+function toggleCategory(id: number | string) {
   categoryFilter.value = categoryFilter.value === id ? '' : id
   fetchPosts(1)
 }
@@ -256,7 +256,7 @@ async function fetchSidebarData() {
   }
 }
 
-let debounceTimer: any
+let debounceTimer: ReturnType<typeof setTimeout> | undefined
 function debouncedFetch() {
   clearTimeout(debounceTimer)
   debounceTimer = setTimeout(() => {

@@ -2,7 +2,8 @@
 
 namespace Modules\Course\Http\Requests;
 
-use Illuminate\Validation\Validator;
+use Illuminate\Contracts\Validation\Validator;
+use Modules\Course\Models\Course;
 
 class BulkForceDeleteCourseRequest extends BaseBulkRequest
 {
@@ -14,7 +15,7 @@ class BulkForceDeleteCourseRequest extends BaseBulkRequest
     public function rules(): array
     {
         return [
-            'ids'   => 'required|array|min:1|max:100',
+            'ids' => 'required|array|min:1|max:100',
             'ids.*' => 'required|integer',
         ];
     }
@@ -29,17 +30,17 @@ class BulkForceDeleteCourseRequest extends BaseBulkRequest
                 return;
             }
 
-            $existingIds = \Modules\Course\Models\Course::withTrashed()
+            $trashedIds = Course::onlyTrashed()
                 ->whereIn('id', $this->ids)
                 ->pluck('id')
                 ->toArray();
 
-            $notFound = array_diff($this->ids, $existingIds);
+            $notFound = array_diff($this->ids, $trashedIds);
 
-            if (!empty($notFound)) {
+            if (! empty($notFound)) {
                 $validator->errors()->add(
                     'ids',
-                    'Các khóa học sau không tồn tại: ' . implode(', ', $notFound)
+                    'Các khóa học sau không tồn tại trong thùng rác: '.implode(', ', $notFound)
                 );
             }
         });
@@ -48,10 +49,10 @@ class BulkForceDeleteCourseRequest extends BaseBulkRequest
     public function messages(): array
     {
         return [
-            'ids.required'  => 'Danh sách ID không được để trống.',
-            'ids.array'     => 'ids phải là mảng.',
-            'ids.min'       => 'Phải chọn ít nhất 1 khóa học.',
-            'ids.max'       => 'Không thể xử lý quá 100 khóa học cùng lúc.',
+            'ids.required' => 'Danh sách ID không được để trống.',
+            'ids.array' => 'ids phải là mảng.',
+            'ids.min' => 'Phải chọn ít nhất 1 khóa học.',
+            'ids.max' => 'Không thể xử lý quá 100 khóa học cùng lúc.',
             'ids.*.integer' => 'ID phải là số nguyên.',
         ];
     }

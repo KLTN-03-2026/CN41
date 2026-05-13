@@ -12,12 +12,12 @@ use Modules\Course\Http\Requests\BulkDeleteCourseRequest;
 use Modules\Course\Http\Requests\BulkForceDeleteCourseRequest;
 use Modules\Course\Http\Requests\BulkRestoreCourseRequest;
 use Modules\Course\Http\Requests\BulkStatusCourseRequest;
+use Modules\Course\Http\Requests\IndexCourseRequest;
+use Modules\Course\Http\Requests\IndexPublicCourseRequest;
 use Modules\Course\Http\Requests\StoreCourseRequest;
 use Modules\Course\Http\Requests\UpdateCourseRequest;
 use Modules\Course\Http\Resources\CourseResource;
-use Modules\Course\Models\Course;
 use Modules\Course\Repositories\CourseRepositoryInterface;
-use Modules\Lessons\Models\Lesson;
 
 class CourseController extends Controller
 {
@@ -30,22 +30,11 @@ class CourseController extends Controller
         $this->repository = $repository;
     }
 
-    // ── Admin CRUD ──
-
     /**
      * Danh sách Courses (có phân trang + filter).
      */
-    public function index(Request $request): JsonResponse
+    public function index(IndexCourseRequest $request): JsonResponse
     {
-        $request->validate([
-            'search' => 'nullable|string|max:100',
-            'status' => 'nullable|integer|in:0,1',
-            'teacher_id' => 'nullable|integer|exists:teachers,id',
-            'category_id' => 'nullable|integer|exists:categories,id',
-            'level' => 'nullable|string|in:beginner,intermediate,advanced',
-            'per_page' => 'nullable|integer|min:1|max:100',
-        ]);
-
         $perPage = (int) $request->query('per_page', 15);
         $filters = $request->only(['search', 'status', 'teacher_id', 'category_id', 'level']);
 
@@ -61,12 +50,6 @@ class CourseController extends Controller
     public function store(StoreCourseRequest $request): JsonResponse
     {
         $validated = $request->validated();
-
-        // Nếu là teacher, tự động gán teacher_id của họ
-        if (auth('admin')->check() && auth('admin')->user()->hasRole('teacher') && auth('admin')->user()->teacher) {
-            $validated['teacher_id'] = auth('admin')->user()->teacher->id;
-        }
-
         $categoryIds = $validated['category_ids'] ?? [];
         unset($validated['category_ids']);
 
@@ -166,17 +149,11 @@ class CourseController extends Controller
         );
     }
 
-    // ── Soft Delete Operations ──
-
     /**
      * Danh sách Courses đã bị soft-delete (thùng rác).
      */
     public function trashed(Request $request): JsonResponse
     {
-        $request->validate([
-            'per_page' => 'nullable|integer|min:1|max:100',
-        ]);
-
         $perPage = (int) $request->query('per_page', 15);
         $data = $this->repository->paginateTrashed($perPage);
         $data->setCollection(CourseResource::collection($data->getCollection())->collection);
@@ -200,28 +177,21 @@ class CourseController extends Controller
     public function forceDelete(int $id): JsonResponse
     {
         $course = $this->repository->findTrashed($id);
+        $thumbnail = $course->thumbnail;
 
-        // Xóa thumbnail trên storage nếu có
-        $this->deleteThumbnailFile($course->thumbnail ?? null);
+        DB::transaction(fn () => $course->forceDelete());
 
-        // Detach categories pivot
-        $course->categories()->detach();
-
-        $course->forceDelete();
+        $this->deleteThumbnailFile($thumbnail);
 
         return $this->success(null, 'Khóa học đã bị xoá vĩnh viễn.');
     }
-
-    // ── Bulk Operations ──
 
     /**
      * Xoá nhiều Courses (soft delete).
      */
     public function bulkDelete(BulkDeleteCourseRequest $request): JsonResponse
     {
-        $deleted = DB::transaction(function () use ($request) {
-            return $this->repository->deleteMany($request->ids);
-        });
+        $deleted = $this->repository->deleteMany($request->ids);
 
         return $this->success(
             ['deleted_count' => $deleted, 'deleted_ids' => $request->ids],
@@ -234,9 +204,7 @@ class CourseController extends Controller
      */
     public function bulkRestore(BulkRestoreCourseRequest $request): JsonResponse
     {
-        $restored = DB::transaction(function () use ($request) {
-            return $this->repository->restoreMany($request->ids);
-        });
+        $restored = $this->repository->restoreMany($request->ids);
 
         return $this->success(
             ['restored_count' => $restored, 'restored_ids' => $request->ids],
@@ -249,17 +217,17 @@ class CourseController extends Controller
      */
     public function bulkForceDelete(BulkForceDeleteCourseRequest $request): JsonResponse
     {
-        $deleted = DB::transaction(function () use ($request) {
-            $courses = $this->repository->findManyTrashed($request->ids);
+        $thumbnails = $this->repository->findManyTrashed($request->ids)
+            ->pluck('thumbnail')
+            ->filter()
+            ->values()
+            ->all();
 
-            foreach ($courses as $course) {
-                $this->deleteThumbnailFile($course->thumbnail ?? null);
-                $course->categories()->detach();
-                $course->forceDelete();
-            }
+        $deleted = $this->repository->bulkForceDelete($request->ids);
 
-            return $courses->count();
-        });
+        foreach ($thumbnails as $thumbnail) {
+            $this->deleteThumbnailFile($thumbnail);
+        }
 
         return $this->success(
             ['deleted_count' => $deleted, 'deleted_ids' => $request->ids],
@@ -267,20 +235,11 @@ class CourseController extends Controller
         );
     }
 
-    // ── Public API ──
-
     /**
      * Public: Danh sách khóa học đã published.
      */
-    public function publicIndex(Request $request): JsonResponse
+    public function publicIndex(IndexPublicCourseRequest $request): JsonResponse
     {
-        $request->validate([
-            'search' => 'nullable|string|max:100',
-            'category_id' => 'nullable|integer|exists:categories,id',
-            'level' => 'nullable|string|in:beginner,intermediate,advanced',
-            'per_page' => 'nullable|integer|min:1|max:100',
-        ]);
-
         $perPage = (int) $request->query('per_page', 15);
         $filters = $request->only(['search', 'category_id', 'level']);
 
@@ -295,8 +254,7 @@ class CourseController extends Controller
      */
     public function featuredCourses(Request $request): JsonResponse
     {
-        $limit = max(1, min((int) $request->query('limit', 8), 20));
-        $courses = $this->repository->getFeatured($limit);
+        $courses = $this->repository->getFeatured((int) $request->query('limit', 8));
 
         return $this->success(
             CourseResource::collection($courses),
@@ -319,6 +277,10 @@ class CourseController extends Controller
             return $this->error('Khóa học không tồn tại.', 404);
         }
 
+        if (auth('api')->check()) {
+            $course->load(['students' => fn ($q) => $q->where('student_id', auth('api')->id())]);
+        }
+
         return $this->success(new CourseResource($course));
     }
 
@@ -337,29 +299,11 @@ class CourseController extends Controller
             return $this->error('Khóa học không tồn tại.', 404);
         }
 
-        // Kiểm tra học viên đã mua chưa
-        $isPurchased = false;
-        if (auth('api')->check()) {
-            $isPurchased = $course->students()->where('student_id', auth('api')->id())->exists();
-        }
+        $isPurchased = auth('api')->check()
+            ? $this->repository->isEnrolled($course->id, auth('api')->id())
+            : false;
 
-        // Load sections theo trạng thái mua
-        $sections = $course->sections()->where('status', 1)->with(['lessons' => function ($q) {
-            $q->where('status', 1);
-        }])->get()->map(fn ($section) => [
-            'id' => $section->id,
-            'title' => $section->title,
-            'order' => $section->order,
-            'lessons' => $section->lessons->map(fn ($lesson) => [
-                'id' => $lesson->id,
-                'title' => $lesson->title,
-                'slug' => $lesson->slug,
-                'type' => $lesson->type,
-                'order' => $lesson->order,
-                'is_preview' => $lesson->is_preview,
-                'duration' => $lesson->duration,
-            ])->values(),
-        ])->values();
+        $sections = $this->repository->getPublicSectionsWithLessons($course->id);
 
         return $this->success([
             'is_purchased' => $isPurchased,
@@ -381,14 +325,7 @@ class CourseController extends Controller
             return $this->error('Khóa học này không miễn phí.', 400);
         }
 
-        $student = auth('api')->user();
-
-        if (! $course->students()->where('student_id', $student->id)->exists()) {
-            $course->students()->attach($student->id, ['enrolled_at' => now()]);
-
-            // Cập nhật số lượng học viên (+1)
-            $this->repository->incrementStudentCount($course->id);
-        }
+        $this->repository->enrollStudent($course->id, auth('api')->id());
 
         return $this->success(null, 'Đăng ký thành công! Bạn đã có thể vào học.');
     }
@@ -398,10 +335,6 @@ class CourseController extends Controller
      */
     public function myCourses(Request $request): JsonResponse
     {
-        $request->validate([
-            'per_page' => 'nullable|integer|min:1|max:100',
-        ]);
-
         $perPage = (int) $request->query('per_page', 15);
         $studentId = auth('api')->id();
 
@@ -422,11 +355,7 @@ class CourseController extends Controller
             return $this->error('Khóa học không tồn tại.', 404);
         }
 
-        $lesson = Lesson::where('course_id', $course->id)
-            ->where('slug', $lessonSlug)
-            ->where('status', 1)
-            ->with(['video', 'document'])
-            ->first();
+        $lesson = $this->repository->findPublicPreviewLesson($course->id, $lessonSlug);
 
         if (! $lesson) {
             return $this->error('Bài học không tồn tại.', 404);
@@ -446,8 +375,6 @@ class CourseController extends Controller
             'is_preview' => $lesson->is_preview,
         ], 'Lấy bài học thử thành công.');
     }
-
-    // ── Private Helpers ──
 
     /**
      * Xóa file thumbnail khỏi storage.

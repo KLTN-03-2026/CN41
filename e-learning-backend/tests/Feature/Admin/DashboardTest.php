@@ -28,8 +28,10 @@ class DashboardTest extends TestCase
         $response = $this->getJson($this->baseUrl);
 
         $response->assertStatus(200)
+            ->assertJsonPath('success', true)
             ->assertJsonStructure([
                 'success',
+                'message',
                 'data' => [
                     'summary' => ['total_students', 'total_courses', 'total_orders', 'total_revenue'],
                     'monthly_revenue',

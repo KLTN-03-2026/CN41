@@ -16,7 +16,7 @@ Route::middleware(['auth:api', 'email.verified'])->prefix('profile')->group(func
 Route::middleware(['auth:admin'])->prefix('admin')->group(function () {
     // Bulk + static routes phải đặt TRƯỚC apiResource để tránh bị match bởi {student}
     Route::get('students/trashed', [StudentsController::class, 'trashed'])->middleware('permission:students.view');
-    Route::post('students/bulk-restore', [StudentsController::class, 'bulkRestore'])->middleware('permission:students.edit');
+    Route::patch('students/bulk-restore', [StudentsController::class, 'bulkRestore'])->middleware('permission:students.edit');
     Route::delete('students/bulk-delete', [StudentsController::class, 'bulkDelete'])->middleware('permission:students.edit');
     Route::delete('students/bulk-force-delete', [StudentsController::class, 'bulkForceDelete'])->middleware('permission:students.edit');
 
@@ -24,10 +24,9 @@ Route::middleware(['auth:admin'])->prefix('admin')->group(function () {
     Route::get('students', [StudentsController::class, 'index'])->middleware('permission:students.view');
     Route::post('students', [StudentsController::class, 'store'])->middleware('permission:students.edit');
     Route::get('students/{student}', [StudentsController::class, 'show'])->middleware('permission:students.view');
-    Route::put('students/{student}', [StudentsController::class, 'update'])->middleware('permission:students.edit');
     Route::patch('students/{student}', [StudentsController::class, 'update'])->middleware('permission:students.edit');
     Route::delete('students/{student}', [StudentsController::class, 'destroy'])->middleware('permission:students.edit');
 
-    Route::post('students/{id}/restore', [StudentsController::class, 'restore'])->middleware('permission:students.edit');
+    Route::patch('students/{id}/restore', [StudentsController::class, 'restore'])->middleware('permission:students.edit');
     Route::delete('students/{id}/force-delete', [StudentsController::class, 'forceDelete'])->middleware('permission:students.edit');
 });

@@ -46,14 +46,14 @@ class StudentResetPasswordNotification extends Notification implements ShouldQue
     public function toMail(object $notifiable): MailMessage
     {
         $frontendUrl = config('app.frontend_url', config('app.url'));
-        $resetUrl = $frontendUrl . '/reset-password?token=' . $this->token . '&email=' . urlencode($notifiable->email);
+        $resetUrl = $frontendUrl.'/reset-password?token='.$this->token.'&email='.urlencode($notifiable->email);
 
         return (new MailMessage)
             ->subject('Đặt lại mật khẩu — E-Learning')
             ->view('auth::emails.reset-password', [
                 'studentName' => $notifiable->name,
-                'resetUrl'    => $resetUrl,
-                'token'       => $this->token,
+                'resetUrl' => $resetUrl,
+                'token' => $this->token,
             ]);
     }
 }

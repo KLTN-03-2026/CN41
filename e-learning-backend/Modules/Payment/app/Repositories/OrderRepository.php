@@ -7,12 +7,6 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Modules\Payment\Models\Order;
 
-/**
- * Class OrderRepository
- *
- * Eloquent implementation cho OrderRepositoryInterface.
- * Extends BaseRepository (đã có sẵn base methods + clamp perPage, soft-delete support).
- */
 class OrderRepository extends BaseRepository implements OrderRepositoryInterface
 {
     public function __construct(Order $model)
@@ -20,9 +14,6 @@ class OrderRepository extends BaseRepository implements OrderRepositoryInterface
         parent::__construct($model);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function getFiltered(array $filters = [], int $perPage = 15): LengthAwarePaginator
     {
         $perPage = max(1, min($perPage, static::MAX_PER_PAGE));
@@ -32,39 +23,36 @@ class OrderRepository extends BaseRepository implements OrderRepositoryInterface
             ->latest();
 
         // Tìm kiếm theo order_code hoặc email sinh viên
-        if (!empty($filters['search'])) {
+        if (! empty($filters['search'])) {
             $search = $filters['search'];
             $query->where(function ($q) use ($search) {
                 $q->where('order_code', 'like', "%{$search}%")
-                  ->orWhereHas('student', fn($sq) => $sq->where('email', 'like', "%{$search}%")
-                      ->orWhere('name', 'like', "%{$search}%"));
+                    ->orWhereHas('student', fn ($sq) => $sq->where('email', 'like', "%{$search}%")
+                        ->orWhere('name', 'like', "%{$search}%"));
             });
         }
 
         // Filter theo status
-        if (!empty($filters['status'])) {
+        if (! empty($filters['status'])) {
             $query->where('status', $filters['status']);
         }
 
         // Filter theo khoảng thời gian
-        if (!empty($filters['from'])) {
+        if (! empty($filters['from'])) {
             $query->whereDate('created_at', '>=', $filters['from']);
         }
-        if (!empty($filters['to'])) {
+        if (! empty($filters['to'])) {
             $query->whereDate('created_at', '<=', $filters['to']);
         }
 
         // Filter theo payment_method
-        if (!empty($filters['payment_method'])) {
+        if (! empty($filters['payment_method'])) {
             $query->where('payment_method', $filters['payment_method']);
         }
 
         return $query->paginate($perPage);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function getByStudent(int $studentId, int $perPage = 15): LengthAwarePaginator
     {
         $perPage = max(1, min($perPage, static::MAX_PER_PAGE));
@@ -76,9 +64,6 @@ class OrderRepository extends BaseRepository implements OrderRepositoryInterface
             ->paginate($perPage);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function findByOrderCode(string $orderCode): ?Order
     {
         return $this->model->newQuery()
@@ -87,9 +72,6 @@ class OrderRepository extends BaseRepository implements OrderRepositoryInterface
             ->first();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function createWithItems(array $orderData, array $items): Order
     {
         $order = $this->model->newQuery()->create($orderData);
@@ -103,14 +85,11 @@ class OrderRepository extends BaseRepository implements OrderRepositoryInterface
         return $order;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function markAsPaid(int $orderId): Order
     {
         $order = $this->model->newQuery()->findOrFail($orderId);
         $order->update([
-            'status'  => 'paid',
+            'status' => 'paid',
             'paid_at' => now(),
         ]);
         $order->refresh();
@@ -118,9 +97,15 @@ class OrderRepository extends BaseRepository implements OrderRepositoryInterface
         return $order;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    public function updateOrderStatus(int $id, array $data): Order
+    {
+        $order = $this->model->newQuery()->findOrFail($id);
+        $order->update($data);
+        $order->refresh()->load(['student', 'items.course', 'transactions']);
+
+        return $order;
+    }
+
     public function getRevenueStats(string $period = 'monthly', ?string $from = null, ?string $to = null): array
     {
         $query = $this->model->newQuery()->paid();
@@ -159,26 +144,23 @@ class OrderRepository extends BaseRepository implements OrderRepositoryInterface
 
         // Tổng doanh thu
         $totalRevenue = $this->model->newQuery()->paid()
-            ->when($from, fn($q) => $q->whereDate('paid_at', '>=', $from))
-            ->when($to, fn($q) => $q->whereDate('paid_at', '<=', $to))
+            ->when($from, fn ($q) => $q->whereDate('paid_at', '>=', $from))
+            ->when($to, fn ($q) => $q->whereDate('paid_at', '<=', $to))
             ->sum('total_amount');
 
         $totalOrders = $this->model->newQuery()->paid()
-            ->when($from, fn($q) => $q->whereDate('paid_at', '>=', $from))
-            ->when($to, fn($q) => $q->whereDate('paid_at', '<=', $to))
+            ->when($from, fn ($q) => $q->whereDate('paid_at', '>=', $from))
+            ->when($to, fn ($q) => $q->whereDate('paid_at', '<=', $to))
             ->count();
 
         return [
-            'period'        => $period,
-            'data'          => $results->toArray(),
+            'period' => $period,
+            'data' => $results->toArray(),
             'total_revenue' => (float) $totalRevenue,
-            'total_orders'  => $totalOrders,
+            'total_orders' => $totalOrders,
         ];
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function checkDuplicateEnrollment(int $studentId, array $courseIds): array
     {
         return DB::table('students_course')

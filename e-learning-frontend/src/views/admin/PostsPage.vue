@@ -231,7 +231,7 @@ async function fetchCategories() {
   }
 }
 
-let debounceTimer: any
+let debounceTimer: ReturnType<typeof setTimeout> | undefined
 function debouncedFetch() {
   clearTimeout(debounceTimer)
   debounceTimer = setTimeout(() => {

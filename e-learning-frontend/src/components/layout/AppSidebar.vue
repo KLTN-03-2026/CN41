@@ -151,7 +151,6 @@ import { useRoute } from 'vue-router'
 
 import {
   GridIcon,
-  UserCircleIcon,
   UserGroupIcon,
   PieChartIcon,
   ChevronDownIcon,
@@ -267,7 +266,7 @@ const rawMenuGroups = [
 import { useAdminAuthStore } from '@/stores/adminAuth.store'
 const adminStore = useAdminAuthStore()
 
-const hasPermission = (item: any) => {
+const hasPermission = (item: { permission?: string; hideForRoles?: string[] }) => {
   const permission = item.permission
   const hideForRoles = item.hideForRoles || []
 

@@ -4,6 +4,8 @@ namespace Modules\Coupons\Providers;
 
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
+use Modules\Coupons\Repositories\CouponRepository;
+use Modules\Coupons\Repositories\CouponRepositoryInterface;
 use Nwidart\Modules\Traits\PathNamespace;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
@@ -36,8 +38,8 @@ class CouponsServiceProvider extends ServiceProvider
     {
         // ── Repository Binding ──
         $this->app->bind(
-            \Modules\Coupons\Repositories\CouponRepositoryInterface::class,
-            \Modules\Coupons\Repositories\CouponRepository::class
+            CouponRepositoryInterface::class,
+            CouponRepository::class
         );
 
         $this->app->register(EventServiceProvider::class);
@@ -135,7 +137,7 @@ class CouponsServiceProvider extends ServiceProvider
 
         $this->loadViewsFrom(array_merge($this->getPublishableViewPaths(), [$sourcePath]), $this->nameLower);
 
-        Blade::componentNamespace(config('modules.namespace').'\\' . $this->name . '\\View\\Components', $this->nameLower);
+        Blade::componentNamespace(config('modules.namespace').'\\'.$this->name.'\\View\\Components', $this->nameLower);
     }
 
     /**

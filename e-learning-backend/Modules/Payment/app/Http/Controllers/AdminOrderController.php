@@ -5,8 +5,12 @@ namespace Modules\Payment\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Modules\Payment\Http\Requests\AdminIndexOrderRequest;
+use Modules\Payment\Http\Requests\AdminTrashedOrderRequest;
+use Modules\Payment\Http\Requests\BulkDeleteOrdersRequest;
+use Modules\Payment\Http\Requests\RevenueStatsRequest;
+use Modules\Payment\Http\Requests\UpdateOrderStatusRequest;
 use Modules\Payment\Http\Resources\OrderResource;
 use Modules\Payment\Repositories\OrderRepositoryInterface;
 
@@ -18,21 +22,8 @@ class AdminOrderController extends Controller
         private OrderRepositoryInterface $repository,
     ) {}
 
-    /**
-     * Danh sách tất cả đơn hàng (phân trang + filter).
-     * Filter: search (order_code/student), status, from, to, payment_method.
-     */
-    public function index(Request $request): JsonResponse
+    public function index(AdminIndexOrderRequest $request): JsonResponse
     {
-        $request->validate([
-            'search'         => 'nullable|string|max:100',
-            'status'         => 'nullable|string|in:pending,paid,failed,cancelled,refunded',
-            'from'           => 'nullable|date',
-            'to'             => 'nullable|date',
-            'payment_method' => 'nullable|string|in:vnpay,momo,free',
-            'per_page'       => 'nullable|integer|min:1|max:100',
-        ]);
-
         $perPage = (int) $request->query('per_page', 15);
         $filters = $request->only(['search', 'status', 'from', 'to', 'payment_method']);
 
@@ -42,9 +33,6 @@ class AdminOrderController extends Controller
         return $this->paginated($data);
     }
 
-    /**
-     * Chi tiết đơn hàng (kèm items + transactions).
-     */
     public function show(int $id): JsonResponse
     {
         $order = $this->repository->findOrFail($id, ['*'], ['student', 'items.course', 'transactions']);
@@ -52,20 +40,11 @@ class AdminOrderController extends Controller
         return $this->success(new OrderResource($order));
     }
 
-    /**
-     * Admin cập nhật trạng thái đơn hàng (VD: refund thủ công).
-     */
-    public function updateStatus(Request $request, int $id): JsonResponse
+    public function updateStatus(UpdateOrderStatusRequest $request, int $id): JsonResponse
     {
-        $request->validate([
-            'status' => 'required|string|in:pending,paid,failed,cancelled,refunded',
-            'note'   => 'nullable|string|max:500',
-        ]);
-
         $order = $this->repository->findOrFail($id);
-
         $oldStatus = $order->status;
-        $newStatus = $request->input('status');
+        $newStatus = $request->validated()['status'];
 
         $updateData = ['status' => $newStatus];
 
@@ -77,25 +56,16 @@ class AdminOrderController extends Controller
             $updateData['paid_at'] = now();
         }
 
-        $order->update($updateData);
-        $order->refresh();
-        $order->load(['student', 'items.course', 'transactions']);
+        $updated = $this->repository->updateOrderStatus($id, $updateData);
 
         return $this->success(
-            new OrderResource($order),
+            new OrderResource($updated),
             "Trạng thái đơn hàng đã cập nhật: {$oldStatus} → {$newStatus}."
         );
     }
 
-    /**
-     * Danh sách đơn hàng đã soft-delete (thùng rác).
-     */
-    public function trashed(Request $request): JsonResponse
+    public function trashed(AdminTrashedOrderRequest $request): JsonResponse
     {
-        $request->validate([
-            'per_page' => 'nullable|integer|min:1|max:100',
-        ]);
-
         $perPage = (int) $request->query('per_page', 15);
         $data = $this->repository->paginateTrashed($perPage, ['*'], ['student', 'items.course']);
         $data->setCollection(OrderResource::collection($data->getCollection())->collection);
@@ -103,9 +73,6 @@ class AdminOrderController extends Controller
         return $this->paginated($data);
     }
 
-    /**
-     * Soft delete đơn hàng.
-     */
     public function destroy(int $id): JsonResponse
     {
         $this->repository->delete($id);
@@ -113,9 +80,6 @@ class AdminOrderController extends Controller
         return $this->success(null, 'Đơn hàng đã được xoá thành công.');
     }
 
-    /**
-     * Khôi phục đơn hàng đã soft-delete.
-     */
     public function restore(int $id): JsonResponse
     {
         $this->repository->restore($id);
@@ -123,18 +87,10 @@ class AdminOrderController extends Controller
         return $this->success(null, 'Đơn hàng đã được khôi phục thành công.');
     }
 
-    /**
-     * Bulk soft delete nhiều đơn hàng.
-     */
-    public function bulkDelete(Request $request): JsonResponse
+    public function bulkDelete(BulkDeleteOrdersRequest $request): JsonResponse
     {
-        $request->validate([
-            'ids'   => 'required|array|min:1',
-            'ids.*' => 'integer|exists:orders,id',
-        ]);
-
         $deleted = DB::transaction(function () use ($request) {
-            return $this->repository->deleteMany($request->ids);
+            return $this->repository->deleteMany($request->validated()['ids']);
         });
 
         return $this->success(
@@ -143,21 +99,11 @@ class AdminOrderController extends Controller
         );
     }
 
-    /**
-     * Thống kê doanh thu (cho dashboard).
-     * Query params: period (daily/monthly), from, to.
-     */
-    public function revenueStats(Request $request): JsonResponse
+    public function revenueStats(RevenueStatsRequest $request): JsonResponse
     {
-        $request->validate([
-            'period' => 'nullable|string|in:daily,monthly',
-            'from'   => 'nullable|date',
-            'to'     => 'nullable|date',
-        ]);
-
         $period = $request->query('period', 'monthly');
-        $from   = $request->query('from');
-        $to     = $request->query('to');
+        $from = $request->query('from');
+        $to = $request->query('to');
 
         $stats = $this->repository->getRevenueStats($period, $from, $to);
 

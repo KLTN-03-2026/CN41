@@ -27,9 +27,12 @@ http.interceptors.request.use((config) => {
 
 // Response interceptor — xử lý lỗi chung
 // Bỏ qua redirect 401 cho các endpoint auth (login/register trả 401 khi sai credentials là bình thường)
+// Logout paths included — prevents 401 loop when store.logout() fires the logout API call
 const AUTH_PATHS = [
   '/admin/auth/login',
+  '/admin/auth/logout',
   '/auth/login',
+  '/auth/logout',
   '/auth/register',
   '/auth/forgot-password',
   '/auth/reset-password',
@@ -47,19 +50,11 @@ http.interceptors.response.use(
       const isAdminRoute = requestUrl.startsWith('/admin')
       if (isAdminRoute) {
         const { useAdminAuthStore } = await import('@/stores/adminAuth.store')
-        const adminStore = useAdminAuthStore()
-        adminStore.token = null
-        adminStore.user = null
-        localStorage.removeItem('adminToken')
-        sessionStorage.removeItem('adminToken')
+        await useAdminAuthStore().logout()
         window.location.href = '/admin/login'
       } else {
         const { useStudentAuthStore } = await import('@/stores/studentAuth.store')
-        const studentStore = useStudentAuthStore()
-        studentStore.token = null
-        studentStore.student = null
-        localStorage.removeItem('studentToken')
-        sessionStorage.removeItem('studentToken')
+        await useStudentAuthStore().logout()
         window.location.href = '/login'
       }
     }

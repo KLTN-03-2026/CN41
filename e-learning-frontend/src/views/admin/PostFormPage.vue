@@ -231,7 +231,7 @@ async function fetchInitialData() {
       form.is_published = !!p.is_published
       form.thumbnail = p.thumbnail || ''
     }
-  } catch (err) {
+  } catch {
     toast.error('Không thể tải dữ liệu')
   }
 }
@@ -281,9 +281,12 @@ async function submitForm() {
       toast.success('Đăng bài viết thành công')
     }
     router.push('/admin/posts')
-  } catch (err: any) {
-    if (err.response?.status === 422) {
-      formErrors.value = err.response.data.errors
+  } catch (err) {
+    const e = err as {
+      response?: { status?: number; data?: { errors?: Record<string, string[]>; message?: string } }
+    }
+    if (e.response?.status === 422) {
+      formErrors.value = e.response.data?.errors ?? {}
     } else {
       submitError.value = err.response?.data?.message || 'Có lỗi xảy ra'
     }

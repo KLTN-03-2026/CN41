@@ -106,7 +106,7 @@ class StudentTest extends TestCase
             'password' => 'password',
         ]);
 
-        $response = $this->putJson($this->baseUrl.'/'.$student->id, [
+        $response = $this->patchJson($this->baseUrl.'/'.$student->id, [
             'name' => 'New Name',
             'email' => 'old@test.com',
             'date_of_birth' => '1995-05-05',
@@ -152,7 +152,7 @@ class StudentTest extends TestCase
         $student = Student::create(['name' => 'Restored', 'email' => 'restored@test.com', 'password' => 'password']);
         $student->delete();
 
-        $response = $this->postJson($this->baseUrl.'/'.$student->id.'/restore');
+        $response = $this->patchJson($this->baseUrl.'/'.$student->id.'/restore');
 
         $response->assertStatus(200);
         $this->assertDatabaseHas('students', ['id' => $student->id, 'deleted_at' => null]);
@@ -193,7 +193,7 @@ class StudentTest extends TestCase
         $s1->delete();
         $s2->delete();
 
-        $response = $this->postJson($this->baseUrl.'/bulk-restore', [
+        $response = $this->patchJson($this->baseUrl.'/bulk-restore', [
             'ids' => [$s1->id, $s2->id],
         ]);
 

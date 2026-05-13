@@ -12,8 +12,8 @@ class BulkStatusCourseRequest extends BaseBulkRequest
     public function rules(): array
     {
         return [
-            'ids'    => 'required|array|min:1',
-            'ids.*'  => 'integer|exists:courses,id',
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'integer|exists:courses,id',
             'status' => 'required|integer|in:0,1',
         ];
     }
@@ -21,11 +21,11 @@ class BulkStatusCourseRequest extends BaseBulkRequest
     public function messages(): array
     {
         return [
-            'ids.required'    => 'Vui lòng chọn ít nhất một khóa học.',
-            'ids.array'       => 'Danh sách ID không hợp lệ.',
-            'ids.*.exists'    => 'Một số khóa học không tồn tại.',
+            'ids.required' => 'Vui lòng chọn ít nhất một khóa học.',
+            'ids.array' => 'Danh sách ID không hợp lệ.',
+            'ids.*.exists' => 'Một số khóa học không tồn tại.',
             'status.required' => 'Trạng thái là bắt buộc.',
-            'status.in'       => 'Trạng thái không hợp lệ.',
+            'status.in' => 'Trạng thái không hợp lệ.',
         ];
     }
 }

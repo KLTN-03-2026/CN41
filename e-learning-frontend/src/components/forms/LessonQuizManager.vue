@@ -246,29 +246,13 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useToast } from 'vue-toastification'
-import http from '@/plugins/axios'
-
-interface Question {
-  id: number
-  question: string
-  option_a: string
-  option_b: string
-  option_c: string
-  option_d: string
-  correct_option: 'A' | 'B' | 'C' | 'D'
-  order: number
-}
-
-interface ChapterPdf {
-  id: number
-  name: string
-  url: string
-}
+import { quizService } from '@/services/quiz.service'
+import type { QuizQuestion, ChapterPdf } from '@/services/quiz.service'
 
 const props = defineProps<{ lessonId: number }>()
 const toast = useToast()
 
-const questions = ref<Question[]>([])
+const questions = ref<QuizQuestion[]>([])
 const showGeneratePanel = ref(false)
 const generating = ref(false)
 const generatingStep = ref('')
@@ -285,7 +269,7 @@ onMounted(() => loadQuiz())
 
 async function loadQuiz() {
   try {
-    const res = await http.get(`/admin/lesson-quiz/${props.lessonId}`)
+    const res = await quizService.lessonQuizGet(props.lessonId)
     if (res.data.data?.questions) {
       questions.value = res.data.data.questions
     }
@@ -302,7 +286,7 @@ function selectChapterSource() {
 async function loadChapterPdfs() {
   loadingPdfs.value = true
   try {
-    const res = await http.get(`/admin/lesson-quiz/${props.lessonId}/chapter-pdfs`)
+    const res = await quizService.lessonQuizChapterPdfs(props.lessonId)
     chapterPdfs.value = res.data.data ?? []
   } catch {
     toast.error('Không thể tải danh sách PDF')
@@ -324,20 +308,21 @@ async function doGenerate() {
       formData.append('file', uploadedFile.value)
     }
 
-    const res = await http.post(`/admin/lesson-quiz/${props.lessonId}/generate`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    })
-
-    const jobId: number = res.data.data.job_id
+    const res = await quizService.lessonQuizGenerate(props.lessonId, formData)
+    const jobId = res.data.data.job_id
     generatingStep.value = 'AI đang sinh câu hỏi...'
     await pollJobStatus(jobId)
-  } catch (err: any) {
-    const data = err.response?.data
+  } catch (err) {
+    const e = err as {
+      response?: { data?: { message?: string; errors?: Record<string, string[]> } }
+      message?: string
+    }
+    const data = e.response?.data
     if (data?.errors) {
       const firstError = Object.values(data.errors)[0] as string[]
       toast.error(firstError[0] || data.message || 'Sinh câu hỏi thất bại')
     } else {
-      toast.error(err.message || data?.message || 'Sinh câu hỏi thất bại')
+      toast.error(e.message || data?.message || 'Sinh câu hỏi thất bại')
     }
   } finally {
     generating.value = false
@@ -352,7 +337,7 @@ async function pollJobStatus(jobId: number): Promise<void> {
   for (let i = 0; i < MAX_POLLS; i++) {
     await new Promise((r) => setTimeout(r, INTERVAL_MS))
 
-    const res = await http.get(`/admin/lesson-quiz/jobs/${jobId}`)
+    const res = await quizService.lessonQuizJobStatus(jobId)
     const payload = res.data.data
 
     if (payload.status === 'done') {
@@ -369,9 +354,9 @@ async function pollJobStatus(jobId: number): Promise<void> {
   throw new Error('Hết thời gian chờ. Vui lòng thử lại.')
 }
 
-async function saveQuestion(q: Question) {
+async function saveQuestion(q: QuizQuestion) {
   try {
-    await http.patch(`/admin/quiz-questions/${q.id}`, {
+    await quizService.updateQuestion(q.id, {
       question: q.question,
       option_a: q.option_a,
       option_b: q.option_b,
@@ -384,14 +369,14 @@ async function saveQuestion(q: Question) {
   }
 }
 
-async function setCorrect(q: Question, opt: 'A' | 'B' | 'C' | 'D') {
+async function setCorrect(q: QuizQuestion, opt: 'A' | 'B' | 'C' | 'D') {
   q.correct_option = opt
   await saveQuestion(q)
 }
 
 async function deleteQuestion(id: number) {
   try {
-    await http.delete(`/admin/quiz-questions/${id}`)
+    await quizService.destroyQuestion(id)
     questions.value = questions.value.filter((q) => q.id !== id)
     toast.success('Đã xóa câu hỏi')
   } catch {

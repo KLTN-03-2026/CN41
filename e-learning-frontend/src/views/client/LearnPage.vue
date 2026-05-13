@@ -316,7 +316,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, reactive } from 'vue'
+import { ref, computed, onMounted, reactive } from 'vue'
 import { useRoute } from 'vue-router'
 import { useToast } from 'vue-toastification'
 import { lessonService } from '@/services/lesson.service'
@@ -480,7 +480,6 @@ async function selectLesson(lesson: Lesson) {
 }
 
 // ── Video progress ─────────────────────────────────────────────
-const progressTimer: ReturnType<typeof setInterval> | null = null
 let lastSavedSeconds = 0
 
 function onTimeUpdate(currentTime: number) {
@@ -505,8 +504,8 @@ async function saveProgress(watchedSeconds: number, isCompleted: boolean) {
       is_completed: isCompleted,
     })
     if (isCompleted) markLessonComplete()
-  } catch (err) {
-    console.error('Failed to save progress', err)
+  } catch {
+    // progress save failure is non-critical, don't interrupt the learner
   }
 }
 
@@ -546,9 +545,6 @@ async function markComplete(isCompleted: boolean) {
   }
 }
 
-onUnmounted(() => {
-  if (progressTimer) clearInterval(progressTimer)
-})
 </script>
 
 <style src="@/assets/css/learn-page.css"></style>
