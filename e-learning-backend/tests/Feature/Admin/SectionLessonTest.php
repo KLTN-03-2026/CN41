@@ -327,4 +327,132 @@ class SectionLessonTest extends TestCase
         $response->assertStatus(200);
         $this->assertSoftDeleted('lessons', ['id' => $lesson->id]);
     }
+
+    public function test_create_lesson_fails_without_required_fields()
+    {
+        $this->setupAdmin();
+        $course = $this->createCourse();
+
+        $response = $this->postJson($this->baseUrl."/courses/{$course->id}/lessons", []);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['title', 'type']);
+    }
+
+    public function test_lesson_trashed_returns_deleted_lessons()
+    {
+        $this->setupAdmin();
+        $course = $this->createCourse();
+        $lesson = Lesson::create([
+            'title' => 'Trashed Lesson',
+            'course_id' => $course->id,
+            'type' => 'text',
+            'slug' => 'trashed-lesson',
+            'order' => 0,
+        ]);
+        $lesson->delete();
+
+        $response = $this->getJson($this->baseUrl.'/lessons/trashed');
+
+        $response->assertStatus(200)
+            ->assertJsonFragment(['title' => 'Trashed Lesson']);
+    }
+
+    public function test_lesson_restore_success()
+    {
+        $this->setupAdmin();
+        $course = $this->createCourse();
+        $lesson = Lesson::create([
+            'title' => 'Restore Lesson',
+            'course_id' => $course->id,
+            'type' => 'text',
+            'slug' => 'restore-lesson',
+            'order' => 0,
+        ]);
+        $lesson->delete();
+
+        $response = $this->patchJson($this->baseUrl."/lessons/{$lesson->id}/restore");
+
+        $response->assertStatus(200);
+        $this->assertDatabaseHas('lessons', ['id' => $lesson->id, 'deleted_at' => null]);
+    }
+
+    public function test_lesson_force_delete_success()
+    {
+        $this->setupAdmin();
+        $course = $this->createCourse();
+        $lesson = Lesson::create([
+            'title' => 'Force Delete Lesson',
+            'course_id' => $course->id,
+            'type' => 'text',
+            'slug' => 'force-delete-lesson',
+            'order' => 0,
+        ]);
+        $lesson->delete();
+
+        $response = $this->deleteJson($this->baseUrl."/lessons/{$lesson->id}/force-delete");
+
+        $response->assertStatus(200);
+        $this->assertDatabaseMissing('lessons', ['id' => $lesson->id]);
+    }
+
+    public function test_bulk_delete_lessons_success()
+    {
+        $this->setupAdmin();
+        $course = $this->createCourse();
+        $l1 = Lesson::create(['title' => 'BL1', 'course_id' => $course->id, 'type' => 'text', 'slug' => 'bl1', 'order' => 0]);
+        $l2 = Lesson::create(['title' => 'BL2', 'course_id' => $course->id, 'type' => 'text', 'slug' => 'bl2', 'order' => 1]);
+
+        $response = $this->deleteJson($this->baseUrl.'/lessons/bulk-delete', [
+            'ids' => [$l1->id, $l2->id],
+        ]);
+
+        $response->assertStatus(200);
+        $this->assertSoftDeleted('lessons', ['id' => $l1->id]);
+        $this->assertSoftDeleted('lessons', ['id' => $l2->id]);
+    }
+
+    public function test_bulk_restore_lessons_success()
+    {
+        $this->setupAdmin();
+        $course = $this->createCourse();
+        $l1 = Lesson::create(['title' => 'BRL1', 'course_id' => $course->id, 'type' => 'text', 'slug' => 'brl1', 'order' => 0]);
+        $l2 = Lesson::create(['title' => 'BRL2', 'course_id' => $course->id, 'type' => 'text', 'slug' => 'brl2', 'order' => 1]);
+        $l1->delete();
+        $l2->delete();
+
+        $response = $this->patchJson($this->baseUrl.'/lessons/bulk-restore', [
+            'ids' => [$l1->id, $l2->id],
+        ]);
+
+        $response->assertStatus(200);
+        $this->assertDatabaseHas('lessons', ['id' => $l1->id, 'deleted_at' => null]);
+        $this->assertDatabaseHas('lessons', ['id' => $l2->id, 'deleted_at' => null]);
+    }
+
+    public function test_section_restore_success()
+    {
+        $this->setupAdmin();
+        $course = $this->createCourse();
+        $section = Section::create(['title' => 'Restore Section', 'course_id' => $course->id, 'order' => 0]);
+        $section->delete();
+
+        $response = $this->patchJson($this->baseUrl."/sections/{$section->id}/restore");
+
+        $response->assertStatus(200);
+        $this->assertDatabaseHas('sections', ['id' => $section->id, 'deleted_at' => null]);
+    }
+
+    public function test_section_force_delete_success()
+    {
+        $this->setupAdmin();
+        $course = $this->createCourse();
+        $section = Section::create(['title' => 'Force Section', 'course_id' => $course->id, 'order' => 0]);
+        $section->delete();
+
+        $response = $this->deleteJson($this->baseUrl."/sections/{$section->id}/force-delete");
+
+        $response->assertStatus(200);
+        $this->assertDatabaseMissing('sections', ['id' => $section->id]);
+    }
 }

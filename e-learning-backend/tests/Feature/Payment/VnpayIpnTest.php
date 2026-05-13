@@ -197,4 +197,64 @@ class VnpayIpnTest extends TestCase
         $response->assertStatus(200)
             ->assertJson(['RspCode' => '02', 'Message' => 'Order already confirmed']);
     }
+
+    public function test_ipn_order_not_found()
+    {
+        $vnpData = [
+            'vnp_Amount' => 20000000,
+            'vnp_ResponseCode' => '00',
+            'vnp_TxnRef' => 'ORD-NONEXISTENT',
+            'vnp_TransactionNo' => '11111',
+        ];
+        $vnpData['vnp_SecureHash'] = $this->generateValidHash($vnpData);
+
+        $response = $this->getJson($this->baseUrl.'?'.http_build_query($vnpData));
+
+        $response->assertStatus(200)
+            ->assertJson(['RspCode' => '01', 'Message' => 'Order not Found']);
+    }
+
+    public function test_ipn_bank_declined_sets_order_failed()
+    {
+        $student = Student::forceCreate([
+            'name' => 'Test Student',
+            'email' => 'ipn_declined@test.com',
+            'password' => 'password123',
+        ]);
+
+        $order = Order::create([
+            'order_code' => 'ORD-DECLINED',
+            'student_id' => $student->id,
+            'total_amount' => 200000,
+            'status' => 'pending',
+            'payment_method' => 'vnpay',
+        ]);
+
+        Transaction::create([
+            'order_id' => $order->id,
+            'gateway' => 'vnpay',
+            'amount' => 200000,
+            'status' => 'pending',
+        ]);
+
+        $vnpData = [
+            'vnp_Amount' => 20000000, // 200k × 100
+            'vnp_BankCode' => 'NCB',
+            'vnp_ResponseCode' => '07', // bank declined / suspected fraud
+            'vnp_TxnRef' => 'ORD-DECLINED',
+            'vnp_TransactionNo' => '99999',
+        ];
+        $vnpData['vnp_SecureHash'] = $this->generateValidHash($vnpData);
+
+        $response = $this->getJson($this->baseUrl.'?'.http_build_query($vnpData));
+
+        // VNPAY always expects RspCode 00 to acknowledge receipt
+        $response->assertStatus(200)
+            ->assertJson(['RspCode' => '00', 'Message' => 'Confirm Success']);
+
+        $this->assertDatabaseHas('orders', ['id' => $order->id, 'status' => 'failed']);
+
+        // Student must NOT be enrolled when payment is declined
+        $this->assertDatabaseMissing('students_course', ['student_id' => $student->id]);
+    }
 }

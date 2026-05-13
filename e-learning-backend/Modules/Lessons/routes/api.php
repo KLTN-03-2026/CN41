@@ -13,7 +13,7 @@ Route::middleware(['auth:admin'])->prefix('admin')->group(function () {
 
     Route::post('sections/bulk-action', [SectionController::class, 'bulkAction'])->middleware('permission:lessons.edit');
     Route::delete('sections/bulk-delete', [SectionController::class, 'bulkDelete'])->middleware('permission:lessons.delete');
-    Route::post('sections/bulk-restore', [SectionController::class, 'bulkRestore'])->middleware('permission:lessons.delete');
+    Route::patch('sections/bulk-restore', [SectionController::class, 'bulkRestore'])->middleware('permission:lessons.delete');
     Route::delete('sections/bulk-force-delete', [SectionController::class, 'bulkForceDelete'])->middleware('permission:lessons.delete');
 
     Route::get('courses/{course_id}/sections', [SectionController::class, 'index'])->middleware('permission:lessons.view');
@@ -23,7 +23,7 @@ Route::middleware(['auth:admin'])->prefix('admin')->group(function () {
     Route::patch('sections/{id}', [SectionController::class, 'update'])->middleware('permission:lessons.edit');
     Route::delete('sections/{id}', [SectionController::class, 'destroy'])->middleware('permission:lessons.delete');
     Route::patch('sections/{id}/toggle-status', [SectionController::class, 'toggleStatus'])->middleware('permission:lessons.edit');
-    Route::post('sections/{id}/restore', [SectionController::class, 'restore'])->middleware('permission:lessons.delete');
+    Route::patch('sections/{id}/restore', [SectionController::class, 'restore'])->middleware('permission:lessons.delete');
     Route::delete('sections/{id}/force-delete', [SectionController::class, 'forceDelete'])->middleware('permission:lessons.delete');
 
     // ── Lessons ──
@@ -32,7 +32,7 @@ Route::middleware(['auth:admin'])->prefix('admin')->group(function () {
 
     Route::post('lessons/bulk-action', [LessonController::class, 'bulkAction'])->middleware('permission:lessons.edit');
     Route::delete('lessons/bulk-delete', [LessonController::class, 'bulkDelete'])->middleware('permission:lessons.delete');
-    Route::post('lessons/bulk-restore', [LessonController::class, 'bulkRestore'])->middleware('permission:lessons.delete');
+    Route::patch('lessons/bulk-restore', [LessonController::class, 'bulkRestore'])->middleware('permission:lessons.delete');
     Route::delete('lessons/bulk-force-delete', [LessonController::class, 'bulkForceDelete'])->middleware('permission:lessons.delete');
 
     // Nested: lessons thuộc course (section_id optional trong body)
@@ -43,7 +43,7 @@ Route::middleware(['auth:admin'])->prefix('admin')->group(function () {
     Route::patch('lessons/{id}', [LessonController::class, 'update'])->middleware('permission:lessons.edit');
     Route::delete('lessons/{id}', [LessonController::class, 'destroy'])->middleware('permission:lessons.delete');
     Route::patch('lessons/{id}/toggle-status', [LessonController::class, 'toggleStatus'])->middleware('permission:lessons.edit');
-    Route::post('lessons/{id}/restore', [LessonController::class, 'restore'])->middleware('permission:lessons.delete');
+    Route::patch('lessons/{id}/restore', [LessonController::class, 'restore'])->middleware('permission:lessons.delete');
     Route::delete('lessons/{id}/force-delete', [LessonController::class, 'forceDelete'])->middleware('permission:lessons.delete');
 });
 
