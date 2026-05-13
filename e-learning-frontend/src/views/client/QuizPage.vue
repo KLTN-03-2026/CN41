@@ -321,6 +321,7 @@ async function submitQuiz() {
   } catch (err: unknown) {
     const axiosError = err as { response?: { data?: { message?: string } } }
     toast.error(axiosError.response?.data?.message || 'Nộp bài thất bại')
+  } finally {
     submitting.value = false
   }
 }

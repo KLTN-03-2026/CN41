@@ -1,6 +1,6 @@
 import type { AxiosResponse } from 'axios'
 import http from '@/plugins/axios'
-import type { ApiResponse } from '@/types'
+import type { ApiResponse, PaginatedResponse } from '@/types'
 
 export interface Quiz {
   id: number
@@ -56,6 +56,18 @@ export interface QuizDetail {
   questions: QuizQuestion[]
 }
 
+export interface ChapterPdf {
+  id: number
+  name: string
+  url: string
+}
+
+export interface GenerateJobStatus {
+  status: 'pending' | 'processing' | 'done' | 'failed'
+  questions: QuizQuestion[]
+  error_message?: string
+}
+
 export const quizService = {
   // ── Admin ──────────────────────────────────────────────────
   index: (params: Record<string, unknown> = {}): Promise<AxiosResponse<PaginatedResponse<Quiz>>> =>
@@ -93,4 +105,31 @@ export const quizService = {
 
   attempts: (id: number): Promise<AxiosResponse<ApiResponse<QuizAttempt[]>>> =>
     http.get(`/quizzes/${id}/attempts`),
+
+  // ── Admin lesson-quiz ──────────────────────────────────────
+  lessonQuizGet: (lessonId: number): Promise<AxiosResponse<ApiResponse<{ questions: QuizQuestion[] } | null>>> =>
+    http.get(`/admin/lesson-quiz/${lessonId}`),
+
+  lessonQuizChapterPdfs: (lessonId: number): Promise<AxiosResponse<ApiResponse<ChapterPdf[]>>> =>
+    http.get(`/admin/lesson-quiz/${lessonId}/chapter-pdfs`),
+
+  lessonQuizGenerate: (
+    lessonId: number,
+    data: FormData,
+  ): Promise<AxiosResponse<ApiResponse<{ job_id: number }>>> =>
+    http.post(`/admin/lesson-quiz/${lessonId}/generate`, data, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }),
+
+  lessonQuizJobStatus: (jobId: number): Promise<AxiosResponse<ApiResponse<GenerateJobStatus>>> =>
+    http.get(`/admin/lesson-quiz/jobs/${jobId}`),
+
+  updateQuestion: (
+    id: number,
+    data: Partial<Omit<QuizQuestion, 'id' | 'quiz_id' | 'order'>>,
+  ): Promise<AxiosResponse<ApiResponse<QuizQuestion>>> =>
+    http.patch(`/admin/quiz-questions/${id}`, data),
+
+  destroyQuestion: (id: number): Promise<AxiosResponse<ApiResponse<null>>> =>
+    http.delete(`/admin/quiz-questions/${id}`),
 }

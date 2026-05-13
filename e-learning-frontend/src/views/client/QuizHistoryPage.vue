@@ -47,7 +47,7 @@
             <div class="flex-1 min-w-0">
               <div class="flex items-center justify-between mb-2">
                 <span class="text-sm font-medium text-gray-700">Lần {{ attempts.length - i }}</span>
-                <span class="text-xs text-gray-400">{{ formatDate(attempt.created_at) }}</span>
+                <span class="text-xs text-gray-400">{{ formatDatetime(attempt.created_at) }}</span>
               </div>
               <div class="flex items-center gap-3">
                 <div class="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
@@ -146,6 +146,7 @@ import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { quizService } from '@/services/quiz.service'
 import type { QuizAttempt } from '@/services/quiz.service'
+import { formatDatetime } from '@/utils/formatDate'
 import {
   getCorrectAnswer,
   getStudentAnswer,
@@ -174,10 +175,6 @@ onMounted(async () => {
 
 function toggleExpand(id: number) {
   expandedId.value = expandedId.value === id ? null : id
-}
-
-function formatDate(str: string) {
-  return new Date(str).toLocaleString('vi-VN', { dateStyle: 'short', timeStyle: 'short' })
 }
 
 function scoreColorBg(pct: number) {

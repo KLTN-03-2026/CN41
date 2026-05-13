@@ -62,7 +62,7 @@
           </div>
         </div>
 
-        <p class="text-xs text-gray-400">Nộp lúc: {{ formatDate(viewingAttempt.completed_at) }}</p>
+        <p class="text-xs text-gray-400">Nộp lúc: {{ formatDatetime(viewingAttempt.completed_at) }}</p>
       </div>
 
       <!-- Per-question breakdown -->
@@ -117,7 +117,7 @@
                 </p>
                 <p class="text-xs text-gray-400 mt-0.5">
                   {{ attempt.score }}/{{ attempt.total_questions }} câu đúng ·
-                  {{ formatDate(attempt.completed_at) }}
+                  {{ formatDatetime(attempt.completed_at) }}
                 </p>
               </div>
             </div>
@@ -185,7 +185,7 @@
         </div>
 
         <div class="flex flex-col gap-1 text-xs text-gray-400 mb-5">
-          <span>Nộp lúc: {{ formatDate(lastAttempt.completed_at) }}</span>
+          <span>Nộp lúc: {{ formatDatetime(lastAttempt.completed_at) }}</span>
           <span v-if="attemptsLeft > 0">Còn {{ attemptsLeft }} lượt làm lại</span>
           <span v-else class="text-orange-400">Đã dùng hết lượt làm bài</span>
         </div>
@@ -328,6 +328,7 @@ import { useToast } from 'vue-toastification'
 import { quizService } from '@/services/quiz.service'
 import type { Quiz, QuizQuestion, QuizAttempt } from '@/services/quiz.service'
 import QuestionBreakdown from '@/components/shared/client/QuestionBreakdown.vue'
+import { formatDatetime } from '@/utils/formatDate'
 
 // ── Main component ────────────────────────────────────────────────────────────
 const props = defineProps<{ lessonId: number }>()
@@ -362,16 +363,6 @@ function attemptEmoji(a: QuizAttempt | null) {
 function attemptLabel(a: QuizAttempt | null) {
   const p = a?.percentage ?? 0
   return p >= 80 ? 'Xuất sắc!' : p >= 50 ? 'Đạt yêu cầu' : 'Chưa đạt'
-}
-
-function formatDate(iso: string) {
-  if (!iso) return ''
-  const d = new Date(iso)
-  return (
-    d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }) +
-    ' ' +
-    d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
-  )
 }
 
 onMounted(async () => {
