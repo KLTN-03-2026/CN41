@@ -68,7 +68,7 @@ class PostTest extends TestCase
             'is_published' => false,
         ]);
 
-        $response = $this->putJson($this->baseUrl.'/'.$post->id, [
+        $response = $this->patchJson($this->baseUrl.'/'.$post->id, [
             'title' => 'New Title',
             'slug' => 'new-title',
             'content' => 'New content',
