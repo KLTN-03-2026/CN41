@@ -16,9 +16,9 @@ export const lessonService = {
   show: (id: number): Promise<AxiosResponse<ApiResponse<Lesson>>> =>
     http.get(`/admin/lessons/${id}`),
 
-  /** PUT /admin/lessons/{id} */
+  /** PATCH /admin/lessons/{id} */
   update: (id: number, data: Record<string, unknown>): Promise<AxiosResponse<ApiResponse<Lesson>>> =>
-    http.put(`/admin/lessons/${id}`, data),
+    http.patch(`/admin/lessons/${id}`, data),
 
   /** DELETE /admin/lessons/{id} (soft delete) */
   destroy: (id: number): Promise<AxiosResponse<ApiResponse<null>>> =>
@@ -32,9 +32,9 @@ export const lessonService = {
   trashed: (params: Record<string, unknown> = {}): Promise<AxiosResponse<PaginatedResponse<Lesson>>> =>
     http.get('/admin/lessons/trashed', { params }),
 
-  /** POST /admin/lessons/{id}/restore */
+  /** PATCH /admin/lessons/{id}/restore */
   restore: (id: number): Promise<AxiosResponse<ApiResponse<Lesson>>> =>
-    http.post(`/admin/lessons/${id}/restore`),
+    http.patch(`/admin/lessons/${id}/restore`),
 
   /** DELETE /admin/lessons/{id}/force-delete */
   forceDelete: (id: number): Promise<AxiosResponse<ApiResponse<null>>> =>
