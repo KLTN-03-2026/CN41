@@ -2,9 +2,6 @@
 
 namespace Modules\Teachers\Http\Requests;
 
-use Illuminate\Validation\Validator;
-use Modules\Teachers\Models\Teachers;
-
 class BulkForceDeleteTeachersRequest extends BaseBulkRequest
 {
     public function authorize(): bool
@@ -16,34 +13,8 @@ class BulkForceDeleteTeachersRequest extends BaseBulkRequest
     {
         return [
             'ids' => 'required|array|min:1|max:100',
-            'ids.*' => 'required|integer',
+            'ids.*' => 'required|integer|exists:teachers,id',
         ];
-    }
-
-    /**
-     * After validation: kiểm tra tất cả IDs tồn tại (bao gồm cả đã soft-delete).
-     */
-    public function withValidator(Validator $validator): void
-    {
-        $validator->after(function (Validator $validator) {
-            if ($validator->errors()->isNotEmpty()) {
-                return;
-            }
-
-            $existingIds = Teachers::withTrashed()
-                ->whereIn('id', $this->ids)
-                ->pluck('id')
-                ->toArray();
-
-            $notFound = array_diff($this->ids, $existingIds);
-
-            if (! empty($notFound)) {
-                $validator->errors()->add(
-                    'ids',
-                    'Các giảng viên sau không tồn tại: '.implode(', ', $notFound)
-                );
-            }
-        });
     }
 
     public function messages(): array
@@ -54,6 +25,7 @@ class BulkForceDeleteTeachersRequest extends BaseBulkRequest
             'ids.min' => 'Phải chọn ít nhất 1 giảng viên.',
             'ids.max' => 'Không thể xử lý quá 100 giảng viên cùng lúc.',
             'ids.*.integer' => 'ID phải là số nguyên.',
+            'ids.*.exists' => 'Một hoặc nhiều giảng viên không tồn tại.',
         ];
     }
 }

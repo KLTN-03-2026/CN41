@@ -5,11 +5,11 @@ namespace Modules\Teachers\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Modules\Teachers\Http\Requests\BulkDeleteTeachersRequest;
 use Modules\Teachers\Http\Requests\BulkForceDeleteTeachersRequest;
 use Modules\Teachers\Http\Requests\BulkRestoreTeachersRequest;
+use Modules\Teachers\Http\Requests\IndexTeachersRequest;
 use Modules\Teachers\Http\Requests\StoreTeachersRequest;
 use Modules\Teachers\Http\Requests\UpdateTeachersRequest;
 use Modules\Teachers\Http\Resources\TeacherResource;
@@ -31,14 +31,8 @@ class TeachersController extends Controller
     /**
      * Danh sách Teachers (có phân trang + filter).
      */
-    public function index(Request $request): JsonResponse
+    public function index(IndexTeachersRequest $request): JsonResponse
     {
-        $request->validate([
-            'search' => 'nullable|string|max:100',
-            'status' => 'nullable|integer|in:0,1',
-            'per_page' => 'nullable|integer|min:1|max:100',
-        ]);
-
         $perPage = (int) $request->query('per_page', 15);
         $filters = $request->only(['search', 'status']);
 
@@ -106,12 +100,8 @@ class TeachersController extends Controller
     /**
      * Danh sách Teachers đã bị soft-delete (thùng rác).
      */
-    public function trashed(Request $request): JsonResponse
+    public function trashed(IndexTeachersRequest $request): JsonResponse
     {
-        $request->validate([
-            'per_page' => 'nullable|integer|min:1|max:100',
-        ]);
-
         $perPage = (int) $request->query('per_page', 15);
         $data = $this->repository->paginateTrashed($perPage);
         $data->setCollection(TeacherResource::collection($data->getCollection())->collection);
@@ -194,13 +184,8 @@ class TeachersController extends Controller
     /**
      * Public: Danh sách giảng viên (chỉ active, phân trang).
      */
-    public function publicIndex(Request $request): JsonResponse
+    public function publicIndex(IndexTeachersRequest $request): JsonResponse
     {
-        $request->validate([
-            'search' => 'nullable|string|max:100',
-            'per_page' => 'nullable|integer|min:1|max:100',
-        ]);
-
         $perPage = (int) $request->query('per_page', 15);
         $filters = $request->only(['search']);
 
@@ -225,7 +210,7 @@ class TeachersController extends Controller
             return $this->error('Giảng viên không tồn tại.', 404);
         }
 
-        $teacher->load('courses');
+        $teacher->load(['courses', 'user']);
 
         return $this->success(new TeacherResource($teacher));
     }

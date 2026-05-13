@@ -65,7 +65,7 @@ class TeacherTest extends TestCase
         $this->setupAdmin();
         $teacher = Teachers::create(['name' => 'Old Teacher', 'slug' => 'old-teacher']);
 
-        $response = $this->putJson($this->baseUrl.'/'.$teacher->id, [
+        $response = $this->patchJson($this->baseUrl.'/'.$teacher->id, [
             'name' => 'Updated Teacher',
             'slug' => 'updated-teacher',
             'description' => 'Updated Bio',
@@ -122,7 +122,7 @@ class TeacherTest extends TestCase
         $teacher = Teachers::create(['name' => 'Restored', 'slug' => 'restored']);
         $teacher->delete();
 
-        $response = $this->postJson($this->baseUrl.'/'.$teacher->id.'/restore');
+        $response = $this->patchJson($this->baseUrl.'/'.$teacher->id.'/restore');
 
         $response->assertStatus(200);
         $this->assertDatabaseHas('teachers', ['id' => $teacher->id, 'deleted_at' => null]);
@@ -163,7 +163,7 @@ class TeacherTest extends TestCase
         $t1->delete();
         $t2->delete();
 
-        $response = $this->postJson($this->baseUrl.'/bulk-restore', [
+        $response = $this->patchJson($this->baseUrl.'/bulk-restore', [
             'ids' => [$t1->id, $t2->id],
         ]);
 
