@@ -2,7 +2,7 @@
 
 namespace Modules\Posts\Models;
 
-use App\Models\User;
+use Modules\Users\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Modules\Students\Models\Student;
 
