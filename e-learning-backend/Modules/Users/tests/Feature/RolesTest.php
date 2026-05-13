@@ -103,7 +103,7 @@ class RolesTest extends TestCase
         $role->syncPermissions(['users.view']);
 
         $response = $this->actingAs($this->admin, 'admin')
-            ->putJson("/api/v1/admin/roles/{$role->id}", [
+            ->patchJson("/api/v1/admin/roles/{$role->id}", [
                 'name' => 'staff-updated',
                 'permissions' => ['users.view', 'users.edit'],
             ]);
@@ -123,7 +123,7 @@ class RolesTest extends TestCase
         $superAdminRole = Role::findByName('super-admin', 'admin');
 
         $response = $this->actingAs($this->admin, 'admin')
-            ->putJson("/api/v1/admin/roles/{$superAdminRole->id}", [
+            ->patchJson("/api/v1/admin/roles/{$superAdminRole->id}", [
                 'name' => 'hacker-admin',
             ]);
 

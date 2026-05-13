@@ -6,7 +6,7 @@ use Modules\Users\Http\Controllers\RolesController;
 use Modules\Users\Http\Controllers\UsersController;
 
 Route::middleware(['auth:admin'])->prefix('admin')->group(function () {
-    // Bulk routes
+    // Users — static/bulk routes BEFORE the parameterized apiResource
     Route::get('users/trashed', [UsersController::class, 'trashed'])->middleware('permission:users.view');
     Route::post('users/bulk-restore', [UsersController::class, 'bulkRestore'])->middleware('permission:users.edit');
     Route::delete('users/bulk-delete', [UsersController::class, 'bulkDelete'])->middleware('permission:users.delete');
@@ -15,8 +15,6 @@ Route::middleware(['auth:admin'])->prefix('admin')->group(function () {
     Route::get('users/roles', [UsersController::class, 'getRoles'])->middleware('permission:users.view');
     Route::post('users/bulk-assign-role', [UsersController::class, 'bulkAssignRole'])->middleware('permission:users.edit');
 
-    // apiResource: index, show (view), store (create), update (edit), destroy (delete)
-    // Tạm thời bảo vệ chung bằng users.view, sau đó chặn riêng tạo/sửa/xóa
     Route::apiResource('users', UsersController::class)->names('admin.users')
         ->middleware('permission:users.view|users.create|users.edit|users.delete');
 
@@ -25,10 +23,15 @@ Route::middleware(['auth:admin'])->prefix('admin')->group(function () {
     Route::post('users/{id}/restore', [UsersController::class, 'restore'])->middleware('permission:users.edit');
     Route::delete('users/{id}/force-delete', [UsersController::class, 'forceDelete'])->middleware('permission:users.delete');
 
-    // Roles & Permissions (Dùng chung quyền users.view hoặc riêng roles.view)
+    // Permissions list
     Route::get('permissions', [RolesController::class, 'getPermissions'])->middleware('permission:users.view');
-    Route::apiResource('roles', RolesController::class)->names('admin.roles')
-        ->middleware('permission:users.view');
+
+    // Roles — each verb gets its own permission check
+    Route::get('roles', [RolesController::class, 'index'])->middleware('permission:users.view');
+    Route::get('roles/{role}', [RolesController::class, 'show'])->middleware('permission:users.view');
+    Route::post('roles', [RolesController::class, 'store'])->middleware('permission:users.create');
+    Route::patch('roles/{role}', [RolesController::class, 'update'])->middleware('permission:users.edit');
+    Route::delete('roles/{role}', [RolesController::class, 'destroy'])->middleware('permission:users.delete');
 
     // System Logs
     Route::prefix('system')->group(function () {
