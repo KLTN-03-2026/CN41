@@ -27,7 +27,6 @@ class PaymentServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        // ── Repository Binding ──
         $this->app->bind(
             OrderRepositoryInterface::class,
             OrderRepository::class

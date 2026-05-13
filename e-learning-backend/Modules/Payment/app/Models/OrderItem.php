@@ -25,19 +25,11 @@ class OrderItem extends Model
         'final_price' => 'decimal:2',
     ];
 
-    // ── Relationships ──
-
-    /**
-     * OrderItem thuộc về một Order.
-     */
     public function order()
     {
         return $this->belongsTo(Order::class, 'order_id');
     }
 
-    /**
-     * OrderItem liên kết với một Course.
-     */
     public function course()
     {
         return $this->belongsTo(Course::class, 'course_id');

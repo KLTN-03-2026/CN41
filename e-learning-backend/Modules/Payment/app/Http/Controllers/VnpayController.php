@@ -16,14 +16,9 @@ class VnpayController extends Controller
         private VnpayService $vnpayService,
     ) {}
 
-    /**
-     * VNPAY Return URL — user được redirect về đây sau khi thanh toán.
-     *
-     * Trong môi trường production, IPN sẽ xử lý cập nhật order.
-     * Tuy nhiên, ở localhost VNPAY không gọi được IPN,
-     * nên return URL cũng xử lý luôn (fallback) để đảm bảo order được cập nhật.
-     */
-    public function return(Request $request): mixed
+    // IPN không reach được localhost, nên return URL cũng gọi handleIpn làm fallback.
+    // handleIpn có idempotent check nên an toàn khi gọi lại.
+    public function return(Request $request): \Illuminate\Http\RedirectResponse
     {
         $vnpData = $request->query();
 
@@ -44,12 +39,6 @@ class VnpayController extends Controller
         return redirect()->away("{$frontendUrl}?{$queryParams}");
     }
 
-    /**
-     * VNPAY IPN — Webhook server-to-server.
-     *
-     * VNPAY gọi endpoint này để thông báo kết quả thanh toán.
-     * Response phải trả JSON theo chuẩn VNPAY: { RspCode, Message }
-     */
     public function ipn(Request $request): JsonResponse
     {
         $vnpData = $request->query();

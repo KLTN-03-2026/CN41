@@ -37,33 +37,20 @@ class Order extends Model
         'deleted_at' => 'datetime',
     ];
 
-    // ── Relationships ──
-
-    /**
-     * Order thuộc về một Student.
-     */
     public function student()
     {
         return $this->belongsTo(Student::class, 'student_id');
     }
 
-    /**
-     * Order có nhiều OrderItem.
-     */
     public function items()
     {
         return $this->hasMany(OrderItem::class, 'order_id');
     }
 
-    /**
-     * Order có nhiều Transaction (retry payment tạo thêm transaction).
-     */
     public function transactions()
     {
         return $this->hasMany(Transaction::class, 'order_id');
     }
-
-    // ── Scopes ──
 
     public function scopePaid($query)
     {
@@ -79,8 +66,6 @@ class Order extends Model
     {
         return $query->where('status', 'failed');
     }
-
-    // ── Helpers ──
 
     public function isPaid(): bool
     {

@@ -7,12 +7,6 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Modules\Payment\Models\Order;
 
-/**
- * Class OrderRepository
- *
- * Eloquent implementation cho OrderRepositoryInterface.
- * Extends BaseRepository (đã có sẵn base methods + clamp perPage, soft-delete support).
- */
 class OrderRepository extends BaseRepository implements OrderRepositoryInterface
 {
     public function __construct(Order $model)
@@ -20,9 +14,6 @@ class OrderRepository extends BaseRepository implements OrderRepositoryInterface
         parent::__construct($model);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function getFiltered(array $filters = [], int $perPage = 15): LengthAwarePaginator
     {
         $perPage = max(1, min($perPage, static::MAX_PER_PAGE));
@@ -62,9 +53,6 @@ class OrderRepository extends BaseRepository implements OrderRepositoryInterface
         return $query->paginate($perPage);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function getByStudent(int $studentId, int $perPage = 15): LengthAwarePaginator
     {
         $perPage = max(1, min($perPage, static::MAX_PER_PAGE));
@@ -76,9 +64,6 @@ class OrderRepository extends BaseRepository implements OrderRepositoryInterface
             ->paginate($perPage);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function findByOrderCode(string $orderCode): ?Order
     {
         return $this->model->newQuery()
@@ -87,9 +72,6 @@ class OrderRepository extends BaseRepository implements OrderRepositoryInterface
             ->first();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function createWithItems(array $orderData, array $items): Order
     {
         $order = $this->model->newQuery()->create($orderData);
@@ -103,9 +85,6 @@ class OrderRepository extends BaseRepository implements OrderRepositoryInterface
         return $order;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function markAsPaid(int $orderId): Order
     {
         $order = $this->model->newQuery()->findOrFail($orderId);
@@ -118,9 +97,15 @@ class OrderRepository extends BaseRepository implements OrderRepositoryInterface
         return $order;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    public function updateOrderStatus(int $id, array $data): Order
+    {
+        $order = $this->model->newQuery()->findOrFail($id);
+        $order->update($data);
+        $order->refresh()->load(['student', 'items.course', 'transactions']);
+
+        return $order;
+    }
+
     public function getRevenueStats(string $period = 'monthly', ?string $from = null, ?string $to = null): array
     {
         $query = $this->model->newQuery()->paid();
@@ -176,9 +161,6 @@ class OrderRepository extends BaseRepository implements OrderRepositoryInterface
         ];
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function checkDuplicateEnrollment(int $studentId, array $courseIds): array
     {
         return DB::table('students_course')

@@ -9,17 +9,11 @@ use Illuminate\Support\Facades\DB;
 
 class CreateOrderRequest extends FormRequest
 {
-    /**
-     * Xác định user có quyền thực hiện request này không.
-     */
     public function authorize(): bool
     {
         return auth('api')->check();
     }
 
-    /**
-     * Validation rules cho việc tạo đơn hàng.
-     */
     public function rules(): array
     {
         return [
@@ -29,9 +23,6 @@ class CreateOrderRequest extends FormRequest
         ];
     }
 
-    /**
-     * Custom validation: kiểm tra student đã enroll khóa học chưa.
-     */
     public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $validator) {
@@ -42,7 +33,6 @@ class CreateOrderRequest extends FormRequest
             $studentId = auth('api')->id();
             $courseIds = $this->input('course_ids', []);
 
-            // Kiểm tra các khóa học đã enroll
             $enrolledCourseIds = DB::table('students_course')
                 ->where('student_id', $studentId)
                 ->whereIn('course_id', $courseIds)
@@ -50,7 +40,6 @@ class CreateOrderRequest extends FormRequest
                 ->toArray();
 
             if (! empty($enrolledCourseIds)) {
-                // Lấy tên các khóa học đã mua để thông báo rõ ràng
                 $courseNames = DB::table('courses')
                     ->whereIn('id', $enrolledCourseIds)
                     ->pluck('name')
@@ -62,7 +51,6 @@ class CreateOrderRequest extends FormRequest
                 );
             }
 
-            // Kiểm tra khóa học có published không
             $publishedCount = DB::table('courses')
                 ->whereIn('id', $courseIds)
                 ->where('status', 1)
@@ -77,9 +65,6 @@ class CreateOrderRequest extends FormRequest
         });
     }
 
-    /**
-     * Custom messages cho validation errors.
-     */
     public function messages(): array
     {
         return [
@@ -92,9 +77,6 @@ class CreateOrderRequest extends FormRequest
         ];
     }
 
-    /**
-     * Override: trả về JSON thay vì redirect khi validation fail (API-only).
-     */
     protected function failedValidation(Validator $validator): void
     {
         throw new HttpResponseException(response()->json([
