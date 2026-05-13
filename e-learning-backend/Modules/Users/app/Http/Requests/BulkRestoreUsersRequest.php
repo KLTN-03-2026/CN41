@@ -2,6 +2,8 @@
 
 namespace Modules\Users\Http\Requests;
 
+use Illuminate\Validation\Rule;
+
 class BulkRestoreUsersRequest extends BaseBulkRequest
 {
     public function authorize(): bool
@@ -12,19 +14,24 @@ class BulkRestoreUsersRequest extends BaseBulkRequest
     public function rules(): array
     {
         return [
-            'ids' => 'required|array|min:1|max:100',
-            'ids.*' => 'required|integer',
+            'ids'   => 'required|array|min:1|max:100',
+            'ids.*' => [
+                'required',
+                'integer',
+                Rule::exists('users', 'id')->whereNotNull('deleted_at'),
+            ],
         ];
     }
 
     public function messages(): array
     {
         return [
-            'ids.required' => 'Danh sách ID không được để trống.',
-            'ids.array' => 'ids phải là mảng.',
-            'ids.min' => 'Phải chọn ít nhất 1 user.',
-            'ids.max' => 'Không thể xử lý quá 100 user cùng lúc.',
+            'ids.required'  => 'Danh sách ID không được để trống.',
+            'ids.array'     => 'ids phải là mảng.',
+            'ids.min'       => 'Phải chọn ít nhất 1 user.',
+            'ids.max'       => 'Không thể xử lý quá 100 user cùng lúc.',
             'ids.*.integer' => 'ID phải là số nguyên.',
+            'ids.*.exists'  => 'Một hoặc nhiều user không tồn tại hoặc chưa bị xóa.',
         ];
     }
 }
