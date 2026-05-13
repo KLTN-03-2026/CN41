@@ -16,7 +16,7 @@ class StoreCommentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'content'   => 'required|string|max:1000',
+            'content' => 'required|string|max:1000',
             'parent_id' => 'nullable|exists:post_comments,id',
         ];
     }
@@ -25,7 +25,7 @@ class StoreCommentRequest extends FormRequest
     {
         return [
             'content.required' => 'Nội dung bình luận là bắt buộc.',
-            'content.max'      => 'Nội dung bình luận không được vượt quá 1000 ký tự.',
+            'content.max' => 'Nội dung bình luận không được vượt quá 1000 ký tự.',
             'parent_id.exists' => 'Bình luận cha không tồn tại.',
         ];
     }
@@ -35,7 +35,7 @@ class StoreCommentRequest extends FormRequest
         throw new HttpResponseException(response()->json([
             'success' => false,
             'message' => 'Dữ liệu không hợp lệ.',
-            'errors'  => $validator->errors(),
+            'errors' => $validator->errors(),
         ], 422));
     }
 }

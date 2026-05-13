@@ -28,7 +28,7 @@ class UpdateTagRequest extends FormRequest
         return [
             'name.required' => 'Tên tag là bắt buộc.',
             'slug.required' => 'Slug là bắt buộc.',
-            'slug.unique'   => 'Slug tag đã tồn tại.',
+            'slug.unique' => 'Slug tag đã tồn tại.',
         ];
     }
 
@@ -37,7 +37,7 @@ class UpdateTagRequest extends FormRequest
         throw new HttpResponseException(response()->json([
             'success' => false,
             'message' => 'Dữ liệu không hợp lệ.',
-            'errors'  => $validator->errors(),
+            'errors' => $validator->errors(),
         ], 422));
     }
 }

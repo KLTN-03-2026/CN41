@@ -16,7 +16,7 @@ class BulkDeletePostsRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'ids'   => 'required|array',
+            'ids' => 'required|array',
             'ids.*' => 'integer|exists:posts,id',
         ];
     }
@@ -25,7 +25,7 @@ class BulkDeletePostsRequest extends FormRequest
     {
         return [
             'ids.required' => 'Danh sách bài viết là bắt buộc.',
-            'ids.array'    => 'Danh sách bài viết phải là mảng.',
+            'ids.array' => 'Danh sách bài viết phải là mảng.',
             'ids.*.exists' => 'Một số bài viết không tồn tại.',
         ];
     }
@@ -35,7 +35,7 @@ class BulkDeletePostsRequest extends FormRequest
         throw new HttpResponseException(response()->json([
             'success' => false,
             'message' => 'Dữ liệu không hợp lệ.',
-            'errors'  => $validator->errors(),
+            'errors' => $validator->errors(),
         ], 422));
     }
 }

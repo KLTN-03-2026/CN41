@@ -2,9 +2,9 @@
 
 namespace Modules\Posts\Models;
 
-use Modules\Users\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Modules\Students\Models\Student;
+use Modules\Users\Models\User;
 
 class PostComment extends Model
 {

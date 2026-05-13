@@ -16,7 +16,7 @@ class BulkDeleteCommentsRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'ids'   => 'required|array',
+            'ids' => 'required|array',
             'ids.*' => 'integer|exists:post_comments,id',
         ];
     }
@@ -25,7 +25,7 @@ class BulkDeleteCommentsRequest extends FormRequest
     {
         return [
             'ids.required' => 'Danh sách bình luận là bắt buộc.',
-            'ids.array'    => 'Danh sách bình luận phải là mảng.',
+            'ids.array' => 'Danh sách bình luận phải là mảng.',
             'ids.*.exists' => 'Một số bình luận không tồn tại.',
         ];
     }
@@ -35,7 +35,7 @@ class BulkDeleteCommentsRequest extends FormRequest
         throw new HttpResponseException(response()->json([
             'success' => false,
             'message' => 'Dữ liệu không hợp lệ.',
-            'errors'  => $validator->errors(),
+            'errors' => $validator->errors(),
         ], 422));
     }
 }
