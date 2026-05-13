@@ -1,10 +1,11 @@
 <?php
 
-namespace App\Services;
+namespace Modules\Upload\Services;
 
 use Exception;
 use getID3;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -12,6 +13,11 @@ use Modules\Upload\Models\MediaFile;
 
 class UploadService
 {
+    public function findOrFail(int $id): MediaFile
+    {
+        return MediaFile::findOrFail($id);
+    }
+
     public function uploadVideo(UploadedFile $file, ?int $uploadedBy = null): MediaFile
     {
         $metadata = $this->extractVideoMetadata($file);
@@ -98,6 +104,18 @@ class UploadService
         ];
     }
 
+    public function confirmById(int $id): MediaFile
+    {
+        return DB::transaction(function () use ($id) {
+            $mediaFile = MediaFile::where('id', $id)
+                ->where('status', 'pending')
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            return $this->confirmUpload($mediaFile);
+        });
+    }
+
     public function confirmUpload(MediaFile $mediaFile): MediaFile
     {
         $disk = Storage::disk($mediaFile->disk);
@@ -106,7 +124,6 @@ class UploadService
             throw new Exception('File chưa tồn tại trên storage. Upload lại hoặc thử lại sau.');
         }
 
-        // Verify MIME thực tế trên storage (không tin client)
         $updateData = ['status' => 'ready'];
         try {
             $actualMime = $disk->mimeType($mediaFile->path);

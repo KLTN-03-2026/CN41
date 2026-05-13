@@ -2,9 +2,9 @@
 
 namespace App\Console\Commands;
 
-use App\Services\UploadService;
 use Illuminate\Console\Command;
 use Modules\Upload\Models\MediaFile;
+use Modules\Upload\Services\UploadService;
 
 class PruneOrphanMediaFiles extends Command
 {
