@@ -2,7 +2,9 @@
 
 namespace Modules\Posts\Http\Requests\Admin;
 
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\Exceptions\HttpResponseException;
 
 class StorePostCategoryRequest extends FormRequest
 {
@@ -14,9 +16,27 @@ class StorePostCategoryRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => 'required|string|max:255',
-            'slug' => 'required|string|max:255|unique:post_categories,slug',
+            'name'        => 'required|string|max:255',
+            'slug'        => 'required|string|max:255|unique:post_categories,slug',
             'description' => 'nullable|string',
         ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'name.required' => 'Tên danh mục là bắt buộc.',
+            'slug.required' => 'Slug là bắt buộc.',
+            'slug.unique'   => 'Slug danh mục đã tồn tại.',
+        ];
+    }
+
+    protected function failedValidation(Validator $validator): void
+    {
+        throw new HttpResponseException(response()->json([
+            'success' => false,
+            'message' => 'Dữ liệu không hợp lệ.',
+            'errors'  => $validator->errors(),
+        ], 422));
     }
 }
