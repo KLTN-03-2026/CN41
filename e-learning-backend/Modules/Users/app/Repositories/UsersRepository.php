@@ -31,6 +31,13 @@ class UsersRepository extends BaseRepository implements UsersRepositoryInterface
         return $users->count();
     }
 
+    public function hasSuperAdmin(array $ids): bool
+    {
+        return $this->model->whereIn('id', $ids)
+            ->whereHas('roles', fn ($q) => $q->where('name', 'super-admin'))
+            ->exists();
+    }
+
     /**
      * Paginate + filter users.
      *
