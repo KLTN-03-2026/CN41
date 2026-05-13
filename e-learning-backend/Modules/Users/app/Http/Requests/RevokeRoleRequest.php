@@ -24,7 +24,7 @@ class RevokeRoleRequest extends FormRequest
     {
         return [
             'role.required' => 'Role không được để trống.',
-            'role.exists'   => 'Role không hợp lệ.',
+            'role.exists' => 'Role không hợp lệ.',
         ];
     }
 
@@ -33,7 +33,7 @@ class RevokeRoleRequest extends FormRequest
         throw new HttpResponseException(response()->json([
             'success' => false,
             'message' => 'Dữ liệu không hợp lệ.',
-            'errors'  => $validator->errors(),
+            'errors' => $validator->errors(),
         ], 422));
     }
 }

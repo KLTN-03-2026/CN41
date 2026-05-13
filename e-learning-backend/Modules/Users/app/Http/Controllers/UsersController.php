@@ -28,8 +28,8 @@ class UsersController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $perPage      = (int) $request->query('per_page', 15);
-        $filters      = $request->only(['search', 'role', 'status']);
+        $perPage = (int) $request->query('per_page', 15);
+        $filters = $request->only(['search', 'role', 'status']);
         $allowedRoles = null;
 
         if (! auth('admin')->user()->hasRole('super-admin')) {
@@ -74,7 +74,7 @@ class UsersController extends Controller
         $user->load('roles', 'permissions');
 
         if (! auth('admin')->user()->hasRole('super-admin')) {
-            $allowedRoles  = ['student', 'teacher'];
+            $allowedRoles = ['student', 'teacher'];
             $userRoleNames = $user->roles->pluck('name')->toArray();
             $hasSystemRole = count(array_diff($userRoleNames, $allowedRoles)) > 0;
 
@@ -88,7 +88,7 @@ class UsersController extends Controller
 
     public function update(UpdateUsersRequest $request, int $id): JsonResponse
     {
-        $targetUser   = $this->repository->findOrFail($id);
+        $targetUser = $this->repository->findOrFail($id);
         $currentAdmin = auth('admin')->user();
 
         if ($targetUser->hasRole('super-admin') && ! $currentAdmin->hasRole('super-admin')) {
@@ -196,8 +196,8 @@ class UsersController extends Controller
 
     public function trashed(Request $request): JsonResponse
     {
-        $perPage      = (int) $request->query('per_page', 15);
-        $filters      = $request->only(['search', 'role', 'status']);
+        $perPage = (int) $request->query('per_page', 15);
+        $filters = $request->only(['search', 'role', 'status']);
         $allowedRoles = null;
 
         if (! auth('admin')->user()->hasRole('super-admin')) {

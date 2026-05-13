@@ -18,8 +18,8 @@ class UpdateRoleRequest extends FormRequest
         $roleId = $this->route('role');
 
         return [
-            'name'          => 'sometimes|string|max:255|unique:roles,name,'.$roleId,
-            'permissions'   => 'nullable|array',
+            'name' => 'sometimes|string|max:255|unique:roles,name,'.$roleId,
+            'permissions' => 'nullable|array',
             'permissions.*' => 'string|exists:permissions,name',
         ];
     }
@@ -36,7 +36,7 @@ class UpdateRoleRequest extends FormRequest
         throw new HttpResponseException(response()->json([
             'success' => false,
             'message' => 'Dữ liệu không hợp lệ.',
-            'errors'  => $validator->errors(),
+            'errors' => $validator->errors(),
         ], 422));
     }
 }

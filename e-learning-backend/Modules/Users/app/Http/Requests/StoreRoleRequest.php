@@ -16,8 +16,8 @@ class StoreRoleRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name'          => 'required|string|max:255|unique:roles,name',
-            'permissions'   => 'nullable|array',
+            'name' => 'required|string|max:255|unique:roles,name',
+            'permissions' => 'nullable|array',
             'permissions.*' => 'string|exists:permissions,name',
         ];
     }
@@ -26,7 +26,7 @@ class StoreRoleRequest extends FormRequest
     {
         return [
             'name.required' => 'Tên vai trò không được để trống.',
-            'name.unique'   => 'Tên vai trò đã tồn tại.',
+            'name.unique' => 'Tên vai trò đã tồn tại.',
         ];
     }
 
@@ -35,7 +35,7 @@ class StoreRoleRequest extends FormRequest
         throw new HttpResponseException(response()->json([
             'success' => false,
             'message' => 'Dữ liệu không hợp lệ.',
-            'errors'  => $validator->errors(),
+            'errors' => $validator->errors(),
         ], 422));
     }
 }

@@ -24,8 +24,8 @@ class UserTest extends TestCase
     public function test_index_returns_paginated_users_through_resource(): void
     {
         User::forceCreate([
-            'name'     => 'Alice',
-            'email'    => 'alice@test.com',
+            'name' => 'Alice',
+            'email' => 'alice@test.com',
             'password' => bcrypt('password'),
         ]);
 
@@ -57,8 +57,8 @@ class UserTest extends TestCase
     public function test_bulk_delete_blocks_super_admin_deletion(): void
     {
         $superAdmin = User::forceCreate([
-            'name'     => 'Super2',
-            'email'    => 'super2@test.com',
+            'name' => 'Super2',
+            'email' => 'super2@test.com',
             'password' => bcrypt('password'),
         ]);
         $superAdmin->assignRole('super-admin');
