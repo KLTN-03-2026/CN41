@@ -5,6 +5,7 @@ namespace Modules\Payment\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Modules\Payment\Services\VnpayService;
 
@@ -18,7 +19,7 @@ class VnpayController extends Controller
 
     // IPN không reach được localhost, nên return URL cũng gọi handleIpn làm fallback.
     // handleIpn có idempotent check nên an toàn khi gọi lại.
-    public function return(Request $request): \Illuminate\Http\RedirectResponse
+    public function return(Request $request): RedirectResponse
     {
         $vnpData = $request->query();
 
