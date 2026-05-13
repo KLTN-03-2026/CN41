@@ -9,8 +9,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Modules\Coupons\Http\Requests\BulkDeleteCouponsRequest;
 use Modules\Coupons\Http\Requests\BulkRestoreCouponsRequest;
+use Modules\Coupons\Http\Requests\IndexCouponRequest;
 use Modules\Coupons\Http\Requests\StoreCouponRequest;
 use Modules\Coupons\Http\Requests\UpdateCouponRequest;
+use Modules\Coupons\Http\Requests\ValidateCouponRequest;
 use Modules\Coupons\Http\Resources\CouponResource;
 use Modules\Coupons\Repositories\CouponRepositoryInterface;
 
@@ -18,27 +20,12 @@ class CouponsController extends Controller
 {
     use ApiResponse;
 
-    protected CouponRepositoryInterface $repository;
+    public function __construct(
+        protected CouponRepositoryInterface $repository,
+    ) {}
 
-    public function __construct(CouponRepositoryInterface $repository)
+    public function index(IndexCouponRequest $request): JsonResponse
     {
-        $this->repository = $repository;
-    }
-
-    // ── Admin CRUD ──
-
-    /**
-     * Danh sách Coupons (có phân trang + filter).
-     */
-    public function index(Request $request): JsonResponse
-    {
-        $request->validate([
-            'search' => 'nullable|string|max:100',
-            'status' => 'nullable|integer|in:0,1',
-            'type' => 'nullable|string|in:fixed,percentage',
-            'per_page' => 'nullable|integer|min:1|max:100',
-        ]);
-
         $perPage = (int) $request->query('per_page', 15);
         $filters = $request->only(['search', 'status', 'type']);
 
@@ -48,9 +35,6 @@ class CouponsController extends Controller
         return $this->paginated($data);
     }
 
-    /**
-     * Tạo mới Coupon.
-     */
     public function store(StoreCouponRequest $request): JsonResponse
     {
         $coupon = $this->repository->create($request->validated());
@@ -59,9 +43,6 @@ class CouponsController extends Controller
         return $this->success(new CouponResource($coupon), 'Mã giảm giá đã được tạo thành công.', 201);
     }
 
-    /**
-     * Chi tiết Coupon.
-     */
     public function show(int $id): JsonResponse
     {
         $coupon = $this->repository->findOrFail($id);
@@ -69,9 +50,6 @@ class CouponsController extends Controller
         return $this->success(new CouponResource($coupon));
     }
 
-    /**
-     * Cập nhật Coupon.
-     */
     public function update(UpdateCouponRequest $request, int $id): JsonResponse
     {
         $coupon = $this->repository->update($id, $request->validated());
@@ -79,9 +57,6 @@ class CouponsController extends Controller
         return $this->success(new CouponResource($coupon), 'Mã giảm giá đã được cập nhật thành công.');
     }
 
-    /**
-     * Xoá Coupon (soft delete).
-     */
     public function destroy(int $id): JsonResponse
     {
         $this->repository->delete($id);
@@ -89,9 +64,6 @@ class CouponsController extends Controller
         return $this->success(null, 'Mã giảm giá đã được xoá thành công.');
     }
 
-    /**
-     * Toggle trạng thái active/inactive.
-     */
     public function toggleStatus(int $id): JsonResponse
     {
         $coupon = $this->repository->toggleStatus($id);
@@ -100,17 +72,8 @@ class CouponsController extends Controller
         return $this->success(new CouponResource($coupon), "Mã giảm giá đã được {$statusText}.");
     }
 
-    // ── Soft Delete Operations ──
-
-    /**
-     * Danh sách Coupons đã bị soft-delete (thùng rác).
-     */
     public function trashed(Request $request): JsonResponse
     {
-        $request->validate([
-            'per_page' => 'nullable|integer|min:1|max:100',
-        ]);
-
         $perPage = (int) $request->query('per_page', 15);
         $data = $this->repository->paginateTrashed($perPage);
         $data->setCollection(CouponResource::collection($data->getCollection())->collection);
@@ -118,9 +81,6 @@ class CouponsController extends Controller
         return $this->paginated($data);
     }
 
-    /**
-     * Khôi phục một Coupon đã soft-delete.
-     */
     public function restore(int $id): JsonResponse
     {
         $this->repository->restore($id);
@@ -128,17 +88,12 @@ class CouponsController extends Controller
         return $this->success(null, 'Mã giảm giá đã được khôi phục thành công.');
     }
 
-    /**
-     * Xoá vĩnh viễn một Coupon.
-     */
     public function forceDelete(int $id): JsonResponse
     {
         $this->repository->forceDeleteById($id);
 
         return $this->success(null, 'Mã giảm giá đã bị xoá vĩnh viễn.');
     }
-
-    // ── Bulk Operations ──
 
     public function bulkDelete(BulkDeleteCouponsRequest $request): JsonResponse
     {
@@ -164,44 +119,15 @@ class CouponsController extends Controller
         );
     }
 
-    // ── Public API (Student) ──
-
-    /**
-     * Danh sách mã giảm giá đang còn hiệu lực (public, cho student xem).
-     */
     public function listAvailable(): JsonResponse
     {
         $coupons = $this->repository->getAvailable();
 
-        $data = $coupons->map(function ($coupon) {
-            return [
-                'code' => $coupon->code,
-                'type' => $coupon->type,
-                'value' => $coupon->value,
-                'min_order_value' => $coupon->min_order_value,
-                'max_discount' => $coupon->max_discount,
-                'end_date' => $coupon->end_date?->toISOString(),
-                'description' => $coupon->description,
-                'remaining' => $coupon->usage_limit !== null
-                                        ? max(0, $coupon->usage_limit - $coupon->used_count)
-                                        : null,
-            ];
-        });
-
-        return $this->success($data, 'Danh sách mã giảm giá có sẵn.');
+        return $this->success(CouponResource::collection($coupons), 'Danh sách mã giảm giá có sẵn.');
     }
 
-    /**
-     * Validate coupon code và trả về thông tin giảm giá.
-     * Dùng cho Checkout page.
-     */
-    public function validateCoupon(Request $request): JsonResponse
+    public function validateCoupon(ValidateCouponRequest $request): JsonResponse
     {
-        $request->validate([
-            'code' => 'required|string|max:50',
-            'subtotal' => 'required|numeric|min:0',
-        ]);
-
         $code = strtoupper(trim($request->code));
         $subtotal = (float) $request->subtotal;
 

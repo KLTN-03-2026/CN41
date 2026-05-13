@@ -20,7 +20,6 @@ Route::middleware(['auth:admin'])->prefix('admin')->group(function () {
     Route::get('coupons', [CouponsController::class, 'index'])->middleware('permission:coupons.view');
     Route::post('coupons', [CouponsController::class, 'store'])->middleware('permission:coupons.create');
     Route::get('coupons/{coupon}', [CouponsController::class, 'show'])->middleware('permission:coupons.view');
-    Route::put('coupons/{coupon}', [CouponsController::class, 'update'])->middleware('permission:coupons.edit');
     Route::patch('coupons/{coupon}', [CouponsController::class, 'update'])->middleware('permission:coupons.edit');
     Route::delete('coupons/{coupon}', [CouponsController::class, 'destroy'])->middleware('permission:coupons.delete');
 

@@ -40,19 +40,11 @@ class Coupon extends Model
         'deleted_at' => 'datetime',
     ];
 
-    // ── Scopes ──
-
-    /**
-     * Scope: chỉ lấy coupons đang active.
-     */
     public function scopeActive($query)
     {
         return $query->where('status', 1);
     }
 
-    /**
-     * Scope: chỉ lấy coupons còn hiệu lực (chưa hết hạn, chưa hết lượt).
-     */
     public function scopeValid($query)
     {
         return $query->active()
@@ -67,11 +59,6 @@ class Coupon extends Model
             });
     }
 
-    // ── Business Logic ──
-
-    /**
-     * Kiểm tra coupon còn hợp lệ không.
-     */
     public function isValid(): bool
     {
         if ($this->status !== 1) {
@@ -90,9 +77,6 @@ class Coupon extends Model
         return true;
     }
 
-    /**
-     * Tính giá trị giảm giá thực tế dựa trên subtotal.
-     */
     public function calculateDiscount(float $subtotal): float
     {
         if (! $this->isValid()) {

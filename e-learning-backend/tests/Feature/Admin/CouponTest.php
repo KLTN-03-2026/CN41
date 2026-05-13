@@ -4,7 +4,7 @@ namespace Tests\Feature\Admin;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Modules\Coupons\Models\Coupon;
-use Modules\Users\Models\User;
+use Modules\Students\Models\Student;
 use Tests\TestCase;
 
 class CouponTest extends TestCase
@@ -15,11 +15,11 @@ class CouponTest extends TestCase
 
     protected function setupStudent()
     {
-        $student = User::forceCreate([
+        $student = Student::forceCreate([
             'name' => 'Student Test',
             'email' => 'student_coupon_test@test.com',
-            'password' => 'password123',
-            'email_verified_at' => now(), // Đã xác thực
+            'password' => bcrypt('password'),
+            'email_verified_at' => now(),
         ]);
 
         $this->actingAs($student, 'api');
@@ -87,7 +87,7 @@ class CouponTest extends TestCase
         $this->setupAdmin();
         $coupon = Coupon::create(['code' => 'OLDCODE', 'type' => 'fixed', 'value' => 10000]);
 
-        $response = $this->putJson($this->baseUrl.'/'.$coupon->id, [
+        $response = $this->patchJson($this->baseUrl.'/'.$coupon->id, [
             'code' => 'NEWCODE',
             'type' => 'percentage',
             'value' => 15,
