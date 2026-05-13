@@ -4,7 +4,6 @@ namespace Modules\Users\Providers;
 
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
-use Modules\Users\Helpers\UsersHelper;
 use Modules\Users\Repositories\UsersRepository;
 use Modules\Users\Repositories\UsersRepositoryInterface;
 use Nwidart\Modules\Traits\PathNamespace;
@@ -42,11 +41,6 @@ class UsersServiceProvider extends ServiceProvider
             UsersRepositoryInterface::class,
             UsersRepository::class
         );
-
-        // ── Helper Binding ──
-        $this->app->singleton('UsersHelper', function () {
-            return new UsersHelper;
-        });
 
         $this->app->register(EventServiceProvider::class);
         $this->app->register(RouteServiceProvider::class);
