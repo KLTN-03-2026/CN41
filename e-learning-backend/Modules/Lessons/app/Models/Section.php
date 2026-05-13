@@ -28,8 +28,6 @@ class Section extends Model
         'course_id' => 'integer',
     ];
 
-    // ── Scopes ──
-
     public function scopePublished($query)
     {
         return $query->where('status', 1);
@@ -39,8 +37,6 @@ class Section extends Model
     {
         return $query->orderBy('order', 'asc');
     }
-
-    // ── Relationships ──
 
     public function course()
     {

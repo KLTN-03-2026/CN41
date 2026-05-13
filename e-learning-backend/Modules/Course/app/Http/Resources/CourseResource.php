@@ -16,11 +16,7 @@ class CourseResource extends JsonResource
             'name' => $this->name,
             'slug' => $this->slug,
             'description' => $this->description,
-            'thumbnail' => $this->thumbnail
-                                    ? (str_starts_with($this->thumbnail, 'http') || str_starts_with($this->thumbnail, '/storage')
-                                        ? $this->thumbnail
-                                        : '/storage/'.$this->thumbnail)
-                                    : null,
+            'thumbnail' => $this->resolveThumbnail(),
             'price' => $this->price,
             'sale_price' => $this->sale_price,
             'level' => $this->level,
@@ -44,5 +40,18 @@ class CourseResource extends JsonResource
             'created_at' => $this->created_at?->toISOString(),
             'updated_at' => $this->updated_at?->toISOString(),
         ];
+    }
+
+    private function resolveThumbnail(): ?string
+    {
+        if (empty($this->thumbnail)) {
+            return null;
+        }
+
+        if (str_starts_with($this->thumbnail, 'http') || str_starts_with($this->thumbnail, '/storage')) {
+            return $this->thumbnail;
+        }
+
+        return '/storage/'.$this->thumbnail;
     }
 }

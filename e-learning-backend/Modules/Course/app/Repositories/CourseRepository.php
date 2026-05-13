@@ -6,8 +6,12 @@ use App\Repositories\BaseRepository;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection as SupportCollection;
+use Illuminate\Support\Facades\DB;
 use Modules\Categories\Models\Category;
 use Modules\Course\Models\Course;
+use Modules\Lessons\Models\Lesson;
+use Modules\Lessons\Models\Section;
 
 /**
  * Class CourseRepository
@@ -33,22 +37,18 @@ class CourseRepository extends BaseRepository implements CourseRepositoryInterfa
             ->with(['teacher', 'categories'])
             ->latest();
 
-        // Filter theo tên
         if (! empty($filters['search'])) {
             $query->where('name', 'like', '%'.$filters['search'].'%');
         }
 
-        // Filter theo status
         if (isset($filters['status']) && $filters['status'] !== '') {
             $query->where('status', (int) $filters['status']);
         }
 
-        // Filter theo teacher_id
         if (! empty($filters['teacher_id'])) {
             $query->where('teacher_id', (int) $filters['teacher_id']);
         }
 
-        // Filter theo category_id (qua pivot, bao gồm cả con cháu)
         if (! empty($filters['category_id'])) {
             $category = Category::find((int) $filters['category_id']);
             if ($category) {
@@ -59,7 +59,6 @@ class CourseRepository extends BaseRepository implements CourseRepositoryInterfa
             }
         }
 
-        // Filter theo level
         if (! empty($filters['level'])) {
             $query->where('level', $filters['level']);
         }
@@ -79,12 +78,10 @@ class CourseRepository extends BaseRepository implements CourseRepositoryInterfa
             ->with(['teacher', 'categories'])
             ->latest();
 
-        // Tìm kiếm theo tên
         if (! empty($filters['search'])) {
             $query->where('name', 'like', '%'.$filters['search'].'%');
         }
 
-        // Filter theo category_id (qua pivot, bao gồm cả con cháu)
         if (! empty($filters['category_id'])) {
             $category = Category::find((int) $filters['category_id']);
             if ($category) {
@@ -95,7 +92,6 @@ class CourseRepository extends BaseRepository implements CourseRepositoryInterfa
             }
         }
 
-        // Filter theo level
         if (! empty($filters['level'])) {
             $query->where('level', $filters['level']);
         }
@@ -190,7 +186,7 @@ class CourseRepository extends BaseRepository implements CourseRepositoryInterfa
      */
     public function findTrashed(int $id): Model
     {
-        return $this->model->newQuery()->withTrashed()->findOrFail($id);
+        return $this->model->newQuery()->onlyTrashed()->findOrFail($id);
     }
 
     /**
@@ -198,7 +194,7 @@ class CourseRepository extends BaseRepository implements CourseRepositoryInterfa
      */
     public function findManyTrashed(array $ids): Collection
     {
-        return $this->model->newQuery()->withTrashed()->whereIn('id', $ids)->get();
+        return $this->model->newQuery()->onlyTrashed()->whereIn('id', $ids)->get();
     }
 
     /**
@@ -210,7 +206,7 @@ class CourseRepository extends BaseRepository implements CourseRepositoryInterfa
             ->published()
             ->with(['teacher', 'categories'])
             ->orderByDesc('rating')
-            ->limit($limit)
+            ->limit(max(1, min($limit, 20)))
             ->get();
     }
 
@@ -234,5 +230,85 @@ class CourseRepository extends BaseRepository implements CourseRepositoryInterfa
             });
 
         return $count;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getPublicSectionsWithLessons(int $courseId): SupportCollection
+    {
+        return Section::where('course_id', $courseId)
+            ->where('status', 1)
+            ->with(['lessons' => fn ($q) => $q->where('status', 1)])
+            ->ordered()
+            ->get()
+            ->map(fn (Section $section) => [
+                'id' => $section->id,
+                'title' => $section->title,
+                'order' => $section->order,
+                'lessons' => $section->lessons->map(fn (Lesson $lesson) => [
+                    'id' => $lesson->id,
+                    'title' => $lesson->title,
+                    'slug' => $lesson->slug,
+                    'type' => $lesson->type,
+                    'order' => $lesson->order,
+                    'is_preview' => $lesson->is_preview,
+                    'duration' => $lesson->duration,
+                ])->values(),
+            ])
+            ->values();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function findPublicPreviewLesson(int $courseId, string $lessonSlug): ?Model
+    {
+        return Lesson::where('course_id', $courseId)
+            ->where('slug', $lessonSlug)
+            ->where('status', 1)
+            ->with(['video', 'document'])
+            ->first();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function isEnrolled(int $courseId, int $studentId): bool
+    {
+        return DB::table('students_course')
+            ->where('course_id', $courseId)
+            ->where('student_id', $studentId)
+            ->exists();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function enrollStudent(int $courseId, int $studentId): void
+    {
+        DB::transaction(function () use ($courseId, $studentId) {
+            $course = $this->model->newQuery()->findOrFail($courseId);
+            $result = $course->students()->syncWithoutDetaching([$studentId => ['enrolled_at' => now()]]);
+            if (! empty($result['attached'])) {
+                $this->incrementStudentCount($courseId);
+            }
+        });
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function bulkForceDelete(array $ids): int
+    {
+        $courses = $this->findManyTrashed($ids);
+
+        DB::transaction(function () use ($courses) {
+            foreach ($courses as $course) {
+                $course->forceDelete();
+            }
+        });
+
+        return $courses->count();
     }
 }

@@ -54,29 +54,16 @@ class Lesson extends Model
         'deleted_at' => 'datetime',
     ];
 
-    // ── Scopes ──
-
-    /**
-     * Scope: chỉ lấy lessons đã published (status = 1).
-     */
     public function scopePublished($query)
     {
         return $query->where('status', 1);
     }
 
-    /**
-     * Scope: sắp xếp theo thứ tự order tăng dần.
-     */
     public function scopeOrdered($query)
     {
         return $query->orderBy('order', 'asc');
     }
 
-    // ── Relationships ──
-
-    /**
-     * Lesson thuộc về một Course.
-     */
     public function course()
     {
         return $this->belongsTo(Course::class, 'course_id');
@@ -87,25 +74,16 @@ class Lesson extends Model
         return $this->belongsTo(Section::class, 'section_id');
     }
 
-    /**
-     * Lesson có nhiều LessonProgress (tiến trình học của học viên).
-     */
     public function progresses()
     {
         return $this->hasMany(LessonProgress::class, 'lesson_id');
     }
 
-    /**
-     * Quan hệ tới file video của bài học.
-     */
     public function video()
     {
         return $this->belongsTo(MediaFile::class, 'video_id');
     }
 
-    /**
-     * Quan hệ tới file tài liệu của bài học.
-     */
     public function document()
     {
         return $this->belongsTo(MediaFile::class, 'document_id');

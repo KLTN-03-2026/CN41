@@ -20,7 +20,6 @@ Route::middleware(['auth:admin'])->prefix('admin')->group(function () {
     Route::post('courses/{course_id}/sections', [SectionController::class, 'store'])->middleware('permission:lessons.create');
 
     Route::get('sections/{id}', [SectionController::class, 'show'])->middleware('permission:lessons.view');
-    Route::put('sections/{id}', [SectionController::class, 'update'])->middleware('permission:lessons.edit');
     Route::patch('sections/{id}', [SectionController::class, 'update'])->middleware('permission:lessons.edit');
     Route::delete('sections/{id}', [SectionController::class, 'destroy'])->middleware('permission:lessons.delete');
     Route::patch('sections/{id}/toggle-status', [SectionController::class, 'toggleStatus'])->middleware('permission:lessons.edit');
@@ -41,7 +40,6 @@ Route::middleware(['auth:admin'])->prefix('admin')->group(function () {
     Route::post('courses/{course_id}/lessons', [LessonController::class, 'store'])->middleware('permission:lessons.create');
 
     Route::get('lessons/{id}', [LessonController::class, 'show'])->middleware('permission:lessons.view');
-    Route::put('lessons/{id}', [LessonController::class, 'update'])->middleware('permission:lessons.edit');
     Route::patch('lessons/{id}', [LessonController::class, 'update'])->middleware('permission:lessons.edit');
     Route::delete('lessons/{id}', [LessonController::class, 'destroy'])->middleware('permission:lessons.delete');
     Route::patch('lessons/{id}/toggle-status', [LessonController::class, 'toggleStatus'])->middleware('permission:lessons.edit');

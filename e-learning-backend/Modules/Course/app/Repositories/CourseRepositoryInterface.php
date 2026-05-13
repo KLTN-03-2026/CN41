@@ -6,6 +6,7 @@ use App\Repositories\RepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection as SupportCollection;
 
 /**
  * Interface CourseRepositoryInterface
@@ -76,4 +77,29 @@ interface CourseRepositoryInterface extends RepositoryInterface
      * Lấy courses nổi bật: published, sort theo rating DESC, giới hạn $limit.
      */
     public function getFeatured(int $limit = 8): Collection;
+
+    /**
+     * Lấy danh sách sections + lessons public của course (status = 1).
+     */
+    public function getPublicSectionsWithLessons(int $courseId): SupportCollection;
+
+    /**
+     * Tìm lesson preview trong course theo slug (status = 1, kèm video + document).
+     */
+    public function findPublicPreviewLesson(int $courseId, string $lessonSlug): ?Model;
+
+    /**
+     * Kiểm tra học viên đã enroll course chưa.
+     */
+    public function isEnrolled(int $courseId, int $studentId): bool;
+
+    /**
+     * Enroll học viên vào course (attach pivot + tăng total_students).
+     */
+    public function enrollStudent(int $courseId, int $studentId): void;
+
+    /**
+     * Force delete nhiều courses đã soft-delete (cascade qua model event).
+     */
+    public function bulkForceDelete(array $ids): int;
 }

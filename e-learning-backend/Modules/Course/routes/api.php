@@ -13,7 +13,7 @@ Route::middleware(['auth:admin'])->prefix('admin')->group(function () {
     Route::get('courses/trashed', [CourseController::class, 'trashed'])->middleware('permission:courses.view');
 
     // Bulk routes
-    Route::post('courses/bulk-restore', [CourseController::class, 'bulkRestore'])->middleware('permission:courses.delete');
+    Route::patch('courses/bulk-restore', [CourseController::class, 'bulkRestore'])->middleware('permission:courses.delete');
     Route::delete('courses/bulk-delete', [CourseController::class, 'bulkDelete'])->middleware('permission:courses.delete');
     Route::delete('courses/bulk-force-delete', [CourseController::class, 'bulkForceDelete'])->middleware('permission:courses.delete');
     Route::patch('courses/bulk-status', [CourseController::class, 'bulkStatus'])->middleware('permission:courses.edit');
@@ -22,13 +22,12 @@ Route::middleware(['auth:admin'])->prefix('admin')->group(function () {
     Route::get('courses', [CourseController::class, 'index'])->middleware('permission:courses.view');
     Route::post('courses', [CourseController::class, 'store'])->middleware('permission:courses.create');
     Route::get('courses/{course}', [CourseController::class, 'show'])->middleware('permission:courses.view');
-    Route::put('courses/{course}', [CourseController::class, 'update'])->middleware('permission:courses.edit');
     Route::patch('courses/{course}', [CourseController::class, 'update'])->middleware('permission:courses.edit');
     Route::delete('courses/{course}', [CourseController::class, 'destroy'])->middleware('permission:courses.delete');
 
     // Per-item actions (đặt SAU apiResource)
     Route::patch('courses/{id}/toggle-status', [CourseController::class, 'toggleStatus'])->middleware('permission:courses.edit');
-    Route::post('courses/{id}/restore', [CourseController::class, 'restore'])->middleware('permission:courses.delete');
+    Route::patch('courses/{id}/restore', [CourseController::class, 'restore'])->middleware('permission:courses.delete');
     Route::delete('courses/{id}/force-delete', [CourseController::class, 'forceDelete'])->middleware('permission:courses.delete');
 });
 
@@ -37,13 +36,11 @@ Route::middleware(['auth:admin'])->prefix('admin')->group(function () {
 | Public Routes (không cần auth)
 |--------------------------------------------------------------------------
 */
-Route::group([], function () {
-    Route::get('courses', [CourseController::class, 'publicIndex']);
-    Route::get('courses/featured', [CourseController::class, 'featuredCourses']);
-    Route::get('courses/{slug}', [CourseController::class, 'publicShow']);
-    Route::get('courses/{slug}/lessons', [CourseController::class, 'publicLessons']);
-    Route::get('courses/{slug}/preview-lesson/{lesson_slug}', [CourseController::class, 'publicPreviewLesson']);
-});
+Route::get('courses', [CourseController::class, 'publicIndex']);
+Route::get('courses/featured', [CourseController::class, 'featuredCourses']);
+Route::get('courses/{slug}', [CourseController::class, 'publicShow']);
+Route::get('courses/{slug}/lessons', [CourseController::class, 'publicLessons']);
+Route::get('courses/{slug}/preview-lesson/{lesson_slug}', [CourseController::class, 'publicPreviewLesson']);
 
 /*
 |--------------------------------------------------------------------------

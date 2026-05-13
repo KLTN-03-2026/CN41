@@ -6,14 +6,9 @@ use App\Repositories\RepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection as SupportCollection;
+use Modules\Lessons\Models\LessonProgress;
 
-/**
- * Interface LessonRepositoryInterface
- *
- * Contract cho Lesson Repository.
- * Extends RepositoryInterface (base methods chuẩn).
- * Thêm các method riêng cho Lesson.
- */
 interface LessonRepositoryInterface extends RepositoryInterface
 {
     /**
@@ -45,4 +40,59 @@ interface LessonRepositoryInterface extends RepositoryInterface
      * @param  array  $orders  Array of ['id' => int, 'order' => int]
      */
     public function reorder(array $orders): void;
+
+    /**
+     * Tìm lesson trong thùng rác (onlyTrashed).
+     */
+    public function findTrashed(int $id): Model;
+
+    /**
+     * Đếm số lessons trong phạm vi (course hoặc section).
+     */
+    public function countInScope(int $courseId, ?int $sectionId = null): int;
+
+    /**
+     * Lấy nhiều lessons theo ids.
+     */
+    public function getByIds(array $ids): Collection;
+
+    /**
+     * Lấy nhiều lessons đã xóa theo ids (onlyTrashed).
+     */
+    public function getManyTrashed(array $ids): Collection;
+
+    /**
+     * Lấy danh sách course_id distinct từ các lesson ids.
+     */
+    public function getDistinctCourseIds(array $ids, bool $onlyTrashed = false): SupportCollection;
+
+    /**
+     * Gán section_id hàng loạt cho các lessons.
+     */
+    public function assignSection(array $ids, ?int $sectionId): int;
+
+    /**
+     * Lấy map tiến độ học của student trong course, keyed by lesson_id.
+     */
+    public function getProgressMap(int $studentId, int $courseId): SupportCollection;
+
+    /**
+     * Tìm bản ghi tiến độ học của student cho 1 lesson.
+     */
+    public function findProgress(int $studentId, int $lessonId): ?LessonProgress;
+
+    /**
+     * Tạo hoặc cập nhật tiến độ học.
+     */
+    public function updateOrCreateProgress(int $studentId, int $lessonId, int $courseId, array $data): LessonProgress;
+
+    /**
+     * Lấy các lessons published chưa gán chương (section_id = null) của course.
+     */
+    public function getOrphanPublished(int $courseId): Collection;
+
+    /**
+     * Tìm lesson published theo course và slug, kèm video + document.
+     */
+    public function findPublishedByCourseAndSlug(int $courseId, string $slug): ?Model;
 }

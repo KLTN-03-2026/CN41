@@ -2,7 +2,7 @@
 
 namespace Modules\Course\Http\Requests;
 
-use Illuminate\Validation\Validator;
+use Illuminate\Contracts\Validation\Validator;
 use Modules\Course\Models\Course;
 
 class BulkForceDeleteCourseRequest extends BaseBulkRequest
@@ -30,17 +30,17 @@ class BulkForceDeleteCourseRequest extends BaseBulkRequest
                 return;
             }
 
-            $existingIds = Course::withTrashed()
+            $trashedIds = Course::onlyTrashed()
                 ->whereIn('id', $this->ids)
                 ->pluck('id')
                 ->toArray();
 
-            $notFound = array_diff($this->ids, $existingIds);
+            $notFound = array_diff($this->ids, $trashedIds);
 
             if (! empty($notFound)) {
                 $validator->errors()->add(
                     'ids',
-                    'Các khóa học sau không tồn tại: '.implode(', ', $notFound)
+                    'Các khóa học sau không tồn tại trong thùng rác: '.implode(', ', $notFound)
                 );
             }
         });

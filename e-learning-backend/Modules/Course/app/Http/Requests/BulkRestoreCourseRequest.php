@@ -2,7 +2,7 @@
 
 namespace Modules\Course\Http\Requests;
 
-use Illuminate\Validation\Validator;
+use Illuminate\Contracts\Validation\Validator;
 use Modules\Course\Models\Course;
 
 class BulkRestoreCourseRequest extends BaseBulkRequest

@@ -40,27 +40,16 @@ class LessonProgress extends Model
         'course_id' => 'integer',
     ];
 
-    // ── Relationships ──
-
-    /**
-     * Progress thuộc về một Lesson.
-     */
     public function lesson()
     {
         return $this->belongsTo(Lesson::class, 'lesson_id');
     }
 
-    /**
-     * Progress thuộc về một Student.
-     */
     public function student()
     {
         return $this->belongsTo(Student::class, 'student_id');
     }
 
-    /**
-     * Progress thuộc về một Course.
-     */
     public function course()
     {
         return $this->belongsTo(Course::class, 'course_id');

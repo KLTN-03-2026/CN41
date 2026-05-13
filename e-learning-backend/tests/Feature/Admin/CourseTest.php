@@ -104,7 +104,7 @@ class CourseTest extends TestCase
             'teacher_id' => $teacher->id,
         ]);
 
-        $response = $this->putJson($this->baseUrl.'/'.$course->id, [
+        $response = $this->patchJson($this->baseUrl.'/'.$course->id, [
             'name' => 'Course Updated',
             'slug' => 'course-updated',
             'teacher_id' => $teacher->id,
@@ -199,7 +199,7 @@ class CourseTest extends TestCase
         ]);
         $course->delete(); // Soft delete
 
-        $response = $this->postJson($this->baseUrl.'/'.$course->id.'/restore');
+        $response = $this->patchJson($this->baseUrl.'/'.$course->id.'/restore');
 
         $response->assertStatus(200);
         $this->assertDatabaseHas('courses', [
@@ -315,7 +315,7 @@ class CourseTest extends TestCase
         $c1->delete();
         $c2->delete();
 
-        $response = $this->postJson($this->baseUrl.'/bulk-restore', [
+        $response = $this->patchJson($this->baseUrl.'/bulk-restore', [
             'ids' => [$c1->id, $c2->id],
         ]);
 

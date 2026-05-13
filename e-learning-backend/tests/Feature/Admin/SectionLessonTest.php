@@ -68,7 +68,7 @@ class SectionLessonTest extends TestCase
         $course = $this->createCourse();
         $section = Section::create(['title' => 'Old Title', 'course_id' => $course->id, 'order' => 0]);
 
-        $response = $this->putJson($this->baseUrl."/sections/{$section->id}", [
+        $response = $this->patchJson($this->baseUrl."/sections/{$section->id}", [
             'title' => 'New Title',
         ]);
 
@@ -225,7 +225,7 @@ class SectionLessonTest extends TestCase
             'order' => 0,
         ]);
 
-        $response = $this->putJson($this->baseUrl."/lessons/{$lesson->id}", [
+        $response = $this->patchJson($this->baseUrl."/lessons/{$lesson->id}", [
             'title' => 'New Title',
         ]);
 

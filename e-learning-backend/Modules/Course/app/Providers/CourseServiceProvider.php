@@ -3,7 +3,6 @@
 namespace Modules\Course\Providers;
 
 use Illuminate\Support\ServiceProvider;
-use Modules\Course\Helpers\CourseHelper;
 use Modules\Course\Repositories\CourseRepository;
 use Modules\Course\Repositories\CourseRepositoryInterface;
 
@@ -31,11 +30,6 @@ class CourseServiceProvider extends ServiceProvider
             CourseRepositoryInterface::class,
             CourseRepository::class
         );
-
-        // ── Helper Binding ──
-        $this->app->singleton('CourseHelper', function () {
-            return new CourseHelper;
-        });
 
         $this->app->register(RouteServiceProvider::class);
     }
