@@ -35,6 +35,12 @@ export const useCartStore = defineStore('cart', {
       this.items = []
       this._persist()
     },
+    setPendingOrder(orderCode: string): void {
+      localStorage.setItem(STORAGE_KEYS.PENDING_ORDER_CODE, orderCode)
+    },
+    clearPendingOrder(): void {
+      localStorage.removeItem(STORAGE_KEYS.PENDING_ORDER_CODE)
+    },
     _persist(): void {
       localStorage.setItem(STORAGE_KEYS.CART, JSON.stringify(this.items))
     },

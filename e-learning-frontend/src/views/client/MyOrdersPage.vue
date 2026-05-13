@@ -38,7 +38,7 @@
               <span class="text-sm font-medium text-gray-800">{{ order.order_code }}</span>
               <OrderStatusBadge :status="order.status" />
             </div>
-            <span class="text-xs text-gray-400">{{ formatDate(order.created_at) }}</span>
+            <span class="text-xs text-gray-400">{{ formatDatetime(order.created_at) }}</span>
           </div>
 
           <!-- Order items -->
@@ -66,9 +66,10 @@
               <button
                 v-if="order.status === 'pending' || order.status === 'failed'"
                 @click="handleRetry(order.order_code)"
-                class="text-xs px-3 py-1.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                :disabled="retryingCode === order.order_code"
+                class="text-xs px-3 py-1.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                Thanh toán lại
+                {{ retryingCode === order.order_code ? 'Đang xử lý...' : 'Thanh toán lại' }}
               </button>
               <router-link
                 v-if="order.status === 'paid'"
@@ -105,6 +106,7 @@ import { ref, onMounted } from 'vue'
 import { useToast } from 'vue-toastification'
 import { orderService } from '@/services/order.service'
 import { formatCurrency } from '@/utils/formatCurrency'
+import { formatDatetime } from '@/utils/formatDate'
 import OrderStatusBadge from '@/components/common/OrderStatusBadge.vue'
 import { usePagination } from '@/composables/usePagination'
 
@@ -114,12 +116,7 @@ const toast = useToast()
 
 const loading = ref(true)
 const orders = ref<Order[]>([])
-
-function formatDate(iso: string) {
-  if (!iso) return ''
-  const d = new Date(iso)
-  return d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
-}
+const retryingCode = ref('')
 
 async function loadPage(page = 1) {
   loading.value = true
@@ -141,6 +138,7 @@ function fetchOrders(page: number) {
 }
 
 async function handleRetry(orderCode: string) {
+  retryingCode.value = orderCode
   try {
     const res = await orderService.retryPayment(orderCode)
     const { payment_url } = res.data.data
@@ -150,6 +148,8 @@ async function handleRetry(orderCode: string) {
   } catch (err: unknown) {
     const axiosError = err as { response?: { data?: { message?: string } } }
     toast.error(axiosError.response?.data?.message || 'Không thể tạo liên kết thanh toán mới.')
+  } finally {
+    retryingCode.value = ''
   }
 }
 

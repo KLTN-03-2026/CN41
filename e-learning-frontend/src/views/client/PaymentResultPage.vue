@@ -102,7 +102,7 @@ onMounted(() => {
   // Clear cart on success
   if (status.value === 'success') {
     cartStore.clear()
-    localStorage.removeItem('pending_order_code')
+    cartStore.clearPendingOrder()
   }
 
   loading.value = false

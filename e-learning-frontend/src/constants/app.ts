@@ -12,6 +12,7 @@ export const STORAGE_KEYS = {
   STUDENT_TOKEN: 'studentToken',
   CART: 'cart',
   THEME: 'theme',
+  PENDING_ORDER_CODE: 'pending_order_code',
 } as const
 
 export const COURSE_LEVELS = ['beginner', 'intermediate', 'advanced'] as const
