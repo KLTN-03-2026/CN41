@@ -96,6 +96,7 @@ const router = createRouter({
     {
       path: '/courses/:slug/learn',
       component: () => import('@/views/client/LearnPage.vue'),
+      meta: { requiresAuth: true, guard: 'student' },
     },
 
     // ── QUIZ PAGES (fullscreen, no layout) ───────────────────
@@ -159,17 +160,27 @@ router.beforeEach(async (to) => {
   const adminToken = getToken('adminToken')
   const studentToken = getToken('studentToken')
 
+  let adminStore = null
+  let studentStore = null
+
   // Global Initialization cho Student (để lấy email_verified_at)
   if (studentToken && to.meta.guard !== 'admin') {
     const { useStudentAuthStore } = await import('@/stores/studentAuth.store')
-    const studentStore = useStudentAuthStore()
+    studentStore = useStudentAuthStore()
     if (!studentStore.student) {
       await studentStore.fetchMe()
     }
 
     // Email verification guard — chặn mọi trang nếu chưa verify (kể cả trang chủ)
     const unverified = studentStore.student && !studentStore.student.email_verified_at
-    const allowedWhenUnverified = ['/verify-email', '/verify-email/result', '/login', '/register']
+    const allowedWhenUnverified = [
+      '/verify-email',
+      '/verify-email/result',
+      '/login',
+      '/register',
+      '/forgot-password',
+      '/reset-password',
+    ]
     if (unverified && !allowedWhenUnverified.includes(to.path)) {
       return '/verify-email'
     }
@@ -178,29 +189,34 @@ router.beforeEach(async (to) => {
   // Global Initialization cho Admin
   if (adminToken && to.meta.guard === 'admin') {
     const { useAdminAuthStore } = await import('@/stores/adminAuth.store')
-    const adminStore = useAdminAuthStore()
+    adminStore = useAdminAuthStore()
     if (!adminStore.user) {
       await adminStore.fetchMe()
     }
   }
 
-  // Route cần auth
+  // Route cần auth — dùng store state sau fetchMe(), tránh stale raw token
   if (to.meta.requiresAuth) {
-    if (to.meta.guard === 'admin' && !adminToken) {
-      return '/admin/login'
+    if (to.meta.guard === 'admin') {
+      const loggedIn = adminStore ? adminStore.isLoggedIn : !!adminToken
+      if (!loggedIn) return '/admin/login'
     }
-    if (to.meta.guard === 'student' && !studentToken) {
-      return { path: '/login', query: { redirect: to.fullPath } }
+    if (to.meta.guard === 'student') {
+      const loggedIn = studentStore ? studentStore.isLoggedIn : !!studentToken
+      if (!loggedIn) return { path: '/login', query: { redirect: to.fullPath } }
     }
   }
 
   // Route chỉ dành cho guest (login, register, forgot-password...)
   if (to.meta.requiresGuest) {
-    if (to.meta.guard === 'admin' && adminToken) return '/admin/dashboard'
+    const isAdminLoggedIn = adminStore ? adminStore.isLoggedIn : !!adminToken
+    const isStudentLoggedIn = studentStore ? studentStore.isLoggedIn : !!studentToken
+
+    if (to.meta.guard === 'admin' && isAdminLoggedIn) return '/admin/dashboard'
 
     if (to.meta.guard === 'student') {
-      if (studentToken) return '/'
-      if (adminToken) return '/admin/dashboard'
+      if (isStudentLoggedIn) return '/'
+      if (isAdminLoggedIn) return '/admin/dashboard'
     }
   }
 
