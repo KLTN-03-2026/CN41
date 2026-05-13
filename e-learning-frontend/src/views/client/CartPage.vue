@@ -100,14 +100,7 @@ import CartItemCard from '@/components/shared/client/CartItemCard.vue'
 const toast = useToast()
 const cartStore = useCartStore()
 
-const totalDiscount = computed(() => {
-  return cartStore.items.reduce((sum, item) => {
-    if (item.sale_price && item.sale_price < item.price) {
-      return sum + (item.price - item.sale_price)
-    }
-    return sum
-  }, 0)
-})
+const totalDiscount = computed(() => cartStore.originalTotal - cartStore.total)
 
 function handleRemove(courseId: number) {
   cartStore.removeItem(courseId)

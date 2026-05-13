@@ -62,7 +62,7 @@ export const couponService = {
   update: (
     id: number,
     data: Record<string, unknown>,
-  ): Promise<AxiosResponse<ApiResponse<Coupon>>> => http.put(`/admin/coupons/${id}`, data),
+  ): Promise<AxiosResponse<ApiResponse<Coupon>>> => http.patch(`/admin/coupons/${id}`, data),
 
   /** DELETE /admin/coupons/{id} (soft delete) */
   destroy: (id: number): Promise<AxiosResponse<ApiResponse<null>>> =>
@@ -80,7 +80,7 @@ export const couponService = {
 
   /** POST /admin/coupons/{id}/restore */
   restore: (id: number): Promise<AxiosResponse<ApiResponse<Coupon>>> =>
-    http.post(`/admin/coupons/${id}/restore`),
+    http.patch(`/admin/coupons/${id}/restore`),
 
   /** DELETE /admin/coupons/{id}/force-delete */
   forceDelete: (id: number): Promise<AxiosResponse<ApiResponse<null>>> =>
