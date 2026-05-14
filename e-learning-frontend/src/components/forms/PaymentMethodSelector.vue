@@ -27,23 +27,27 @@
         </div>
       </label>
 
-      <!-- MoMo (disabled — phase sau) -->
+      <!-- ZaloPay -->
       <label
-        class="flex items-center gap-3 p-3 rounded-xl border border-gray-200 opacity-50 cursor-not-allowed"
+        class="flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all"
+        :class="modelValue === 'zalopay'
+          ? 'border-blue-500 bg-blue-50/50 ring-1 ring-blue-200'
+          : 'border-gray-200 hover:border-gray-300'"
       >
         <input
           type="radio"
-          value="momo"
-          disabled
-          class="w-4 h-4 text-gray-300"
+          :value="'zalopay'"
+          :checked="modelValue === 'zalopay'"
+          @change="$emit('update:modelValue', 'zalopay')"
+          class="w-4 h-4 text-blue-600 focus:ring-blue-500"
         />
         <div class="flex items-center gap-2 flex-1">
           <div class="w-10 h-7 bg-white rounded border border-gray-100 flex items-center justify-center">
-            <span class="text-[10px] font-bold text-pink-500">MoMo</span>
+            <span class="text-[10px] font-bold text-blue-500">Zalo</span>
           </div>
           <div>
-            <p class="text-sm font-medium text-gray-400">MoMo</p>
-            <p class="text-xs text-gray-400">Sắp ra mắt</p>
+            <p class="text-sm font-medium text-gray-800">ZaloPay</p>
+            <p class="text-xs text-gray-500">Ví điện tử ZaloPay</p>
           </div>
         </div>
       </label>
