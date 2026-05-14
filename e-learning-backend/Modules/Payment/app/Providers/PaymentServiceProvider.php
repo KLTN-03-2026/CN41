@@ -19,6 +19,7 @@ class PaymentServiceProvider extends ServiceProvider
     {
         $this->loadMigrationsFrom(module_path($this->name, 'database/migrations'));
         $this->mergeConfigFrom(module_path($this->name, 'config/vnpay.php'), 'vnpay');
+        $this->mergeConfigFrom(module_path($this->name, 'config/zalopay.php'), 'zalopay');
         $this->loadViewsFrom(module_path($this->name, 'resources/views'), $this->nameLower);
     }
 
