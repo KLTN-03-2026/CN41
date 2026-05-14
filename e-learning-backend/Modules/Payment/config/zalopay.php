@@ -1,11 +1,11 @@
 <?php
 
 return [
-    'app_id'              => env('ZALOPAY_APP_ID'),
-    'key1'                => env('ZALOPAY_KEY1'),
-    'key2'                => env('ZALOPAY_KEY2'),
-    'endpoint'            => env('ZALOPAY_ENDPOINT', 'https://sb.zalopay.vn/v001/tpe/createorder'),
-    'callback_url'        => env('ZALOPAY_CALLBACK_URL', 'http://localhost:8000/api/v1/payment/zalopay/callback'),
-    'redirect_url'        => env('ZALOPAY_REDIRECT_URL', 'http://localhost:8000/api/v1/payment/zalopay/redirect'),
+    'app_id' => env('ZALOPAY_APP_ID'),
+    'key1' => env('ZALOPAY_KEY1'),
+    'key2' => env('ZALOPAY_KEY2'),
+    'endpoint' => env('ZALOPAY_ENDPOINT', 'https://sb.zalopay.vn/v001/tpe/createorder'),
+    'callback_url' => env('ZALOPAY_CALLBACK_URL', 'http://localhost:8000/api/v1/payment/zalopay/callback'),
+    'redirect_url' => env('ZALOPAY_REDIRECT_URL', 'http://localhost:8000/api/v1/payment/zalopay/redirect'),
     'frontend_result_url' => env('VNPAY_FRONTEND_RESULT_URL', 'http://localhost:5173/payment/result'),
 ];

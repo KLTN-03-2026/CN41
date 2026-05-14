@@ -15,13 +15,13 @@ class ZalopayService
 {
     public function createPaymentUrl(Order $order, string $ipAddress): string
     {
-        $appId      = (int) config('zalopay.app_id');
-        $key1       = config('zalopay.key1');
+        $appId = (int) config('zalopay.app_id');
+        $key1 = config('zalopay.key1');
         $appTransId = now('Asia/Ho_Chi_Minh')->format('ymd').'_'.$order->order_code;
-        $appTime    = (int) (microtime(true) * 1000);
-        $amount     = (int) $order->total_amount;
-        $embedData  = json_encode(['redirecturl' => config('zalopay.redirect_url')]);
-        $item       = '[]';
+        $appTime = (int) (microtime(true) * 1000);
+        $amount = (int) $order->total_amount;
+        $embedData = json_encode(['redirecturl' => config('zalopay.redirect_url')]);
+        $item = '[]';
 
         $macData = implode('|', [
             $appId,
@@ -36,16 +36,16 @@ class ZalopayService
         $mac = hash_hmac('sha256', $macData, $key1);
 
         $payload = [
-            'app_id'       => $appId,
+            'app_id' => $appId,
             'app_trans_id' => $appTransId,
-            'app_user'     => (string) $order->student_id,
-            'app_time'     => $appTime,
-            'amount'       => $amount,
-            'item'         => $item,
-            'embed_data'   => $embedData,
-            'description'  => 'Thanh toán đơn hàng '.$order->order_code,
+            'app_user' => (string) $order->student_id,
+            'app_time' => $appTime,
+            'amount' => $amount,
+            'item' => $item,
+            'embed_data' => $embedData,
+            'description' => 'Thanh toán đơn hàng '.$order->order_code,
             'callback_url' => config('zalopay.callback_url'),
-            'mac'          => $mac,
+            'mac' => $mac,
         ];
 
         $response = Http::post(config('zalopay.endpoint'), $payload);
@@ -53,7 +53,7 @@ class ZalopayService
         if ($response->failed() || (int) $response->json('return_code') !== 1) {
             Log::error('[ZaloPay] createPaymentUrl failed', [
                 'order_code' => $order->order_code,
-                'response'   => $response->json(),
+                'response' => $response->json(),
             ]);
             throw new \Exception('Không thể tạo liên kết thanh toán ZaloPay.');
         }
@@ -78,7 +78,7 @@ class ZalopayService
     public function handleCallback(array $payload): array
     {
         $dataStr = $payload['data'] ?? '';
-        $mac     = $payload['mac'] ?? '';
+        $mac = $payload['mac'] ?? '';
 
         Log::info('[ZaloPay] Callback received', ['data' => $dataStr]);
 
@@ -88,9 +88,9 @@ class ZalopayService
             return ['return_code' => -1, 'return_message' => 'mac not equal'];
         }
 
-        $data       = json_decode($dataStr, true);
+        $data = json_decode($dataStr, true);
         $appTransId = $data['app_trans_id'] ?? '';
-        $zpTransId  = (string) ($data['zp_trans_id'] ?? '');
+        $zpTransId = (string) ($data['zp_trans_id'] ?? '');
 
         // app_trans_id format: yymmdd_ORDER_CODE — 7-char prefix (6 digits + underscore)
         $orderCode = strlen($appTransId) > 7 ? substr($appTransId, 7) : '';
@@ -121,10 +121,10 @@ class ZalopayService
                 ->latest()
                 ->first()
                 ?->update([
-                    'status'           => 'success',
+                    'status' => 'success',
                     'transaction_code' => $zpTransId,
                     'gateway_response' => $data,
-                    'paid_at'          => now(),
+                    'paid_at' => now(),
                 ]);
 
             $lockedOrder->update(['status' => 'paid', 'paid_at' => now()]);
@@ -156,11 +156,11 @@ class ZalopayService
 
             if (! $exists) {
                 DB::table('students_course')->insert([
-                    'student_id'  => $order->student_id,
-                    'course_id'   => $item->course_id,
+                    'student_id' => $order->student_id,
+                    'course_id' => $item->course_id,
                     'enrolled_at' => now(),
-                    'created_at'  => now(),
-                    'updated_at'  => now(),
+                    'created_at' => now(),
+                    'updated_at' => now(),
                 ]);
 
                 Course::where('id', $item->course_id)->increment('total_students');

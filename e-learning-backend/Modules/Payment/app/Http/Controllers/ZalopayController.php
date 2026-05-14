@@ -28,7 +28,7 @@ class ZalopayController extends Controller
     // Checks DB order status (IPN should have already processed) then forwards to frontend.
     public function redirect(Request $request): RedirectResponse
     {
-        $appTransId  = $request->query('apptransid', '');
+        $appTransId = $request->query('apptransid', '');
         $frontendUrl = config('zalopay.frontend_result_url');
 
         // app_trans_id format: yymmdd_ORDER_CODE — strip 7-char prefix
@@ -37,20 +37,20 @@ class ZalopayController extends Controller
         if (! $orderCode) {
             return redirect()->away(
                 $frontendUrl.'?'.http_build_query([
-                    'status'  => 'failed',
+                    'status' => 'failed',
                     'message' => 'Yêu cầu không hợp lệ',
                 ])
             );
         }
 
-        $order     = Order::where('order_code', $orderCode)->first();
+        $order = Order::where('order_code', $orderCode)->first();
         $isSuccess = $order?->status === 'paid';
 
         return redirect()->away(
             $frontendUrl.'?'.http_build_query([
                 'order_code' => $orderCode,
-                'status'     => $isSuccess ? 'success' : 'failed',
-                'message'    => $isSuccess ? 'Thanh toán thành công' : 'Thanh toán thất bại',
+                'status' => $isSuccess ? 'success' : 'failed',
+                'message' => $isSuccess ? 'Thanh toán thành công' : 'Thanh toán thất bại',
             ])
         );
     }

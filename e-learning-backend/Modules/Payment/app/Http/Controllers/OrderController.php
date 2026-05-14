@@ -46,7 +46,7 @@ class OrderController extends Controller
             $order = $this->orderService->handleFreeOrder($order);
 
             return $this->success([
-                'order'       => new OrderResource($order),
+                'order' => new OrderResource($order),
                 'payment_url' => null,
             ], 'Đơn hàng miễn phí đã được xử lý. Bạn có thể vào học ngay!', 201);
         }
@@ -58,7 +58,7 @@ class OrderController extends Controller
         $order->load(['items.course']);
 
         return $this->success([
-            'order'       => new OrderResource($order),
+            'order' => new OrderResource($order),
             'payment_url' => $paymentUrl,
         ], 'Đơn hàng đã được tạo. Vui lòng thanh toán.', 201);
     }
@@ -112,7 +112,7 @@ class OrderController extends Controller
             : $this->vnpayService->createPaymentUrl($order, $request->ip());
 
         return $this->success([
-            'order_code'  => $order->order_code,
+            'order_code' => $order->order_code,
             'payment_url' => $paymentUrl,
         ], 'Đã tạo liên kết thanh toán mới.');
     }

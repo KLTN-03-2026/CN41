@@ -34,67 +34,67 @@ class ZalopayCallbackTest extends TestCase
     private function makeCallbackData(string $appTransId, int $amount, int $zpTransId, int $studentId): string
     {
         return json_encode([
-            'app_id'           => 2553,
-            'app_trans_id'     => $appTransId,
-            'app_time'         => now()->timestamp * 1000,
-            'app_user'         => (string) $studentId,
-            'amount'           => $amount,
-            'embed_data'       => '{}',
-            'item'             => '[]',
-            'zp_trans_id'      => $zpTransId,
-            'server_time'      => now()->timestamp * 1000,
-            'channel'          => 39,
+            'app_id' => 2553,
+            'app_trans_id' => $appTransId,
+            'app_time' => now()->timestamp * 1000,
+            'app_user' => (string) $studentId,
+            'amount' => $amount,
+            'embed_data' => '{}',
+            'item' => '[]',
+            'zp_trans_id' => $zpTransId,
+            'server_time' => now()->timestamp * 1000,
+            'channel' => 39,
             'merchant_user_id' => 'test',
-            'user_fee_amount'  => 0,
-            'discount_amount'  => 0,
+            'user_fee_amount' => 0,
+            'discount_amount' => 0,
         ]);
     }
 
     private function createOrderFixture(string $orderCode, int $amount): array
     {
         $student = Student::forceCreate([
-            'name'     => 'ZP Student',
-            'email'    => "zp_{$orderCode}@test.com",
+            'name' => 'ZP Student',
+            'email' => "zp_{$orderCode}@test.com",
             'password' => 'password',
         ]);
 
         $teacherId = DB::table('teachers')->insertGetId([
-            'name'       => 'Teacher',
-            'slug'       => "teacher-{$orderCode}",
+            'name' => 'Teacher',
+            'slug' => "teacher-{$orderCode}",
             'created_at' => now(),
             'updated_at' => now(),
         ]);
 
         $course = Course::create([
-            'name'       => 'Course',
-            'slug'       => "course-{$orderCode}",
-            'price'      => $amount,
+            'name' => 'Course',
+            'slug' => "course-{$orderCode}",
+            'price' => $amount,
             'teacher_id' => $teacherId,
-            'status'     => 1,
+            'status' => 1,
         ]);
 
         $order = Order::create([
-            'order_code'      => $orderCode,
-            'student_id'      => $student->id,
-            'subtotal'        => $amount,
+            'order_code' => $orderCode,
+            'student_id' => $student->id,
+            'subtotal' => $amount,
             'discount_amount' => 0,
-            'total_amount'    => $amount,
-            'status'          => 'pending',
-            'payment_method'  => 'zalopay',
+            'total_amount' => $amount,
+            'status' => 'pending',
+            'payment_method' => 'zalopay',
         ]);
 
         OrderItem::create([
-            'order_id'    => $order->id,
-            'course_id'   => $course->id,
-            'price'       => $amount,
+            'order_id' => $order->id,
+            'course_id' => $course->id,
+            'price' => $amount,
             'final_price' => $amount,
         ]);
 
         Transaction::create([
             'order_id' => $order->id,
-            'gateway'  => 'zalopay',
-            'amount'   => $amount,
-            'status'   => 'pending',
+            'gateway' => 'zalopay',
+            'amount' => $amount,
+            'status' => 'pending',
         ]);
 
         return compact('student', 'order', 'course');
@@ -122,7 +122,7 @@ class ZalopayCallbackTest extends TestCase
     {
         $response = $this->postJson($this->baseUrl, [
             'data' => '{"app_trans_id":"260514_ORD-ZP-FAKE"}',
-            'mac'  => 'WRONG_MAC',
+            'mac' => 'WRONG_MAC',
         ]);
 
         $response->assertStatus(200)
@@ -163,11 +163,11 @@ class ZalopayCallbackTest extends TestCase
 
         // Pre-enroll the student
         DB::table('students_course')->insert([
-            'student_id'  => $student->id,
-            'course_id'   => $course->id,
+            'student_id' => $student->id,
+            'course_id' => $course->id,
             'enrolled_at' => now(),
-            'created_at'  => now(),
-            'updated_at'  => now(),
+            'created_at' => now(),
+            'updated_at' => now(),
         ]);
 
         $appTransId = now()->format('ymd').'_ORD-ZP-DOUBLE';

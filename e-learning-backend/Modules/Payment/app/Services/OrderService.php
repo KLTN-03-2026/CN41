@@ -83,9 +83,9 @@ class OrderService
             if ($totalAmount > 0) {
                 Transaction::create([
                     'order_id' => $order->id,
-                    'gateway'  => $paymentMethod,
-                    'amount'   => $totalAmount,
-                    'status'   => 'pending',
+                    'gateway' => $paymentMethod,
+                    'amount' => $totalAmount,
+                    'status' => 'pending',
                 ]);
             }
 
@@ -120,9 +120,9 @@ class OrderService
 
             Transaction::create([
                 'order_id' => $order->id,
-                'gateway'  => $order->payment_method,
-                'amount'   => $order->total_amount,
-                'status'   => 'pending',
+                'gateway' => $order->payment_method,
+                'amount' => $order->total_amount,
+                'status' => 'pending',
             ]);
         });
     }
