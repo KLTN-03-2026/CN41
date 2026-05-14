@@ -19,7 +19,8 @@ class CreateOrderRequest extends FormRequest
         return [
             'course_ids' => 'required|array|min:1',
             'course_ids.*' => 'integer|exists:courses,id',
-            'coupon_code' => 'nullable|string|max:50',
+            'coupon_code'    => 'nullable|string|max:50',
+            'payment_method' => 'nullable|string|in:vnpay,zalopay',
         ];
     }
 
@@ -73,7 +74,8 @@ class CreateOrderRequest extends FormRequest
             'course_ids.min' => 'Vui lòng chọn ít nhất một khóa học.',
             'course_ids.*.integer' => 'ID khóa học phải là số nguyên.',
             'course_ids.*.exists' => 'Một hoặc nhiều khóa học không tồn tại.',
-            'coupon_code.max' => 'Mã giảm giá tối đa 50 ký tự.',
+            'coupon_code.max'      => 'Mã giảm giá tối đa 50 ký tự.',
+            'payment_method.in'   => 'Phương thức thanh toán không hợp lệ.',
         ];
     }
 

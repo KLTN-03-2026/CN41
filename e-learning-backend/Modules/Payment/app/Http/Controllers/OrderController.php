@@ -12,6 +12,7 @@ use Modules\Payment\Http\Resources\OrderResource;
 use Modules\Payment\Repositories\OrderRepositoryInterface;
 use Modules\Payment\Services\OrderService;
 use Modules\Payment\Services\VnpayService;
+use Modules\Payment\Services\ZalopayService;
 
 class OrderController extends Controller
 {
@@ -21,15 +22,19 @@ class OrderController extends Controller
         private OrderRepositoryInterface $repository,
         private OrderService $orderService,
         private VnpayService $vnpayService,
+        private ZalopayService $zalopayService,
     ) {}
 
     public function store(CreateOrderRequest $request): JsonResponse
     {
+        $paymentMethod = $request->input('payment_method', 'vnpay');
+
         try {
             $result = $this->orderService->createOrder(
                 auth('api')->id(),
                 $request->validated()['course_ids'],
-                $request->input('coupon_code')
+                $request->input('coupon_code'),
+                $paymentMethod
             );
         } catch (\Exception $e) {
             return $this->error($e->getMessage(), $e->getCode() ?: 422);
@@ -41,16 +46,19 @@ class OrderController extends Controller
             $order = $this->orderService->handleFreeOrder($order);
 
             return $this->success([
-                'order' => new OrderResource($order),
+                'order'       => new OrderResource($order),
                 'payment_url' => null,
             ], 'Đơn hàng miễn phí đã được xử lý. Bạn có thể vào học ngay!', 201);
         }
 
-        $paymentUrl = $this->vnpayService->createPaymentUrl($order, $request->ip());
+        $paymentUrl = $paymentMethod === 'zalopay'
+            ? $this->zalopayService->createPaymentUrl($order, $request->ip())
+            : $this->vnpayService->createPaymentUrl($order, $request->ip());
+
         $order->load(['items.course']);
 
         return $this->success([
-            'order' => new OrderResource($order),
+            'order'       => new OrderResource($order),
             'payment_url' => $paymentUrl,
         ], 'Đơn hàng đã được tạo. Vui lòng thanh toán.', 201);
     }
@@ -99,10 +107,12 @@ class OrderController extends Controller
 
         $this->orderService->retryPayment($order);
 
-        $paymentUrl = $this->vnpayService->createPaymentUrl($order, $request->ip());
+        $paymentUrl = $order->payment_method === 'zalopay'
+            ? $this->zalopayService->createPaymentUrl($order, $request->ip())
+            : $this->vnpayService->createPaymentUrl($order, $request->ip());
 
         return $this->success([
-            'order_code' => $order->order_code,
+            'order_code'  => $order->order_code,
             'payment_url' => $paymentUrl,
         ], 'Đã tạo liên kết thanh toán mới.');
     }
