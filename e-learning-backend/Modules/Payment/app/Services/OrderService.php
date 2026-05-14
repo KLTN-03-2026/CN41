@@ -17,7 +17,7 @@ class OrderService
         private VnpayService $vnpayService,
     ) {}
 
-    public function createOrder(int $studentId, array $courseIds, ?string $couponCode): array
+    public function createOrder(int $studentId, array $courseIds, ?string $couponCode, string $paymentMethod = 'vnpay'): array
     {
         $courses = Course::whereIn('id', $courseIds)->published()->get();
 
@@ -45,7 +45,7 @@ class OrderService
 
         $orderCode = 'ORD-'.now()->format('Ymd').'-'.strtoupper(Str::random(5));
 
-        return DB::transaction(function () use ($studentId, $orderCode, $subtotal, $items, $couponCode) {
+        return DB::transaction(function () use ($studentId, $orderCode, $subtotal, $items, $couponCode, $paymentMethod) {
             $discountAmount = 0;
             $coupon = null;
 
@@ -77,15 +77,15 @@ class OrderService
                 'coupon_code' => $couponCode,
                 'total_amount' => $totalAmount,
                 'status' => 'pending',
-                'payment_method' => $totalAmount > 0 ? 'vnpay' : 'free',
+                'payment_method' => $totalAmount > 0 ? $paymentMethod : 'free',
             ], $items);
 
             if ($totalAmount > 0) {
                 Transaction::create([
                     'order_id' => $order->id,
-                    'gateway' => 'vnpay',
-                    'amount' => $totalAmount,
-                    'status' => 'pending',
+                    'gateway'  => $paymentMethod,
+                    'amount'   => $totalAmount,
+                    'status'   => 'pending',
                 ]);
             }
 
@@ -120,9 +120,9 @@ class OrderService
 
             Transaction::create([
                 'order_id' => $order->id,
-                'gateway' => 'vnpay',
-                'amount' => $order->total_amount,
-                'status' => 'pending',
+                'gateway'  => $order->payment_method,
+                'amount'   => $order->total_amount,
+                'status'   => 'pending',
             ]);
         });
     }
