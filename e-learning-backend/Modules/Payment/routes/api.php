@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Modules\Payment\Http\Controllers\AdminOrderController;
 use Modules\Payment\Http\Controllers\OrderController;
 use Modules\Payment\Http\Controllers\VnpayController;
+use Modules\Payment\Http\Controllers\ZalopayController;
 
 /*
 |--------------------------------------------------------------------------
@@ -54,3 +55,17 @@ Route::get('payment/vnpay/return', [VnpayController::class, 'return']);
 |--------------------------------------------------------------------------
 */
 Route::get('payment/vnpay/ipn', [VnpayController::class, 'ipn']);
+
+/*
+|--------------------------------------------------------------------------
+| ZaloPay Callback (POST) — ZaloPay server-to-server IPN
+|--------------------------------------------------------------------------
+*/
+Route::post('payment/zalopay/callback', [ZalopayController::class, 'callback']);
+
+/*
+|--------------------------------------------------------------------------
+| ZaloPay Redirect (GET) — ZaloPay redirects user here after payment
+|--------------------------------------------------------------------------
+*/
+Route::get('payment/zalopay/redirect', [ZalopayController::class, 'redirect']);
