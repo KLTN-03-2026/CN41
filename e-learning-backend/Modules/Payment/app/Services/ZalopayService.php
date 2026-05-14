@@ -50,7 +50,7 @@ class ZalopayService
         ];
 
         try {
-            $response = Http::timeout(15)->post(config('zalopay.endpoint'), $payload);
+            $response = Http::timeout(15)->asForm()->post(config('zalopay.endpoint'), $payload);
         } catch (ConnectionException $e) {
             Log::error('[ZaloPay] Network connection failed', [
                 'order_code' => $order->order_code,
@@ -59,7 +59,7 @@ class ZalopayService
             throw new \Exception('Không thể kết nối đến cổng thanh toán ZaloPay. Vui lòng thử lại sau.');
         }
 
-        if ($response->failed() || (int) $response->json('return_code') !== 1) {
+        if ($response->failed() || (int) $response->json('returncode') !== 1) {
             Log::error('[ZaloPay] createPaymentUrl failed', [
                 'order_code' => $order->order_code,
                 'response' => $response->json(),
@@ -74,7 +74,7 @@ class ZalopayService
             ->first()
             ?->update(['transaction_code' => $appTransId]);
 
-        return (string) $response->json('order_url');
+        return (string) $response->json('orderurl');
     }
 
     public function verifyCallbackMac(string $data, string $mac): bool
