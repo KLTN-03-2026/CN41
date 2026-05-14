@@ -51,9 +51,13 @@ class OrderController extends Controller
             ], 'Đơn hàng miễn phí đã được xử lý. Bạn có thể vào học ngay!', 201);
         }
 
-        $paymentUrl = $paymentMethod === 'zalopay'
-            ? $this->zalopayService->createPaymentUrl($order, $request->ip())
-            : $this->vnpayService->createPaymentUrl($order, $request->ip());
+        try {
+            $paymentUrl = $paymentMethod === 'zalopay'
+                ? $this->zalopayService->createPaymentUrl($order, $request->ip())
+                : $this->vnpayService->createPaymentUrl($order, $request->ip());
+        } catch (\Exception $e) {
+            return $this->error($e->getMessage(), 503);
+        }
 
         $order->load(['items.course']);
 
@@ -107,9 +111,13 @@ class OrderController extends Controller
 
         $this->orderService->retryPayment($order);
 
-        $paymentUrl = $order->payment_method === 'zalopay'
-            ? $this->zalopayService->createPaymentUrl($order, $request->ip())
-            : $this->vnpayService->createPaymentUrl($order, $request->ip());
+        try {
+            $paymentUrl = $order->payment_method === 'zalopay'
+                ? $this->zalopayService->createPaymentUrl($order, $request->ip())
+                : $this->vnpayService->createPaymentUrl($order, $request->ip());
+        } catch (\Exception $e) {
+            return $this->error($e->getMessage(), 503);
+        }
 
         return $this->success([
             'order_code' => $order->order_code,

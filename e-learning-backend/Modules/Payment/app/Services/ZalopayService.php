@@ -3,6 +3,7 @@
 namespace Modules\Payment\Services;
 
 use App\Events\PaymentSuccessful;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -48,7 +49,15 @@ class ZalopayService
             'mac' => $mac,
         ];
 
-        $response = Http::post(config('zalopay.endpoint'), $payload);
+        try {
+            $response = Http::timeout(15)->post(config('zalopay.endpoint'), $payload);
+        } catch (ConnectionException $e) {
+            Log::error('[ZaloPay] Network connection failed', [
+                'order_code' => $order->order_code,
+                'error' => $e->getMessage(),
+            ]);
+            throw new \Exception('Không thể kết nối đến cổng thanh toán ZaloPay. Vui lòng thử lại sau.');
+        }
 
         if ($response->failed() || (int) $response->json('return_code') !== 1) {
             Log::error('[ZaloPay] createPaymentUrl failed', [
