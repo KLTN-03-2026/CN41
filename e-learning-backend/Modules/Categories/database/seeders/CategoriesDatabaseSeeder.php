@@ -46,6 +46,9 @@ class CategoriesDatabaseSeeder extends Seeder
             ['Tiếng Anh',          'tieng-anh',        'IELTS, TOEIC, giao tiếp',               'fa-flag',       'ngoai-ngu'],
             ['Tiếng Nhật',         'tieng-nhat',       'JLPT N5-N1',                            'fa-flag',       'ngoai-ngu'],
             ['Tiếng Hàn',          'tieng-han',        'TOPIK I-II',                            'fa-flag',       'ngoai-ngu'],
+
+            ['Kỹ năng mềm',        'ky-nang-mem',      'Phát triển bản thân và kỹ năng mềm',     'fa-star',       null],
+            ['Thiết kế đồ họa',    'thiet-ke-do-hoa',  'Graphic design và đa phương tiện',       'fa-paint-brush', null],
         ];
 
         // Map slug -> id để resolve parent_id
