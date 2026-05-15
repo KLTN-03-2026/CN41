@@ -18,10 +18,16 @@ class ZalopayService
     {
         $appId = (int) config('zalopay.app_id');
         $key1 = config('zalopay.key1');
+        $zalopayAttempts = Transaction::where('order_id', $order->id)
+            ->where('gateway', 'zalopay')
+            ->count();
         $appTransId = now('Asia/Ho_Chi_Minh')->format('ymd').'_'.$order->order_code;
+        if ($zalopayAttempts > 1) {
+            $appTransId .= '_'.$zalopayAttempts;
+        }
         $appTime = (int) (microtime(true) * 1000);
         $amount = (int) $order->total_amount;
-        $embedData = json_encode(['redirecturl' => config('zalopay.redirect_url')]);
+        $embedData = json_encode(['redirecturl' => config('zalopay.redirect_url')], JSON_UNESCAPED_SLASHES);
         $item = '[]';
 
         $macData = implode('|', [
@@ -59,7 +65,7 @@ class ZalopayService
             throw new \Exception('Không thể kết nối đến cổng thanh toán ZaloPay. Vui lòng thử lại sau.');
         }
 
-        if ($response->failed() || (int) $response->json('returncode') !== 1) {
+        if ($response->failed() || (int) $response->json('return_code') !== 1) {
             Log::error('[ZaloPay] createPaymentUrl failed', [
                 'order_code' => $order->order_code,
                 'response' => $response->json(),
@@ -74,7 +80,7 @@ class ZalopayService
             ->first()
             ?->update(['transaction_code' => $appTransId]);
 
-        return (string) $response->json('orderurl');
+        return (string) $response->json('order_url');
     }
 
     public function verifyCallbackMac(string $data, string $mac): bool
@@ -101,8 +107,7 @@ class ZalopayService
         $appTransId = $data['app_trans_id'] ?? '';
         $zpTransId = (string) ($data['zp_trans_id'] ?? '');
 
-        // app_trans_id format: yymmdd_ORDER_CODE — 7-char prefix (6 digits + underscore)
-        $orderCode = strlen($appTransId) > 7 ? substr($appTransId, 7) : '';
+        $orderCode = self::extractOrderCode($appTransId);
 
         $order = Order::where('order_code', $orderCode)->first();
 
@@ -118,28 +123,7 @@ class ZalopayService
         }
 
         // lockForUpdate() trong DB::transaction() — tránh race condition duplicate callback
-        $paid = DB::transaction(function () use ($order, $zpTransId, $data) {
-            $lockedOrder = Order::where('id', $order->id)->lockForUpdate()->first();
-
-            if ($lockedOrder->status !== 'pending') {
-                return null;
-            }
-
-            Transaction::where('order_id', $lockedOrder->id)
-                ->where('status', 'pending')
-                ->latest()
-                ->first()
-                ?->update([
-                    'status' => 'success',
-                    'transaction_code' => $zpTransId,
-                    'gateway_response' => $data,
-                    'paid_at' => now(),
-                ]);
-
-            $lockedOrder->update(['status' => 'paid', 'paid_at' => now()]);
-
-            return $lockedOrder;
-        });
+        $paid = $this->markOrderAsPaid($order, $zpTransId, $data);
 
         if ($paid === null) {
             return ['return_code' => 2, 'return_message' => 'Order already confirmed'];
@@ -151,6 +135,91 @@ class ZalopayService
         Log::info('[ZaloPay] Payment SUCCESS', ['order_code' => $orderCode]);
 
         return ['return_code' => 1, 'return_message' => 'success'];
+    }
+
+    private function markOrderAsPaid(Order $order, string $zpTransId, array $gatewayData): ?Order
+    {
+        return DB::transaction(function () use ($order, $zpTransId, $gatewayData) {
+            $locked = Order::where('id', $order->id)->lockForUpdate()->first();
+
+            if ($locked->status !== 'pending') {
+                return null;
+            }
+
+            Transaction::where('order_id', $locked->id)
+                ->where('status', 'pending')
+                ->latest()
+                ->first()
+                ?->update([
+                    'status' => 'success',
+                    'transaction_code' => $zpTransId,
+                    'gateway_response' => $gatewayData,
+                    'paid_at' => now(),
+                ]);
+
+            $locked->update(['status' => 'paid', 'paid_at' => now()]);
+
+            return $locked;
+        });
+    }
+
+    public function queryAndConfirmPayment(string $appTransId, string $orderCode = ''): bool
+    {
+        $appId = (int) config('zalopay.app_id');
+        $key1 = config('zalopay.key1');
+        $mac = hash_hmac('sha256', $appId.'|'.$appTransId.'|'.$key1, $key1);
+
+        try {
+            $response = Http::timeout(10)->asForm()->post(
+                config('zalopay.query_endpoint', 'https://sb-openapi.zalopay.vn/v2/query'),
+                ['app_id' => $appId, 'app_trans_id' => $appTransId, 'mac' => $mac]
+            );
+        } catch (ConnectionException $e) {
+            Log::warning('[ZaloPay] Query connection failed', ['app_trans_id' => $appTransId]);
+
+            return false;
+        }
+
+        if ($response->failed() || (int) $response->json('return_code') !== 1) {
+            Log::info('[ZaloPay] Query: not confirmed', [
+                'app_trans_id' => $appTransId,
+                'return_code' => $response->json('return_code'),
+            ]);
+
+            return false;
+        }
+
+        $zpTransId = (string) ($response->json('zp_trans_id') ?? '');
+        $data = $response->json();
+
+        $resolvedCode = $orderCode ?: self::extractOrderCode($appTransId);
+        $order = Order::where('order_code', $resolvedCode)->first();
+        if (! $order) {
+            return false;
+        }
+
+        if ($order->status === 'paid') {
+            return true;
+        }
+
+        $paid = $this->markOrderAsPaid($order, $zpTransId, $data);
+        if ($paid) {
+            $this->enrollStudent($paid);
+            OrderPlaced::dispatch($paid);
+            event(new PaymentSuccessful($paid, $data));
+            Log::info('[ZaloPay] Payment confirmed via redirect query', ['order_code' => $orderCode]);
+        }
+
+        return (bool) $paid;
+    }
+
+    private static function extractOrderCode(string $appTransId): string
+    {
+        // Format: yymmdd_ORDER_CODE or yymmdd_ORDER_CODE_N (retry attempt N)
+        // Order codes use hyphens (e.g. ORD-20260514-XXXXX), never end with _\d+
+        $withoutPrefix = strlen($appTransId) > 7 ? substr($appTransId, 7) : '';
+
+        return preg_replace('/_\d+$/', '', $withoutPrefix);
     }
 
     public function enrollStudent(Order $order): void
@@ -173,6 +242,23 @@ class ZalopayService
                 ]);
 
                 Course::where('id', $item->course_id)->increment('total_students');
+            }
+        }
+
+        // Auto-cancel các pending/failed orders khác chứa cùng courses (student đã sở hữu rồi)
+        $courseIds = $order->items->pluck('course_id')->toArray();
+        if (! empty($courseIds)) {
+            $siblingIds = \Modules\Payment\Models\OrderItem::whereIn('course_id', $courseIds)
+                ->whereHas('order', fn ($q) => $q
+                    ->where('student_id', $order->student_id)
+                    ->whereIn('status', ['pending', 'failed'])
+                    ->where('id', '!=', $order->id)
+                )
+                ->pluck('order_id')
+                ->unique();
+
+            if ($siblingIds->isNotEmpty()) {
+                Order::whereIn('id', $siblingIds)->update(['status' => 'cancelled']);
             }
         }
     }

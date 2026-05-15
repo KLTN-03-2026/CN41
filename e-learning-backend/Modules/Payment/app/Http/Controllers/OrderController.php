@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Modules\Payment\Http\Requests\CreateOrderRequest;
 use Modules\Payment\Http\Requests\MyOrdersRequest;
 use Modules\Payment\Http\Resources\OrderResource;
@@ -107,6 +108,20 @@ class OrderController extends Controller
 
         if (! $order->isPending() && ! $order->isFailed()) {
             return $this->error('Chỉ đơn hàng đang chờ hoặc thất bại mới có thể thanh toán lại.', 422);
+        }
+
+        // Nếu student đã sở hữu tất cả courses → auto-cancel đơn thay vì retry
+        $order->load('items');
+        $alreadyOwned = $order->items->every(fn ($item) => DB::table('students_course')
+            ->where('student_id', $order->student_id)
+            ->where('course_id', $item->course_id)
+            ->exists()
+        );
+
+        if ($alreadyOwned) {
+            $order->update(['status' => 'cancelled']);
+
+            return $this->error('Bạn đã sở hữu tất cả khóa học trong đơn hàng này. Đơn hàng đã được hủy tự động.', 422);
         }
 
         $this->orderService->retryPayment($order);

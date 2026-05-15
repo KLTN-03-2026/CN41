@@ -25,14 +25,15 @@ class ZalopayController extends Controller
     }
 
     // GET /payment/zalopay/redirect — ZaloPay redirects user here after payment
-    // Checks DB order status (IPN should have already processed) then forwards to frontend.
+    // Checks DB order status; if still pending, queries ZaloPay API as IPN fallback (for local dev).
     public function redirect(Request $request): RedirectResponse
     {
         $appTransId = $request->query('apptransid', '');
         $frontendUrl = config('zalopay.frontend_result_url');
 
-        // app_trans_id format: yymmdd_ORDER_CODE — strip 7-char prefix
-        $orderCode = strlen($appTransId) > 7 ? substr($appTransId, 7) : '';
+        // Format: yymmdd_ORDER_CODE or yymmdd_ORDER_CODE_N (retry); strip prefix and numeric suffix
+        $withoutPrefix = strlen($appTransId) > 7 ? substr($appTransId, 7) : '';
+        $orderCode = preg_replace('/_\d+$/', '', $withoutPrefix);
 
         if (! $orderCode) {
             return redirect()->away(
@@ -44,6 +45,12 @@ class ZalopayController extends Controller
         }
 
         $order = Order::where('order_code', $orderCode)->first();
+
+        if ($order && $order->status === 'pending' && $appTransId) {
+            $this->zalopayService->queryAndConfirmPayment($appTransId, $orderCode);
+            $order->refresh();
+        }
+
         $isSuccess = $order?->status === 'paid';
 
         return redirect()->away(
