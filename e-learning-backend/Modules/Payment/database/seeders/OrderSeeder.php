@@ -88,7 +88,7 @@ class OrderSeeder extends Seeder
                 }
 
                 $numCourses = min(rand(1, 3), $available->count());
-                $selected = $available->random($numCourses);
+                $selected = collect($available->random($numCourses));
 
                 $subtotal = $selected->sum(fn ($c) => $c->sale_price ?? $c->price);
 
@@ -160,9 +160,11 @@ class OrderSeeder extends Seeder
 
     private function enroll(int $studentId, int $courseId, ?Carbon $enrolledAt): void
     {
-        if (in_array($courseId, $this->enrolled[$studentId] ?? [])) {
+        if (isset($this->enrolled[$studentId]) && in_array($courseId, $this->enrolled[$studentId])) {
             return;
         }
+
+        $this->enrolled[$studentId][] = $courseId;
 
         DB::table('students_course')->insertOrIgnore([
             'student_id' => $studentId,
@@ -171,7 +173,5 @@ class OrderSeeder extends Seeder
             'created_at' => now(),
             'updated_at' => now(),
         ]);
-
-        $this->enrolled[$studentId][] = $courseId;
     }
 }
