@@ -28,10 +28,10 @@ class CourseDatabaseSeeder extends Seeder
         Course::withTrashed()->forceDelete();
         DB::statement('SET FOREIGN_KEY_CHECKS=1');
 
-        $teachers = Teachers::where('status', 1)->pluck('id')->toArray();
+        $teacherMap = Teachers::pluck('id', 'slug')->toArray();
         $categories = Category::whereNotNull('parent_id')->pluck('id', 'slug');
 
-        if (empty($teachers)) {
+        if (empty($teacherMap)) {
             $this->command->warn('Chưa có teacher. Seed Teachers trước.');
 
             return;
@@ -42,7 +42,7 @@ class CourseDatabaseSeeder extends Seeder
 
         foreach ($courses as $data) {
             $course = Course::create([
-                'teacher_id' => $teachers[array_rand($teachers)],
+                'teacher_id' => $teacherMap[$data['teacher_slug']] ?? $teacherMap[array_key_first($teacherMap)],
                 'name' => $data['name'],
                 'slug' => Str::slug($data['name']),
                 'description' => $data['description'],
@@ -75,247 +75,188 @@ class CourseDatabaseSeeder extends Seeder
     private function courseData(): array
     {
         return [
-            // ── Lập trình Web ──
+            // ── Web / Backend — Nguyễn Văn An ──
             [
                 'name' => 'Laravel 12 Từ Cơ Bản Đến Nâng Cao',
                 'description' => 'Khóa học Laravel toàn diện cho lập trình viên PHP. Bạn sẽ học routing, Eloquent ORM, Sanctum API, Queue, Job, Event, Testing và deploy thực tế. Phù hợp từ người mới bắt đầu đến developer muốn nâng cao.',
-                'price' => 599000,
-                'sale_price' => 399000,
-                'level' => 'beginner',
-                'status' => 1,
+                'price' => 599000, 'sale_price' => 399000, 'level' => 'beginner', 'status' => 1,
                 'category_slugs' => ['laravel', 'web-development'],
+                'teacher_slug' => 'nguyen-van-an',
             ],
             [
                 'name' => 'Vue.js 3 & Pinia Thực Chiến',
                 'description' => 'Học Vue.js 3 với Composition API, Pinia state management, Vue Router và Tailwind CSS. Xây dựng SPA hoàn chỉnh tích hợp REST API. Thực hành qua dự án thực tế từ đầu đến cuối.',
-                'price' => 499000,
-                'sale_price' => null,
-                'level' => 'intermediate',
-                'status' => 1,
+                'price' => 499000, 'sale_price' => null, 'level' => 'intermediate', 'status' => 1,
                 'category_slugs' => ['vuejs', 'web-development'],
+                'teacher_slug' => 'nguyen-van-an',
             ],
             [
                 'name' => 'HTML, CSS & JavaScript Cho Người Mới',
                 'description' => 'Khóa học nền tảng web development hoàn toàn miễn phí. Bạn sẽ nắm vững HTML5, CSS3 với Flexbox và Grid layout, JavaScript ES6+ và DOM manipulation. Điểm khởi đầu lý tưởng cho mọi lập trình viên web.',
-                'price' => 0,
-                'sale_price' => null,
-                'level' => 'beginner',
-                'status' => 1,
+                'price' => 0, 'sale_price' => null, 'level' => 'beginner', 'status' => 1,
                 'category_slugs' => ['html-css', 'javascript', 'web-development'],
+                'teacher_slug' => 'nguyen-van-an',
             ],
             [
                 'name' => 'React.js & Next.js Full-Stack',
                 'description' => 'Xây dựng ứng dụng full-stack hiện đại với React.js, Next.js 14 App Router và Node.js. Học SSR, SSG, API Routes, authentication, và deploy lên Vercel. Dự án thực tế: E-Commerce Platform.',
-                'price' => 799000,
-                'sale_price' => 599000,
-                'level' => 'intermediate',
-                'status' => 1,
+                'price' => 799000, 'sale_price' => 599000, 'level' => 'intermediate', 'status' => 1,
                 'category_slugs' => ['react', 'web-development'],
+                'teacher_slug' => 'nguyen-van-an',
             ],
             [
                 'name' => 'Node.js & Express REST API',
                 'description' => 'Xây dựng REST API production-ready với Node.js, Express, JWT authentication, MongoDB và Redis cache. Áp dụng clean architecture, middleware pattern và unit testing.',
-                'price' => 450000,
-                'sale_price' => null,
-                'level' => 'intermediate',
-                'status' => 1,
+                'price' => 450000, 'sale_price' => null, 'level' => 'intermediate', 'status' => 1,
                 'category_slugs' => ['nodejs', 'web-development'],
-            ],
-
-            // ── Database ──
-            [
-                'name' => 'MySQL Nâng Cao & Tối Ưu Query',
-                'description' => 'Nắm vững thiết kế database chuẩn, normalization, indexing chiến lược, query optimization và stored procedures. Thực hành với MySQL 8.0 trên dữ liệu triệu record thực tế.',
-                'price' => 349000,
-                'sale_price' => 249000,
-                'level' => 'advanced',
-                'status' => 1,
-                'category_slugs' => ['co-so-du-lieu'],
-            ],
-
-            // ── Mobile ──
-            [
-                'name' => 'Flutter & Dart Từ Zero Đến Hero',
-                'description' => 'Học Flutter và Dart để xây dựng ứng dụng đa nền tảng iOS & Android. Bao gồm state management với Bloc/Provider, kết nối API, local storage và publish lên store.',
-                'price' => 699000,
-                'sale_price' => 499000,
-                'level' => 'beginner',
-                'status' => 1,
-                'category_slugs' => ['flutter', 'mobile-development'],
-            ],
-            [
-                'name' => 'React Native Thực Chiến 2025',
-                'description' => 'Phát triển app mobile cross-platform với React Native và Expo. Học navigation, camera, push notification, payment integration và CI/CD cho mobile.',
-                'price' => 599000,
-                'sale_price' => null,
-                'level' => 'intermediate',
-                'status' => 1,
-                'category_slugs' => ['react-native', 'mobile-development'],
-            ],
-
-            // ── DevOps ──
-            [
-                'name' => 'Docker & DevOps Cho Developer',
-                'description' => 'Học Docker, Docker Compose, CI/CD với GitHub Actions và GitLab CI. Deploy ứng dụng lên VPS với Nginx reverse proxy, SSL và monitoring. Nền tảng DevOps thiết yếu cho mọi developer.',
-                'price' => 450000,
-                'sale_price' => 350000,
-                'level' => 'advanced',
-                'status' => 1,
-                'category_slugs' => ['devops-cloud'],
-            ],
-
-            // ── AI ──
-            [
-                'name' => 'Python & Machine Learning Cơ Bản',
-                'description' => 'Nhập môn Python và Machine Learning. Sử dụng NumPy, Pandas, Matplotlib để phân tích dữ liệu. Xây dựng model với Scikit-learn và deploy API dự đoán đầu tiên của bạn.',
-                'price' => 699000,
-                'sale_price' => 499000,
-                'level' => 'beginner',
-                'status' => 1,
-                'category_slugs' => ['python', 'machine-learning', 'data-science'],
-            ],
-
-            // ── Tiếng Anh ──
-            [
-                'name' => 'IELTS 7.0 Toàn Diện 4 Kỹ Năng',
-                'description' => 'Lộ trình học IELTS bài bản từ band 5.0 lên 7.0+. Bao gồm Listening, Reading, Writing Task 1 & 2, Speaking. Kèm 500+ đề thi thử và bộ từ vựng học thuật IELTS chuyên sâu.',
-                'price' => 899000,
-                'sale_price' => 699000,
-                'level' => 'intermediate',
-                'status' => 1,
-                'category_slugs' => ['tieng-anh'],
-            ],
-            [
-                'name' => 'Tiếng Anh Giao Tiếp Văn Phòng',
-                'description' => 'Học tiếng Anh thực tế cho môi trường công sở: email chuyên nghiệp, meeting, thuyết trình và đàm phán. Tập trung phát âm chuẩn và phản xạ giao tiếp tự nhiên.',
-                'price' => 399000,
-                'sale_price' => null,
-                'level' => 'beginner',
-                'status' => 1,
-                'category_slugs' => ['tieng-anh'],
-            ],
-
-            // ── Tiếng Nhật ──
-            [
-                'name' => 'Tiếng Nhật N5-N4 Cho Người Mới Bắt Đầu',
-                'description' => 'Học tiếng Nhật từ zero: Hiragana, Katakana, Kanji N5, ngữ pháp và hội thoại cơ bản. Luyện thi JLPT N5 và N4 với bộ đề thi thử đầy đủ và giải thích chi tiết.',
-                'price' => 499000,
-                'sale_price' => 349000,
-                'level' => 'beginner',
-                'status' => 1,
-                'category_slugs' => ['tieng-nhat'],
-            ],
-
-            // ── Tiếng Hàn ──
-            [
-                'name' => 'Tiếng Hàn TOPIK I - Sơ Cấp',
-                'description' => 'Học tiếng Hàn từ bảng chữ cái Hangul đến TOPIK I level 1-2. Bao gồm phát âm chuẩn, từ vựng 1000 từ cơ bản, ngữ pháp và luyện đề thi TOPIK I thực tế.',
-                'price' => 449000,
-                'sale_price' => null,
-                'level' => 'beginner',
-                'status' => 1,
-                'category_slugs' => ['tieng-han'],
+                'teacher_slug' => 'nguyen-van-an',
             ],
             [
                 'name' => 'API Design & RESTful Best Practices',
                 'description' => 'Thiết kế REST API chuẩn: naming conventions, versioning, authentication (JWT/OAuth2), rate limiting, pagination và documentation với Swagger/OpenAPI. Kèm ví dụ thực tế với Laravel và Node.js.',
-                'price' => 399000,
-                'sale_price' => null,
-                'level' => 'intermediate',
-                'status' => 1,
+                'price' => 399000, 'sale_price' => null, 'level' => 'intermediate', 'status' => 1,
                 'category_slugs' => ['web-development'],
+                'teacher_slug' => 'nguyen-van-an',
             ],
-
-            // ── Thêm để vượt 15 (test phân trang) ──
             [
                 'name' => 'TypeScript Từ Cơ Bản Đến Nâng Cao',
                 'description' => 'Học TypeScript toàn diện: kiểu dữ liệu tĩnh, interface, generics, decorators và tích hợp với React, Node.js. Nâng cao chất lượng code và giảm lỗi runtime trong dự án thực tế.',
-                'price' => 449000,
-                'sale_price' => 299000,
-                'level' => 'intermediate',
-                'status' => 1,
+                'price' => 449000, 'sale_price' => 299000, 'level' => 'intermediate', 'status' => 1,
                 'category_slugs' => ['javascript', 'web-development'],
-            ],
-            [
-                'name' => 'Git & GitHub Cho Lập Trình Viên',
-                'description' => 'Nắm vững Git workflow: branching, merging, rebasing, conflict resolution, pull request và code review. Tích hợp CI/CD cơ bản với GitHub Actions. Kỹ năng thiết yếu cho mọi developer.',
-                'price' => 199000,
-                'sale_price' => null,
-                'level' => 'beginner',
-                'status' => 1,
-                'category_slugs' => ['devops-cloud'],
-            ],
-            [
-                'name' => 'PostgreSQL & Thiết Kế Database',
-                'description' => 'Học PostgreSQL từ cơ bản đến nâng cao: DDL/DML, joins, indexing, partitioning, full-text search và JSON support. Thiết kế schema chuẩn cho hệ thống lớn.',
-                'price' => 399000,
-                'sale_price' => 299000,
-                'level' => 'intermediate',
-                'status' => 1,
-                'category_slugs' => ['co-so-du-lieu'],
-            ],
-            [
-                'name' => 'Kubernetes & Container Orchestration',
-                'description' => 'Triển khai và quản lý ứng dụng container hóa với Kubernetes: Pod, Deployment, Service, Ingress, ConfigMap, Secret và Helm chart. Thực hành trên cluster thực tế.',
-                'price' => 799000,
-                'sale_price' => 599000,
-                'level' => 'advanced',
-                'status' => 1,
-                'category_slugs' => ['devops-cloud'],
-            ],
-            [
-                'name' => 'Deep Learning & Neural Networks',
-                'description' => 'Xây dựng mạng neural từ đầu với Python và TensorFlow/Keras. Học CNN, RNN, LSTM, Transformer và ứng dụng trong nhận diện ảnh, xử lý ngôn ngữ tự nhiên.',
-                'price' => 899000,
-                'sale_price' => 699000,
-                'level' => 'advanced',
-                'status' => 1,
-                'category_slugs' => ['machine-learning', 'data-science'],
-            ],
-            [
-                'name' => 'iOS Development với Swift & SwiftUI',
-                'description' => 'Phát triển ứng dụng iOS native với Swift và SwiftUI. Học data binding, navigation, networking, CoreData, notifications và submit lên App Store.',
-                'price' => 749000,
-                'sale_price' => null,
-                'level' => 'intermediate',
-                'status' => 1,
-                'category_slugs' => ['mobile-development'],
-            ],
-            [
-                'name' => 'Kỹ Năng Thuyết Trình & Public Speaking',
-                'description' => 'Xây dựng kỹ năng thuyết trình chuyên nghiệp: cấu trúc bài nói, ngôn ngữ cơ thể, xử lý câu hỏi và vượt qua nỗi sợ đám đông. Thực hành qua video feedback.',
-                'price' => 299000,
-                'sale_price' => 199000,
-                'level' => 'beginner',
-                'status' => 1,
-                'category_slugs' => ['ky-nang-mem'],
-            ],
-            [
-                'name' => 'Photoshop & Thiết Kế Đồ Họa Cơ Bản',
-                'description' => 'Học Adobe Photoshop từ zero: công cụ cơ bản, chỉnh sửa ảnh, thiết kế banner, poster và mockup sản phẩm. Phù hợp cho người mới muốn học thiết kế.',
-                'price' => 349000,
-                'sale_price' => null,
-                'level' => 'beginner',
-                'status' => 0,
-                'category_slugs' => ['thiet-ke-do-hoa'],
-            ],
-            [
-                'name' => 'UI/UX Design với Figma',
-                'description' => 'Thiết kế giao diện và trải nghiệm người dùng với Figma: wireframe, prototype, design system và handoff cho developer. Xây dựng portfolio design chuyên nghiệp.',
-                'price' => 499000,
-                'sale_price' => 349000,
-                'level' => 'intermediate',
-                'status' => 1,
-                'category_slugs' => ['thiet-ke-do-hoa'],
+                'teacher_slug' => 'nguyen-van-an',
             ],
             [
                 'name' => 'Spring Boot & Java Backend',
                 'description' => 'Xây dựng backend enterprise với Spring Boot, Spring Security, JPA/Hibernate và MySQL. Triển khai REST API, JWT auth, microservices cơ bản và Docker.',
-                'price' => 699000,
-                'sale_price' => 499000,
-                'level' => 'intermediate',
-                'status' => 1,
+                'price' => 699000, 'sale_price' => 499000, 'level' => 'intermediate', 'status' => 1,
                 'category_slugs' => ['web-development'],
+                'teacher_slug' => 'nguyen-van-an',
+            ],
+            [
+                'name' => 'Git & GitHub Cho Lập Trình Viên',
+                'description' => 'Nắm vững Git workflow: branching, merging, rebasing, conflict resolution, pull request và code review. Tích hợp CI/CD cơ bản với GitHub Actions. Kỹ năng thiết yếu cho mọi developer.',
+                'price' => 199000, 'sale_price' => null, 'level' => 'beginner', 'status' => 1,
+                'category_slugs' => ['devops-cloud'],
+                'teacher_slug' => 'nguyen-van-an',
+            ],
+            // ── Database — Đặng Thị Giang ──
+            [
+                'name' => 'MySQL Nâng Cao & Tối Ưu Query',
+                'description' => 'Nắm vững thiết kế database chuẩn, normalization, indexing chiến lược, query optimization và stored procedures. Thực hành với MySQL 8.0 trên dữ liệu triệu record thực tế.',
+                'price' => 349000, 'sale_price' => 249000, 'level' => 'advanced', 'status' => 1,
+                'category_slugs' => ['co-so-du-lieu'],
+                'teacher_slug' => 'dang-thi-giang',
+            ],
+            [
+                'name' => 'PostgreSQL & Thiết Kế Database',
+                'description' => 'Học PostgreSQL từ cơ bản đến nâng cao: DDL/DML, joins, indexing, partitioning, full-text search và JSON support. Thiết kế schema chuẩn cho hệ thống lớn.',
+                'price' => 399000, 'sale_price' => 299000, 'level' => 'intermediate', 'status' => 1,
+                'category_slugs' => ['co-so-du-lieu'],
+                'teacher_slug' => 'dang-thi-giang',
+            ],
+            // ── Mobile — Phạm Hồng Đức ──
+            [
+                'name' => 'Flutter & Dart Từ Zero Đến Hero',
+                'description' => 'Học Flutter và Dart để xây dựng ứng dụng đa nền tảng iOS & Android. Bao gồm state management với Bloc/Provider, kết nối API, local storage và publish lên store.',
+                'price' => 699000, 'sale_price' => 499000, 'level' => 'beginner', 'status' => 1,
+                'category_slugs' => ['flutter', 'mobile-development'],
+                'teacher_slug' => 'pham-hong-duc',
+            ],
+            [
+                'name' => 'React Native Thực Chiến 2025',
+                'description' => 'Phát triển app mobile cross-platform với React Native và Expo. Học navigation, camera, push notification, payment integration và CI/CD cho mobile.',
+                'price' => 599000, 'sale_price' => null, 'level' => 'intermediate', 'status' => 1,
+                'category_slugs' => ['react-native', 'mobile-development'],
+                'teacher_slug' => 'pham-hong-duc',
+            ],
+            [
+                'name' => 'iOS Development với Swift & SwiftUI',
+                'description' => 'Phát triển ứng dụng iOS native với Swift và SwiftUI. Học data binding, navigation, networking, CoreData, notifications và submit lên App Store.',
+                'price' => 749000, 'sale_price' => null, 'level' => 'intermediate', 'status' => 1,
+                'category_slugs' => ['mobile-development'],
+                'teacher_slug' => 'pham-hong-duc',
+            ],
+            // ── DevOps — Vũ Đình Phú ──
+            [
+                'name' => 'Docker & DevOps Cho Developer',
+                'description' => 'Học Docker, Docker Compose, CI/CD với GitHub Actions và GitLab CI. Deploy ứng dụng lên VPS với Nginx reverse proxy, SSL và monitoring. Nền tảng DevOps thiết yếu cho mọi developer.',
+                'price' => 450000, 'sale_price' => 350000, 'level' => 'advanced', 'status' => 1,
+                'category_slugs' => ['devops-cloud'],
+                'teacher_slug' => 'vu-dinh-phu',
+            ],
+            [
+                'name' => 'Kubernetes & Container Orchestration',
+                'description' => 'Triển khai và quản lý ứng dụng container hóa với Kubernetes: Pod, Deployment, Service, Ingress, ConfigMap, Secret và Helm chart. Thực hành trên cluster thực tế.',
+                'price' => 799000, 'sale_price' => 599000, 'level' => 'advanced', 'status' => 1,
+                'category_slugs' => ['devops-cloud'],
+                'teacher_slug' => 'vu-dinh-phu',
+            ],
+            // ── AI / Data — Đặng Thị Giang ──
+            [
+                'name' => 'Python & Machine Learning Cơ Bản',
+                'description' => 'Nhập môn Python và Machine Learning. Sử dụng NumPy, Pandas, Matplotlib để phân tích dữ liệu. Xây dựng model với Scikit-learn và deploy API dự đoán đầu tiên của bạn.',
+                'price' => 699000, 'sale_price' => 499000, 'level' => 'beginner', 'status' => 1,
+                'category_slugs' => ['python', 'machine-learning', 'data-science'],
+                'teacher_slug' => 'dang-thi-giang',
+            ],
+            [
+                'name' => 'Deep Learning & Neural Networks',
+                'description' => 'Xây dựng mạng neural từ đầu với Python và TensorFlow/Keras. Học CNN, RNN, LSTM, Transformer và ứng dụng trong nhận diện ảnh, xử lý ngôn ngữ tự nhiên.',
+                'price' => 899000, 'sale_price' => 699000, 'level' => 'advanced', 'status' => 1,
+                'category_slugs' => ['machine-learning', 'data-science'],
+                'teacher_slug' => 'dang-thi-giang',
+            ],
+            // ── Languages — Hoàng Thị Em ──
+            [
+                'name' => 'IELTS 7.0 Toàn Diện 4 Kỹ Năng',
+                'description' => 'Lộ trình học IELTS bài bản từ band 5.0 lên 7.0+. Bao gồm Listening, Reading, Writing Task 1 & 2, Speaking. Kèm 500+ đề thi thử và bộ từ vựng học thuật IELTS chuyên sâu.',
+                'price' => 899000, 'sale_price' => 699000, 'level' => 'intermediate', 'status' => 1,
+                'category_slugs' => ['tieng-anh'],
+                'teacher_slug' => 'hoang-thi-em',
+            ],
+            [
+                'name' => 'Tiếng Anh Giao Tiếp Văn Phòng',
+                'description' => 'Học tiếng Anh thực tế cho môi trường công sở: email chuyên nghiệp, meeting, thuyết trình và đàm phán. Tập trung phát âm chuẩn và phản xạ giao tiếp tự nhiên.',
+                'price' => 399000, 'sale_price' => null, 'level' => 'beginner', 'status' => 1,
+                'category_slugs' => ['tieng-anh'],
+                'teacher_slug' => 'hoang-thi-em',
+            ],
+            [
+                'name' => 'Tiếng Nhật N5-N4 Cho Người Mới Bắt Đầu',
+                'description' => 'Học tiếng Nhật từ zero: Hiragana, Katakana, Kanji N5, ngữ pháp và hội thoại cơ bản. Luyện thi JLPT N5 và N4 với bộ đề thi thử đầy đủ và giải thích chi tiết.',
+                'price' => 499000, 'sale_price' => 349000, 'level' => 'beginner', 'status' => 1,
+                'category_slugs' => ['tieng-nhat'],
+                'teacher_slug' => 'hoang-thi-em',
+            ],
+            [
+                'name' => 'Tiếng Hàn TOPIK I - Sơ Cấp',
+                'description' => 'Học tiếng Hàn từ bảng chữ cái Hangul đến TOPIK I level 1-2. Bao gồm phát âm chuẩn, từ vựng 1000 từ cơ bản, ngữ pháp và luyện đề thi TOPIK I thực tế.',
+                'price' => 449000, 'sale_price' => null, 'level' => 'beginner', 'status' => 1,
+                'category_slugs' => ['tieng-han'],
+                'teacher_slug' => 'hoang-thi-em',
+            ],
+            // ── Soft Skills — Lê Minh Cường ──
+            [
+                'name' => 'Kỹ Năng Thuyết Trình & Public Speaking',
+                'description' => 'Xây dựng kỹ năng thuyết trình chuyên nghiệp: cấu trúc bài nói, ngôn ngữ cơ thể, xử lý câu hỏi và vượt qua nỗi sợ đám đông. Thực hành qua video feedback.',
+                'price' => 299000, 'sale_price' => 199000, 'level' => 'beginner', 'status' => 1,
+                'category_slugs' => ['ky-nang-mem'],
+                'teacher_slug' => 'le-minh-cuong',
+            ],
+            // ── Design — Trần Thị Bình ──
+            [
+                'name' => 'Photoshop & Thiết Kế Đồ Họa Cơ Bản',
+                'description' => 'Học Adobe Photoshop từ zero: công cụ cơ bản, chỉnh sửa ảnh, thiết kế banner, poster và mockup sản phẩm. Phù hợp cho người mới muốn học thiết kế.',
+                'price' => 349000, 'sale_price' => null, 'level' => 'beginner', 'status' => 0,
+                'category_slugs' => ['thiet-ke-do-hoa'],
+                'teacher_slug' => 'tran-thi-binh',
+            ],
+            [
+                'name' => 'UI/UX Design với Figma',
+                'description' => 'Thiết kế giao diện và trải nghiệp người dùng với Figma: wireframe, prototype, design system và handoff cho developer. Xây dựng portfolio design chuyên nghiệp.',
+                'price' => 499000, 'sale_price' => 349000, 'level' => 'intermediate', 'status' => 1,
+                'category_slugs' => ['thiet-ke-do-hoa'],
+                'teacher_slug' => 'tran-thi-binh',
             ],
         ];
     }
