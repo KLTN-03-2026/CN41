@@ -240,5 +240,22 @@ class VnpayService
                 Course::where('id', $item->course_id)->increment('total_students');
             }
         }
+
+        // Auto-cancel các pending/failed orders khác chứa cùng courses (student đã sở hữu rồi)
+        $courseIds = $order->items->pluck('course_id')->toArray();
+        if (! empty($courseIds)) {
+            $siblingIds = \Modules\Payment\Models\OrderItem::whereIn('course_id', $courseIds)
+                ->whereHas('order', fn ($q) => $q
+                    ->where('student_id', $order->student_id)
+                    ->whereIn('status', ['pending', 'failed'])
+                    ->where('id', '!=', $order->id)
+                )
+                ->pluck('order_id')
+                ->unique();
+
+            if ($siblingIds->isNotEmpty()) {
+                Order::whereIn('id', $siblingIds)->update(['status' => 'cancelled']);
+            }
+        }
     }
 }

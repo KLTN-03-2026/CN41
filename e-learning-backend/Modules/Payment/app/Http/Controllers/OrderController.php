@@ -6,12 +6,14 @@ use App\Http\Controllers\Controller;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Modules\Payment\Http\Requests\CreateOrderRequest;
 use Modules\Payment\Http\Requests\MyOrdersRequest;
 use Modules\Payment\Http\Resources\OrderResource;
 use Modules\Payment\Repositories\OrderRepositoryInterface;
 use Modules\Payment\Services\OrderService;
 use Modules\Payment\Services\VnpayService;
+use Modules\Payment\Services\ZalopayService;
 
 class OrderController extends Controller
 {
@@ -21,15 +23,19 @@ class OrderController extends Controller
         private OrderRepositoryInterface $repository,
         private OrderService $orderService,
         private VnpayService $vnpayService,
+        private ZalopayService $zalopayService,
     ) {}
 
     public function store(CreateOrderRequest $request): JsonResponse
     {
+        $paymentMethod = $request->input('payment_method', 'vnpay');
+
         try {
             $result = $this->orderService->createOrder(
                 auth('api')->id(),
                 $request->validated()['course_ids'],
-                $request->input('coupon_code')
+                $request->input('coupon_code'),
+                $paymentMethod
             );
         } catch (\Exception $e) {
             return $this->error($e->getMessage(), $e->getCode() ?: 422);
@@ -46,7 +52,14 @@ class OrderController extends Controller
             ], 'Đơn hàng miễn phí đã được xử lý. Bạn có thể vào học ngay!', 201);
         }
 
-        $paymentUrl = $this->vnpayService->createPaymentUrl($order, $request->ip());
+        try {
+            $paymentUrl = $paymentMethod === 'zalopay'
+                ? $this->zalopayService->createPaymentUrl($order, $request->ip())
+                : $this->vnpayService->createPaymentUrl($order, $request->ip());
+        } catch (\Exception $e) {
+            return $this->error($e->getMessage(), 503);
+        }
+
         $order->load(['items.course']);
 
         return $this->success([
@@ -97,9 +110,29 @@ class OrderController extends Controller
             return $this->error('Chỉ đơn hàng đang chờ hoặc thất bại mới có thể thanh toán lại.', 422);
         }
 
+        // Nếu student đã sở hữu tất cả courses → auto-cancel đơn thay vì retry
+        $order->load('items');
+        $alreadyOwned = $order->items->every(fn ($item) => DB::table('students_course')
+            ->where('student_id', $order->student_id)
+            ->where('course_id', $item->course_id)
+            ->exists()
+        );
+
+        if ($alreadyOwned) {
+            $order->update(['status' => 'cancelled']);
+
+            return $this->error('Bạn đã sở hữu tất cả khóa học trong đơn hàng này. Đơn hàng đã được hủy tự động.', 422);
+        }
+
         $this->orderService->retryPayment($order);
 
-        $paymentUrl = $this->vnpayService->createPaymentUrl($order, $request->ip());
+        try {
+            $paymentUrl = $order->payment_method === 'zalopay'
+                ? $this->zalopayService->createPaymentUrl($order, $request->ip())
+                : $this->vnpayService->createPaymentUrl($order, $request->ip());
+        } catch (\Exception $e) {
+            return $this->error($e->getMessage(), 503);
+        }
 
         return $this->success([
             'order_code' => $order->order_code,

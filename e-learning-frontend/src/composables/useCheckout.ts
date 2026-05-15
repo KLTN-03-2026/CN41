@@ -100,7 +100,14 @@ export function useCheckout() {
     isProcessing.value = true
     errorMessage.value = ''
     try {
-      const payload: Record<string, unknown> = { course_ids: cartStore.courseIds }
+      const payload: {
+        course_ids: number[]
+        coupon_code?: string
+        payment_method?: string
+      } = {
+        course_ids: cartStore.courseIds,
+        payment_method: paymentMethod.value,
+      }
       if (appliedCoupon.value) {
         payload.coupon_code = appliedCoupon.value.code
       }

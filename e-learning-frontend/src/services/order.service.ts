@@ -5,7 +5,11 @@ import type { ApiResponse, PaginatedResponse, Order } from '@/types'
 export const orderService = {
   // ── Student ─────────────────────────────────────────────
   /** POST /orders — Tạo đơn hàng mới → nhận payment_url */
-  createOrder: (data: Record<string, unknown>): Promise<AxiosResponse<ApiResponse<{ payment_url: string | null; order: { order_code: string } }>>> =>
+  createOrder: (data: {
+    course_ids: number[]
+    coupon_code?: string
+    payment_method?: string
+  }): Promise<AxiosResponse<ApiResponse<{ payment_url: string | null; order: { order_code: string } }>>> =>
     http.post('/orders', data),
 
   /** GET /my-orders — Lịch sử đơn hàng (paginated) */

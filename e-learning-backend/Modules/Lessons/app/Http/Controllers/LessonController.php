@@ -278,11 +278,16 @@ class LessonController extends Controller
             return $this->error('Bài học không tồn tại.', 404);
         }
 
+        $token = $request->bearerToken();
+        $videoUrl = $lesson->video
+            ? url('api/v1/media/'.$lesson->video->id.'/stream').($token ? '?token='.urlencode($token) : '')
+            : null;
+
         return $this->success([
             'id' => $lesson->id,
             'title' => $lesson->title,
             'type' => $lesson->type,
-            'video_url' => $lesson->video ? $lesson->video->url : null,
+            'video_url' => $videoUrl,
             'document_url' => $lesson->document ? $lesson->document->url : null,
             'content' => $lesson->content,
             'course_name' => $course->name,

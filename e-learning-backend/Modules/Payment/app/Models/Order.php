@@ -81,4 +81,9 @@ class Order extends Model
     {
         return $this->status === 'failed';
     }
+
+    public function isCancelled(): bool
+    {
+        return $this->status === 'cancelled';
+    }
 }
