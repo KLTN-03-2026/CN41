@@ -39,6 +39,10 @@ class QuizDatabaseSeeder extends Seeder
                 continue;
             }
 
+            if (Quiz::where('lesson_id', $lesson->id)->exists()) {
+                continue;
+            }
+
             // Mark lesson as quiz type
             $lesson->update(['type' => 'quiz']);
 
