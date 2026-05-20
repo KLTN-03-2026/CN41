@@ -24,4 +24,12 @@ export const commissionService = {
     http.get('/teacher/payouts', { params }),
   requestPayout: (data: { amount: number; teacher_note?: string }) =>
     http.post('/teacher/payouts', data),
+  getTeacherDashboard: () =>
+    http.get('/teacher/dashboard'),
+  getTeacherCourses: (params: Record<string, unknown>) =>
+    http.get('/teacher/courses', { params }),
+  getTeacherProfile: () =>
+    http.get('/teacher/profile'),
+  updateTeacherProfile: (data: Record<string, unknown>) =>
+    http.patch('/teacher/profile', data),
 }
