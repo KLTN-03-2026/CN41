@@ -4,8 +4,10 @@ namespace Modules\Commission\Http\Controllers\Teacher;
 
 use App\Http\Controllers\Controller;
 use App\Traits\ApiResponse;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Modules\Commission\Http\Requests\StorePayoutRequest;
 use Modules\Commission\Http\Resources\TeacherEarningResource;
 use Modules\Commission\Http\Resources\TeacherPayoutResource;
@@ -30,17 +32,17 @@ class EarningsController extends Controller
 
         return $this->success([
             'balance' => [
-                'available'      => $this->repository->getAvailableBalance($teacher->id),
-                'total_earned'   => $this->repository->getTotalEarned($teacher->id),
-                'total_paid'     => $this->repository->getTotalPaid($teacher->id),
+                'available' => $this->repository->getAvailableBalance($teacher->id),
+                'total_earned' => $this->repository->getTotalEarned($teacher->id),
+                'total_paid' => $this->repository->getTotalPaid($teacher->id),
                 'pending_payout' => $this->repository->getPendingPayoutAmount($teacher->id),
             ],
-            'earnings'   => $earnings->items(),
+            'earnings' => $earnings->items(),
             'pagination' => [
                 'current_page' => $earnings->currentPage(),
-                'last_page'    => $earnings->lastPage(),
-                'per_page'     => $earnings->perPage(),
-                'total'        => $earnings->total(),
+                'last_page' => $earnings->lastPage(),
+                'per_page' => $earnings->perPage(),
+                'total' => $earnings->total(),
             ],
         ]);
     }
@@ -61,21 +63,23 @@ class EarningsController extends Controller
     {
         $user = auth('admin')->user();
         $teacher = Teachers::where('user_id', $user->id)->firstOrFail();
-        $available = $this->repository->getAvailableBalance($teacher->id);
 
-        if ($request->amount > $available) {
-            return $this->error(
-                'Số dư khả dụng không đủ. Hiện có: ' . number_format($available) . ' VNĐ.',
-                422
-            );
-        }
+        $payout = DB::transaction(function () use ($request, $teacher) {
+            $available = $this->repository->getAvailableBalance($teacher->id);
 
-        $payout = TeacherPayout::create([
-            'teacher_id'   => $teacher->id,
-            'amount'       => $request->amount,
-            'teacher_note' => $request->teacher_note,
-            'status'       => 'pending',
-        ]);
+            if ($request->amount > $available) {
+                throw new HttpResponseException(
+                    $this->error('Số dư khả dụng không đủ. Hiện có: '.number_format($available).' VNĐ.', 422)
+                );
+            }
+
+            return TeacherPayout::create([
+                'teacher_id' => $teacher->id,
+                'amount' => $request->amount,
+                'teacher_note' => $request->teacher_note,
+                'status' => 'pending',
+            ]);
+        });
 
         return $this->success(new TeacherPayoutResource($payout), 'Yêu cầu rút tiền đã được gửi.', 201);
     }
