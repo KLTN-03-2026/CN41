@@ -1,0 +1,11 @@
+{
+    "name": "Commission",
+    "alias": "commission",
+    "description": "Teacher commission and payout management",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\Commission\\Providers\\CommissionServiceProvider"
+    ],
+    "files": []
+}
