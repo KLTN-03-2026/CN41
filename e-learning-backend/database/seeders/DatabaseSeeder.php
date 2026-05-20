@@ -15,6 +15,7 @@ use Modules\Quiz\Database\Seeders\QuizDatabaseSeeder;
 use Modules\Students\Database\Seeders\StudentsDatabaseSeeder;
 use Modules\Teachers\Database\Seeders\TeachersDatabaseSeeder;
 use Modules\Upload\Database\Seeders\MediaFileSeeder;
+use Modules\Commission\Database\Seeders\CommissionSettingSeeder;
 use Modules\Users\Database\Seeders\AdminUserSeeder;
 use Modules\Users\Database\Seeders\RolePermissionSeeder;
 
@@ -64,6 +65,9 @@ class DatabaseSeeder extends Seeder
 
             // 13. Blog posts
             PostsDatabaseSeeder::class,
+
+            // 14. Commission settings (singleton — default 70% teacher rate)
+            CommissionSettingSeeder::class,
         ]);
     }
 }
