@@ -301,17 +301,6 @@ const rawMenuGroups: MenuGroup[] = [
       },
     ],
   },
-  {
-    title: 'Thu nhập',
-    showOnlyForRoles: ['teacher'],
-    items: [
-      {
-        icon: BarChartIcon,
-        name: 'Thu nhập của tôi',
-        path: '/admin/teacher/earnings',
-      },
-    ],
-  },
 ]
 
 import { useAdminAuthStore } from '@/stores/adminAuth.store'

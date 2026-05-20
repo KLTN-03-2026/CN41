@@ -285,6 +285,11 @@ const ADMIN_ROUTES = [
 ]
 
 function getFirstAccessibleRoute(): string {
+  // Teacher role → direct to teacher portal
+  if (adminStore.user?.roles?.includes('teacher')) {
+    return '/teacher/dashboard'
+  }
+  // Admin/super-admin → first accessible admin route
   for (const route of ADMIN_ROUTES) {
     if (adminStore.hasPermission(route.permission)) return route.path
   }

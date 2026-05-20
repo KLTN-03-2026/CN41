@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import AdminLayout from '@/layouts/AdminLayout.vue'
+import TeacherLayout from '@/layouts/TeacherLayout.vue'
 import ClientLayout from '@/layouts/ClientLayout.vue'
 import NProgress from 'nprogress'
 import 'nprogress/nprogress.css'
@@ -56,12 +57,35 @@ const router = createRouter({
           component: () => import('@/views/admin/CommissionSettingsPage.vue'),
           meta: { requiresAuth: true, guard: 'admin' },
         },
-        // Teacher portal
+      ],
+    },
+
+    // ── TEACHER PORTAL ─────────────────────────────────────
+    {
+      path: '/teacher',
+      component: TeacherLayout,
+      meta: { requiresAuth: true, guard: 'admin', role: 'teacher' },
+      children: [
+        { path: '', redirect: '/teacher/dashboard' },
         {
-          path: 'teacher/earnings',
+          path: 'dashboard',
+          name: 'teacher.dashboard',
+          component: () => import('@/views/teacher/TeacherDashboardPage.vue'),
+        },
+        {
+          path: 'courses',
+          name: 'teacher.courses',
+          component: () => import('@/views/teacher/TeacherCoursesPage.vue'),
+        },
+        {
+          path: 'earnings',
           name: 'teacher.earnings',
           component: () => import('@/views/teacher/EarningsPage.vue'),
-          meta: { requiresAuth: true, guard: 'admin' },
+        },
+        {
+          path: 'profile',
+          name: 'teacher.profile',
+          component: () => import('@/views/teacher/TeacherProfilePage.vue'),
         },
       ],
     },
@@ -233,6 +257,14 @@ router.beforeEach(async (to) => {
   // Permission guard — chỉ áp dụng sau khi đã xác nhận đăng nhập
   if (adminStore && adminStore.isLoggedIn && to.meta.permission) {
     if (!adminStore.hasPermission(to.meta.permission)) {
+      return '/403'
+    }
+  }
+
+  // Role guard — required role on top of auth
+  if (adminStore && adminStore.isLoggedIn && to.meta.role) {
+    const userRoles = adminStore.user?.roles || []
+    if (!userRoles.includes(to.meta.role)) {
       return '/403'
     }
   }
