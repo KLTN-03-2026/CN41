@@ -152,6 +152,31 @@ const PostService = {
   storeComment(postId: number, content: string) {
     return axios.post(`/posts/${postId}/comments`, { content })
   },
+
+  // Admin — approve/reject
+  approvePost(id: number) {
+    return axios.patch(`/admin/posts/${id}/approve`)
+  },
+  rejectPost(id: number, data: { rejection_reason: string }) {
+    return axios.patch(`/admin/posts/${id}/reject`, data)
+  },
+
+  // Teacher portal — own posts
+  getTeacherPosts(params?: Record<string, unknown>) {
+    return axios.get('/teacher/posts', { params })
+  },
+  createTeacherPost(data: Record<string, unknown>) {
+    return axios.post('/teacher/posts', data)
+  },
+  getTeacherPost(id: number | string) {
+    return axios.get(`/teacher/posts/${id}`)
+  },
+  updateTeacherPost(id: number | string, data: Record<string, unknown>) {
+    return axios.patch(`/teacher/posts/${id}`, data)
+  },
+  deleteTeacherPost(id: number) {
+    return axios.delete(`/teacher/posts/${id}`)
+  },
 }
 
 export default PostService
