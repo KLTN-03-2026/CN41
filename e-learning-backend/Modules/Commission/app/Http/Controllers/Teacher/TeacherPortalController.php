@@ -22,13 +22,29 @@ class TeacherPortalController extends Controller
         return Teachers::where('user_id', auth('admin')->id())->firstOrFail();
     }
 
+    private function profileData(Teachers $teacher): array
+    {
+        return [
+            'id' => $teacher->id,
+            'name' => $teacher->name,
+            'description' => $teacher->description,
+            'image' => $teacher->image ? asset('storage/'.$teacher->image) : null,
+            'bank_name' => $teacher->bank_name,
+            'bank_account_number' => $teacher->bank_account_number,
+            'bank_account_name' => $teacher->bank_account_name,
+        ];
+    }
+
     public function dashboard(): JsonResponse
     {
         $teacher = $this->getTeacher();
+        $courseStats = Course::where('teacher_id', $teacher->id)
+            ->selectRaw('COUNT(*) as total_courses, COALESCE(SUM(total_students), 0) as total_students')
+            ->first();
 
         return $this->success([
-            'total_courses' => Course::where('teacher_id', $teacher->id)->count(),
-            'total_students' => (int) Course::where('teacher_id', $teacher->id)->sum('total_students'),
+            'total_courses' => (int) $courseStats->total_courses,
+            'total_students' => (int) $courseStats->total_students,
             'total_earned' => $this->repository->getTotalEarned($teacher->id),
             'available_balance' => $this->repository->getAvailableBalance($teacher->id),
         ]);
@@ -49,32 +65,15 @@ class TeacherPortalController extends Controller
 
     public function profile(): JsonResponse
     {
-        $teacher = $this->getTeacher();
-
-        return $this->success([
-            'id' => $teacher->id,
-            'name' => $teacher->name,
-            'description' => $teacher->description,
-            'image' => $teacher->image ? asset('storage/'.$teacher->image) : null,
-            'bank_name' => $teacher->bank_name,
-            'bank_account_number' => $teacher->bank_account_number,
-            'bank_account_name' => $teacher->bank_account_name,
-        ]);
+        return $this->success($this->profileData($this->getTeacher()));
     }
 
     public function updateProfile(UpdateTeacherProfileRequest $request): JsonResponse
     {
         $teacher = $this->getTeacher();
         $teacher->update($request->validated());
+        $teacher->refresh();
 
-        return $this->success([
-            'id' => $teacher->fresh()->id,
-            'name' => $teacher->fresh()->name,
-            'description' => $teacher->fresh()->description,
-            'image' => $teacher->fresh()->image ? asset('storage/'.$teacher->fresh()->image) : null,
-            'bank_name' => $teacher->fresh()->bank_name,
-            'bank_account_number' => $teacher->fresh()->bank_account_number,
-            'bank_account_name' => $teacher->fresh()->bank_account_name,
-        ], 'Cập nhật hồ sơ thành công.');
+        return $this->success($this->profileData($teacher), 'Cập nhật hồ sơ thành công.');
     }
 }
