@@ -35,6 +35,8 @@ export function useTeacherPosts() {
       const res = await PostService.getTeacherPosts(params)
       posts.value = res.data.data
       pagination.value = res.data.pagination
+    } catch {
+      toast.error('Không thể tải danh sách bài viết.')
     } finally {
       loading.value = false
     }

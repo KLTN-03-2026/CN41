@@ -69,6 +69,8 @@ export function useTeacherPostForm() {
         form.post_category_id = post.category?.id ?? null
         form.tag_ids = post.tags?.map((t: Tag) => t.id) ?? []
       }
+    } catch {
+      toast.error('Không thể tải thông tin bài viết.')
     } finally {
       loading.value = false
     }
