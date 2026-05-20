@@ -274,7 +274,10 @@ router.beforeEach(async (to) => {
     const isAdminLoggedIn = adminStore ? adminStore.isLoggedIn : !!adminToken
     const isStudentLoggedIn = studentStore ? studentStore.isLoggedIn : !!studentToken
 
-    if (to.meta.guard === 'admin' && isAdminLoggedIn) return '/admin/dashboard'
+    if (to.meta.guard === 'admin' && isAdminLoggedIn) {
+      const userRoles = adminStore?.user?.roles || []
+      return userRoles.includes('teacher') ? '/teacher/dashboard' : '/admin/dashboard'
+    }
 
     if (to.meta.guard === 'student') {
       if (isStudentLoggedIn) return '/'
