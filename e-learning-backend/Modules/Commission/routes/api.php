@@ -5,6 +5,7 @@ use Modules\Commission\Http\Controllers\Admin\CommissionSettingsController;
 use Modules\Commission\Http\Controllers\Admin\PayoutController;
 use Modules\Commission\Http\Controllers\Admin\TeacherEarningsController;
 use Modules\Commission\Http\Controllers\Teacher\EarningsController;
+use Modules\Commission\Http\Controllers\Teacher\TeacherPortalController;
 
 Route::middleware(['auth:admin'])->prefix('admin')->group(function () {
     Route::get('commission-settings', [CommissionSettingsController::class, 'show']);
@@ -23,4 +24,9 @@ Route::middleware(['auth:admin', 'role:teacher'])->prefix('teacher')->group(func
     Route::get('earnings', [EarningsController::class, 'index']);
     Route::get('payouts', [EarningsController::class, 'myPayouts']);
     Route::post('payouts', [EarningsController::class, 'requestPayout']);
+
+    Route::get('dashboard', [TeacherPortalController::class, 'dashboard']);
+    Route::get('courses', [TeacherPortalController::class, 'courses']);
+    Route::get('profile', [TeacherPortalController::class, 'profile']);
+    Route::patch('profile', [TeacherPortalController::class, 'updateProfile']);
 });
