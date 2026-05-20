@@ -2,6 +2,7 @@
 
 namespace Modules\Commission\Services;
 
+use Illuminate\Support\Facades\DB;
 use Modules\Commission\Models\CommissionSetting;
 use Modules\Commission\Models\TeacherEarning;
 use Modules\Commission\Repositories\CommissionRepositoryInterface;
@@ -15,41 +16,45 @@ class CommissionService
     {
         $rate = CommissionSetting::current()->teacher_rate;
 
-        foreach ($order->items as $item) {
-            $teacher = $item->course?->teacher;
-            if (! $teacher) {
-                continue;
-            }
+        DB::transaction(function () use ($order, $rate) {
+            foreach ($order->items as $item) {
+                $teacher = $item->course?->teacher;
+                if (! $teacher) {
+                    continue;
+                }
 
-            TeacherEarning::create([
-                'teacher_id'      => $teacher->id,
-                'order_item_id'   => $item->id,
-                'type'            => 'credit',
-                'amount'          => round((float) $item->final_price * (float) $rate / 100, 2),
-                'commission_rate' => $rate,
-                'description'     => 'Hoa hồng từ: ' . $item->course->name,
-            ]);
-        }
+                TeacherEarning::create([
+                    'teacher_id' => $teacher->id,
+                    'order_item_id' => $item->id,
+                    'type' => 'credit',
+                    'amount' => round((float) $item->final_price * (float) $rate / 100, 2),
+                    'commission_rate' => $rate,
+                    'description' => 'Hoa hồng từ: '.($item->course?->name ?? 'Khóa học'),
+                ]);
+            }
+        });
     }
 
     public function reverseEarnings(Order $order): void
     {
-        foreach ($order->items as $item) {
-            $original = TeacherEarning::where('order_item_id', $item->id)->where('type', 'credit')->first();
+        DB::transaction(function () use ($order) {
+            foreach ($order->items as $item) {
+                $original = TeacherEarning::where('order_item_id', $item->id)->where('type', 'credit')->first();
 
-            if (! $original) {
-                continue;
+                if (! $original) {
+                    continue;
+                }
+
+                TeacherEarning::create([
+                    'teacher_id' => $original->teacher_id,
+                    'order_item_id' => $item->id,
+                    'type' => 'debit',
+                    'amount' => $original->amount,
+                    'commission_rate' => $original->commission_rate,
+                    'description' => 'Hoàn tiền: '.($item->course?->name ?? 'Khóa học'),
+                ]);
             }
-
-            TeacherEarning::create([
-                'teacher_id'      => $original->teacher_id,
-                'order_item_id'   => $item->id,
-                'type'            => 'debit',
-                'amount'          => $original->amount,
-                'commission_rate' => $original->commission_rate,
-                'description'     => 'Hoàn tiền: ' . ($item->course->name ?? 'Khóa học'),
-            ]);
-        }
+        });
     }
 
     public function getAvailableBalance(int $teacherId): float

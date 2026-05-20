@@ -45,6 +45,7 @@ class CommissionRepository implements CommissionRepositoryInterface
     {
         // Correlated subqueries avoid cartesian product from joining both tables simultaneously
         return DB::table('teachers')
+            ->whereNull('teachers.deleted_at')
             ->select([
                 'teachers.id',
                 'teachers.name',

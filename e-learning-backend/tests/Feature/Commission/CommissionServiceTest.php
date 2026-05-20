@@ -5,6 +5,7 @@ namespace Tests\Feature\Commission;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Modules\Commission\Models\CommissionSetting;
 use Modules\Commission\Models\TeacherEarning;
+use Modules\Commission\Models\TeacherPayout;
 use Modules\Commission\Services\CommissionService;
 use Modules\Course\Models\Course;
 use Modules\Payment\Models\Order;
@@ -80,5 +81,39 @@ class CommissionServiceTest extends TestCase
         $balance = $this->service->getAvailableBalance($teacherId);
 
         $this->assertEquals(350000.0, $balance);
+    }
+
+    public function test_available_balance_cannot_go_below_zero(): void
+    {
+        CommissionSetting::create(['teacher_rate' => 70.00]);
+        $order = $this->makeOrder();
+        $teacherId = $order->items->first()->course->teacher->id;
+        $this->service->recordEarnings($order);
+
+        // Manually create a larger debit (simulating a scenario)
+        TeacherEarning::create([
+            'teacher_id' => $teacherId, 'type' => 'debit',
+            'amount' => 999999, 'commission_rate' => 70,
+        ]);
+
+        $balance = $this->service->getAvailableBalance($teacherId);
+
+        $this->assertEquals(0.0, $balance);
+    }
+
+    public function test_pending_payout_reduces_available_balance(): void
+    {
+        CommissionSetting::create(['teacher_rate' => 70.00]);
+        $order = $this->makeOrder();
+        $teacherId = $order->items->first()->course->teacher->id;
+        $this->service->recordEarnings($order); // credit 350000
+
+        TeacherPayout::create([
+            'teacher_id' => $teacherId, 'amount' => 100000, 'status' => 'pending',
+        ]);
+
+        $balance = $this->service->getAvailableBalance($teacherId);
+
+        $this->assertEquals(250000.0, $balance);
     }
 }
