@@ -26,6 +26,8 @@ export interface Post {
   is_published: boolean
   published_at?: string
   views: number
+  approval_status?: 'pending' | 'approved' | 'rejected'
+  rejection_reason?: string
   created_at: string
   updated_at: string
   author?: {

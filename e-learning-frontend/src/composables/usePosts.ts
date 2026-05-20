@@ -10,6 +10,7 @@ export function usePosts() {
   const search = ref('')
   const categoryFilter = ref('')
   const statusFilter = ref('')
+  const approvalStatusFilter = ref('')
   const pagination = reactive({
     current_page: 1,
     last_page: 1,
@@ -26,6 +27,7 @@ export function usePosts() {
         search: search.value || undefined,
         category_id: categoryFilter.value || undefined,
         is_published: statusFilter.value !== '' ? statusFilter.value : undefined,
+        approval_status: approvalStatusFilter.value || undefined,
       }
       const res = await PostService.getPosts(params)
       posts.value = res.data.data
@@ -54,6 +56,7 @@ export function usePosts() {
     search,
     categoryFilter,
     statusFilter,
+    approvalStatusFilter,
     pagination,
     fetchPosts,
     deletePost,
