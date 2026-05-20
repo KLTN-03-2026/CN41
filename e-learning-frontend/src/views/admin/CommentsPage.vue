@@ -142,6 +142,7 @@
                   <div class="flex items-center justify-end gap-1">
                     <button
                       v-if="!comment.is_approved"
+                      v-permission="'comments.delete'"
                       @click="approveComment(comment.id)"
                       class="p-1.5 rounded-lg hover:bg-green-50 text-green-600 transition-colors"
                       title="Duyệt"
@@ -157,6 +158,7 @@
                       </svg>
                     </button>
                     <button
+                      v-permission="'comments.delete'"
                       @click="deleteComment(comment.id)"
                       class="p-1.5 rounded-lg hover:bg-red-50 text-gray-500 hover:text-red-500 transition-colors"
                       title="Xoá"

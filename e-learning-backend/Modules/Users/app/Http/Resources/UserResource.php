@@ -15,10 +15,11 @@ class UserResource extends JsonResource
             'email' => $this->email,
             'avatar' => $this->avatar,
             'status' => $this->status,
+            'email_verified_at' => $this->email_verified_at?->toISOString(),
             'created_at' => $this->created_at?->toISOString(),
             'updated_at' => $this->updated_at?->toISOString(),
             'deleted_at' => $this->deleted_at?->toISOString(),
-            'roles' => $this->whenLoaded('roles', fn () => $this->roles->pluck('name')),
+            'roles' => $this->whenLoaded('roles', fn () => $this->roles->map(fn ($r) => ['id' => $r->id, 'name' => $r->name])),
             'permissions' => $this->whenLoaded('permissions', fn () => $this->permissions->pluck('name')),
         ];
     }

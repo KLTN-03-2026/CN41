@@ -107,15 +107,20 @@
             <div class="p-5">
               <!-- Giá -->
               <div class="mb-4">
-                <span v-if="course.sale_price" class="text-2xl font-bold text-blue-600">
-                  {{ formatCurrency(Number(course.sale_price)) }}
-                </span>
-                <span
-                  class="text-xl font-bold"
-                  :class="course.sale_price ? 'text-gray-400 line-through text-base ml-2' : 'text-blue-600'"
-                >
-                  {{ formatCurrency(Number(course.price)) }}
-                </span>
+                <template v-if="isFree">
+                  <span class="text-2xl font-bold text-green-600">Miễn phí</span>
+                </template>
+                <template v-else>
+                  <span v-if="course.sale_price && Number(course.sale_price) < Number(course.price)" class="text-2xl font-bold text-blue-600">
+                    {{ formatCurrency(Number(course.sale_price)) }}
+                  </span>
+                  <span
+                    class="text-xl font-bold"
+                    :class="(course.sale_price && Number(course.sale_price) < Number(course.price)) ? 'text-gray-400 line-through text-base ml-2' : 'text-blue-600'"
+                  >
+                    {{ formatCurrency(Number(course.price)) }}
+                  </span>
+                </template>
               </div>
 
               <!-- CTA -->
@@ -158,11 +163,11 @@
               </template>
 
             <!-- Danh mục -->
-              <div v-if="course.categories?.length" class="mt-4 pt-4 border-t border-gray-100">
+              <div v-if="leafCategories.length" class="mt-4 pt-4 border-t border-gray-100">
                 <p class="text-xs text-gray-500 mb-2">Danh mục</p>
                 <div class="flex flex-wrap gap-2">
                   <div
-                    v-for="cat in course.categories"
+                    v-for="cat in leafCategories"
                     :key="cat.id"
                     class="flex flex-wrap items-center gap-1 text-xs"
                   >
@@ -230,9 +235,24 @@ const relatedCourses = ref<Course[]>([])
 const relatedLoading = ref(false)
 
 const hasPreview = computed(() => {
-  return lessonData.value.sections.some(section => 
+  return lessonData.value.sections.some(section =>
     section.lessons.some((lesson) => lesson.is_preview)
   )
+})
+
+const isFree = computed(() => {
+  const c = course.value
+  if (!c) return false
+  const effective = (c.sale_price !== null && c.sale_price !== undefined)
+    ? Number(c.sale_price)
+    : Number(c.price)
+  return effective === 0
+})
+
+const leafCategories = computed(() => {
+  const cats = course.value?.categories ?? []
+  const ancestorIds = new Set(cats.flatMap(cat => (cat.ancestors ?? []).map(a => a.id)))
+  return cats.filter(cat => !ancestorIds.has(cat.id))
 })
 
 const courseFeatures: FeatureItem[] = [

@@ -70,13 +70,6 @@ class RolePermissionSeeder extends Seeder
             'quizzes.view', 'quizzes.create', 'quizzes.edit',
             'dashboard.view',
             'categories.view',
-            'users.view',
-            'tags.view',
-            'students.view',
-            'comments.view',
-            'comments.delete',
-            'posts.view',
-            'orders.view',
         ]);
     }
 }

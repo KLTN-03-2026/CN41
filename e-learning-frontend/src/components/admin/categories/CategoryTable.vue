@@ -82,6 +82,7 @@
             @toggle-expand="$emit('toggle-expand', $event)"
             @edit="$emit('edit', $event)"
             @delete="$emit('delete', $event)"
+            @add-child="$emit('add-child', $event)"
           />
         </tbody>
       </table>
@@ -138,6 +139,7 @@ defineEmits<{
   'toggle-expand': [id: number]
   edit: [cat: AdminCategory]
   delete: [cat: AdminCategory]
+  'add-child': [parentId: number]
   'page-change': [page: number]
 }>()
 </script>

@@ -155,6 +155,13 @@ export function useCategories() {
     showModal.value = true
   }
 
+  function openCreateChild(parentId: number) {
+    editingId.value = null
+    form.value = { ...defaultForm(), parent_id: parentId }
+    clearErrors()
+    showModal.value = true
+  }
+
   function openEdit(cat: AdminCategory) {
     editingId.value = cat.id
     form.value = {
@@ -387,6 +394,7 @@ export function useCategories() {
     form,
     autoSlug,
     openCreate,
+    openCreateChild,
     openEdit,
     closeModal,
     submitForm,

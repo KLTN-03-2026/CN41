@@ -34,7 +34,7 @@ export const categoryService = {
     id: number,
     data: Record<string, unknown>,
   ): Promise<AxiosResponse<ApiResponse<AdminCategory>>> =>
-    http.put(`/admin/categories/${id}`, data),
+    http.patch(`/admin/categories/${id}`, data),
 
   /** DELETE /admin/categories/{id} */
   destroy: (id: number): Promise<AxiosResponse<ApiResponse<null>>> =>

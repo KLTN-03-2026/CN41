@@ -199,13 +199,16 @@
                   </div>
                 </td>
                 <td class="px-4 py-3">
-                  <span
-                    v-if="u.roles && u.roles.length"
-                    :class="getRoleBadge(u.roles[0]?.name)"
-                    class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium"
-                  >
-                    {{ formatRole(u.roles[0]?.name) }}
-                  </span>
+                  <div v-if="u.roles && u.roles.length" class="flex flex-wrap gap-1">
+                    <span
+                      v-for="role in u.roles"
+                      :key="role.name"
+                      :class="getRoleBadge(role.name)"
+                      class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium"
+                    >
+                      {{ formatRole(role.name) }}
+                    </span>
+                  </div>
                   <span v-else class="text-xs text-gray-400">Không có</span>
                 </td>
                 <td class="px-4 py-3">

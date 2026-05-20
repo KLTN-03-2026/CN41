@@ -7,6 +7,7 @@
         <p class="text-sm text-gray-500 mt-0.5">Quản lý tin tức và nội dung blog</p>
       </div>
       <router-link
+        v-permission="'posts.create'"
         to="/admin/posts/create"
         class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-colors"
       >
@@ -149,6 +150,7 @@
                 <td class="px-4 py-3 text-right">
                   <div class="flex items-center justify-end gap-1">
                     <router-link
+                      v-permission="'posts.edit'"
                       :to="`/admin/posts/${post.id}/edit`"
                       class="p-1.5 rounded-lg hover:bg-gray-100 text-gray-500 transition-colors"
                       title="Sửa"
@@ -166,6 +168,7 @@
                       </svg>
                     </router-link>
                     <button
+                      v-permission="'posts.delete'"
                       @click="deletePost(post.id)"
                       class="p-1.5 rounded-lg hover:bg-red-50 text-gray-500 hover:text-red-500 transition-colors"
                       title="Xoá"

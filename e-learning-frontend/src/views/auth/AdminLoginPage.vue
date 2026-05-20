@@ -271,13 +271,34 @@ const schema = toTypedSchema(
   }),
 )
 
+const ADMIN_ROUTES = [
+  { path: '/admin/dashboard', permission: 'dashboard.view' },
+  { path: '/admin/courses', permission: 'courses.view' },
+  { path: '/admin/orders', permission: 'orders.view' },
+  { path: '/admin/students', permission: 'students.view' },
+  { path: '/admin/teachers', permission: 'users.view' },
+  { path: '/admin/categories', permission: 'categories.view' },
+  { path: '/admin/posts', permission: 'posts.view' },
+  { path: '/admin/coupons', permission: 'coupons.view' },
+  { path: '/admin/roles', permission: 'roles.view' },
+  { path: '/admin/users', permission: 'users.view' },
+]
+
+function getFirstAccessibleRoute(): string {
+  for (const route of ADMIN_ROUTES) {
+    if (adminStore.hasPermission(route.permission)) return route.path
+  }
+  return '/admin/dashboard'
+}
+
 const togglePasswordVisibility = () => {
   showPassword.value = !showPassword.value
 }
 
-onMounted(() => {
+onMounted(async () => {
   if (adminStore.token) {
-    router.push('/admin/dashboard')
+    if (!adminStore.user) await adminStore.fetchMe()
+    router.push(getFirstAccessibleRoute())
   }
 })
 
@@ -287,7 +308,7 @@ const onSubmit = async (values: z.infer<typeof schema.shape>) => {
 
   if (result.success) {
     toast.success('Đăng nhập quản trị thành công!')
-    router.push('/admin/dashboard')
+    router.push(getFirstAccessibleRoute())
   } else {
     apiError.value = result.message || 'Email hoặc mật khẩu không chính xác.'
   }

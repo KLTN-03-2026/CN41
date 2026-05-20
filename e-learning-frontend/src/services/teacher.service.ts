@@ -21,7 +21,7 @@ export const teacherService = {
   update: (
     id: number,
     data: Record<string, unknown>,
-  ): Promise<AxiosResponse<ApiResponse<Teacher>>> => http.put(`/admin/teachers/${id}`, data),
+  ): Promise<AxiosResponse<ApiResponse<Teacher>>> => http.patch(`/admin/teachers/${id}`, data),
 
   /** DELETE /admin/teachers/{id} (soft delete) */
   destroy: (id: number): Promise<AxiosResponse<ApiResponse<null>>> =>

@@ -20,7 +20,7 @@ export const userService = {
   update: (
     id: number,
     data: Record<string, unknown>,
-  ): Promise<AxiosResponse<ApiResponse<AdminUser>>> => http.put(`/admin/users/${id}`, data),
+  ): Promise<AxiosResponse<ApiResponse<AdminUser>>> => http.patch(`/admin/users/${id}`, data),
 
   /** DELETE /admin/users/{id} */
   destroy: (id: number): Promise<AxiosResponse<ApiResponse<null>>> =>

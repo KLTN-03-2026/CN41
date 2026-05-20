@@ -19,7 +19,7 @@ export const sectionService = {
 
   /** PUT /admin/sections/{id} */
   update: (id: number, data: Record<string, unknown>): Promise<AxiosResponse<ApiResponse<Section>>> =>
-    http.put(`/admin/sections/${id}`, data),
+    http.patch(`/admin/sections/${id}`, data),
 
   /** DELETE /admin/sections/{id} (soft delete) */
   destroy: (id: number): Promise<AxiosResponse<ApiResponse<null>>> =>

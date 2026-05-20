@@ -52,6 +52,10 @@ class PostRepository extends BaseRepository implements PostRepositoryInterface
             $query->where('title', 'like', '%'.$filters['search'].'%');
         }
 
+        if (! empty($filters['category_id'])) {
+            $query->where('post_category_id', $filters['category_id']);
+        }
+
         if (! empty($filters['category_slug'])) {
             $query->whereHas('category', function ($q) use ($filters) {
                 $q->where('slug', $filters['category_slug']);

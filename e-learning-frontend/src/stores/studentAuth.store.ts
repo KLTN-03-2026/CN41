@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import type { Student } from '@/types'
 import { STORAGE_KEYS } from '@/constants/app'
 import { authService } from '@/services/auth.service'
+import { useCartStore } from '@/stores/cart.store'
 
 interface ActionResult {
   success: boolean
@@ -105,6 +106,8 @@ export const useStudentAuthStore = defineStore('studentAuth', {
       // Xóa ở cả 2 storage
       localStorage.removeItem(STORAGE_KEYS.STUDENT_TOKEN)
       sessionStorage.removeItem(STORAGE_KEYS.STUDENT_TOKEN)
+      // Xóa giỏ hàng để không rò rỉ sang phiên đăng nhập khác
+      useCartStore().clear()
       return { success: true }
     },
   },

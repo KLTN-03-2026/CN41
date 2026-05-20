@@ -19,27 +19,24 @@ const router = createRouter({
       meta: { requiresAuth: true, guard: 'admin' },
       children: [
         { path: '', redirect: '/admin/dashboard' },
-        { path: 'dashboard', component: () => import('@/views/admin/DashboardPage.vue') },
-        { path: 'courses', component: () => import('@/views/admin/CoursesPage.vue') },
-        { path: 'courses/create', component: () => import('@/views/admin/CourseFormPage.vue') },
-        { path: 'courses/:id/edit', component: () => import('@/views/admin/CourseFormPage.vue') },
-        { path: 'categories', component: () => import('@/views/admin/CategoriesPage.vue') },
-        { path: 'roles', component: () => import('@/views/admin/RolesPage.vue') },
-        { path: 'users', component: () => import('@/views/admin/UsersPage.vue') },
-        { path: 'teachers', component: () => import('@/views/admin/TeachersPage.vue') },
-        { path: 'students', component: () => import('@/views/admin/StudentsPage.vue') },
-        { path: 'orders', component: () => import('@/views/admin/OrdersPage.vue') },
-        { path: 'posts', component: () => import('@/views/admin/PostsPage.vue') },
-        { path: 'posts/create', component: () => import('@/views/admin/PostFormPage.vue') },
-        { path: 'posts/:id/edit', component: () => import('@/views/admin/PostFormPage.vue') },
-        {
-          path: 'post-categories',
-          component: () => import('@/views/admin/PostCategoriesPage.vue'),
-        },
-        { path: 'tags', component: () => import('@/views/admin/TagsPage.vue') },
-        { path: 'post-comments', component: () => import('@/views/admin/CommentsPage.vue') },
-        { path: 'coupons', component: () => import('@/views/admin/CouponsPage.vue') },
-        { path: 'system-logs', component: () => import('@/views/admin/ActivityLogsPage.vue') },
+        { path: 'dashboard',      component: () => import('@/views/admin/DashboardPage.vue'),     meta: { permission: 'dashboard.view' } },
+        { path: 'courses',        component: () => import('@/views/admin/CoursesPage.vue'),        meta: { permission: 'courses.view' } },
+        { path: 'courses/create', component: () => import('@/views/admin/CourseFormPage.vue'),     meta: { permission: 'courses.create' } },
+        { path: 'courses/:id/edit', component: () => import('@/views/admin/CourseFormPage.vue'),   meta: { permission: 'courses.edit' } },
+        { path: 'categories',     component: () => import('@/views/admin/CategoriesPage.vue'),     meta: { permission: 'categories.view' } },
+        { path: 'roles',          component: () => import('@/views/admin/RolesPage.vue'),          meta: { permission: 'roles.view' } },
+        { path: 'users',          component: () => import('@/views/admin/UsersPage.vue'),          meta: { permission: 'users.view' } },
+        { path: 'teachers',       component: () => import('@/views/admin/TeachersPage.vue'),       meta: { permission: 'users.view' } },
+        { path: 'students',       component: () => import('@/views/admin/StudentsPage.vue'),       meta: { permission: 'students.view' } },
+        { path: 'orders',         component: () => import('@/views/admin/OrdersPage.vue'),         meta: { permission: 'orders.view' } },
+        { path: 'posts',          component: () => import('@/views/admin/PostsPage.vue'),          meta: { permission: 'posts.view' } },
+        { path: 'posts/create',   component: () => import('@/views/admin/PostFormPage.vue'),       meta: { permission: 'posts.create' } },
+        { path: 'posts/:id/edit', component: () => import('@/views/admin/PostFormPage.vue'),       meta: { permission: 'posts.edit' } },
+        { path: 'post-categories', component: () => import('@/views/admin/PostCategoriesPage.vue'), meta: { permission: 'posts.view' } },
+        { path: 'tags',           component: () => import('@/views/admin/TagsPage.vue'),           meta: { permission: 'tags.view' } },
+        { path: 'post-comments',  component: () => import('@/views/admin/CommentsPage.vue'),       meta: { permission: 'comments.view' } },
+        { path: 'coupons',        component: () => import('@/views/admin/CouponsPage.vue'),        meta: { permission: 'coupons.view' } },
+        { path: 'system-logs',    component: () => import('@/views/admin/ActivityLogsPage.vue'),   meta: { permission: 'system.logs.view' } },
       ],
     },
 
@@ -207,6 +204,13 @@ router.beforeEach(async (to) => {
     }
   }
 
+  // Permission guard — chỉ áp dụng sau khi đã xác nhận đăng nhập
+  if (adminStore && adminStore.isLoggedIn && to.meta.permission) {
+    if (!adminStore.hasPermission(to.meta.permission)) {
+      return '/403'
+    }
+  }
+
   // Route chỉ dành cho guest (login, register, forgot-password...)
   if (to.meta.requiresGuest) {
     const isAdminLoggedIn = adminStore ? adminStore.isLoggedIn : !!adminToken
@@ -216,7 +220,6 @@ router.beforeEach(async (to) => {
 
     if (to.meta.guard === 'student') {
       if (isStudentLoggedIn) return '/'
-      if (isAdminLoggedIn) return '/admin/dashboard'
     }
   }
 

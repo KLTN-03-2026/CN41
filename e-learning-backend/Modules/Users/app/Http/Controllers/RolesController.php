@@ -83,7 +83,12 @@ class RolesController extends Controller
         }
 
         if ($request->has('permissions') && is_array($request->permissions)) {
-            $role->syncPermissions($request->permissions);
+            $permissions = $request->permissions;
+            // Prevent privilege escalation: only super-admin can grant users.delete
+            if (! auth('admin')->user()?->hasPermissionTo('users.delete', 'admin')) {
+                $permissions = array_values(array_filter($permissions, fn ($p) => $p !== 'users.delete'));
+            }
+            $role->syncPermissions($permissions);
         }
 
         $role->load('permissions');
