@@ -14,8 +14,9 @@ function getToken(key) {
 }
 
 // Request interceptor — tự gắn token
+// /admin và /teacher đều dùng guard admin (adminToken)
 http.interceptors.request.use((config) => {
-  if (config.url?.startsWith('/admin')) {
+  if (config.url?.startsWith('/admin') || config.url?.startsWith('/teacher')) {
     const token = getToken('adminToken')
     if (token) config.headers.Authorization = `Bearer ${token}`
   } else {
@@ -47,7 +48,7 @@ http.interceptors.response.use(
 
     // Chỉ redirect khi 401 xảy ra trên route CẦN auth (token hết hạn), không phải trên login/register
     if (status === 401 && !isAuthEndpoint) {
-      const isAdminRoute = requestUrl.startsWith('/admin')
+      const isAdminRoute = requestUrl.startsWith('/admin') || requestUrl.startsWith('/teacher')
       if (isAdminRoute) {
         const { useAdminAuthStore } = await import('@/stores/adminAuth.store')
         await useAdminAuthStore().logout()
