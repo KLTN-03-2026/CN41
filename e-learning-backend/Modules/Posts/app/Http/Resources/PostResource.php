@@ -24,6 +24,8 @@ class PostResource extends JsonResource
             'tags' => TagResource::collection($this->whenLoaded('tags')),
             'comments' => PostCommentResource::collection($this->whenLoaded('comments')),
             'is_published' => $this->is_published,
+            'approval_status' => $this->approval_status,
+            'rejection_reason' => $this->rejection_reason,
             'published_at' => $this->published_at?->toISOString(),
             'views' => $this->views,
             'created_at' => $this->created_at?->toISOString(),
