@@ -2,7 +2,15 @@
 
 namespace Modules\Commission\Repositories;
 
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
+
 interface CommissionRepositoryInterface
 {
-    // Methods will be defined in Task 2
+    public function getAvailableBalance(int $teacherId): float;
+    public function getTotalEarned(int $teacherId): float;
+    public function getTotalPaid(int $teacherId): float;
+    public function getPendingPayoutAmount(int $teacherId): float;
+    public function getEarningsForTeacher(int $teacherId, int $perPage): LengthAwarePaginator;
+    public function getTeachersSummary(): Collection;
 }
