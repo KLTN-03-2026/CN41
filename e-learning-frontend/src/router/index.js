@@ -37,6 +37,32 @@ const router = createRouter({
         { path: 'post-comments',  component: () => import('@/views/admin/CommentsPage.vue'),       meta: { permission: 'comments.view' } },
         { path: 'coupons',        component: () => import('@/views/admin/CouponsPage.vue'),        meta: { permission: 'coupons.view' } },
         { path: 'system-logs',    component: () => import('@/views/admin/ActivityLogsPage.vue'),   meta: { permission: 'system.logs.view' } },
+        // Commission — admin
+        {
+          path: 'payouts',
+          name: 'admin.payouts',
+          component: () => import('@/views/admin/PayoutsPage.vue'),
+          meta: { requiresAuth: true, guard: 'admin' },
+        },
+        {
+          path: 'teacher-earnings',
+          name: 'admin.teacher-earnings',
+          component: () => import('@/views/admin/TeacherEarningsPage.vue'),
+          meta: { requiresAuth: true, guard: 'admin' },
+        },
+        {
+          path: 'commission-settings',
+          name: 'admin.commission-settings',
+          component: () => import('@/views/admin/CommissionSettingsPage.vue'),
+          meta: { requiresAuth: true, guard: 'admin' },
+        },
+        // Teacher portal
+        {
+          path: 'teacher/earnings',
+          name: 'teacher.earnings',
+          component: () => import('@/views/teacher/EarningsPage.vue'),
+          meta: { requiresAuth: true, guard: 'admin' },
+        },
       ],
     },
 
