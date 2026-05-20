@@ -87,6 +87,21 @@ const router = createRouter({
           name: 'teacher.profile',
           component: () => import('@/views/teacher/TeacherProfilePage.vue'),
         },
+        {
+          path: 'posts',
+          name: 'teacher.posts',
+          component: () => import('@/views/teacher/TeacherPostsPage.vue'),
+        },
+        {
+          path: 'posts/create',
+          name: 'teacher.posts.create',
+          component: () => import('@/views/teacher/TeacherPostFormPage.vue'),
+        },
+        {
+          path: 'posts/:id/edit',
+          name: 'teacher.posts.edit',
+          component: () => import('@/views/teacher/TeacherPostFormPage.vue'),
+        },
       ],
     },
 

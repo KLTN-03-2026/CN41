@@ -83,6 +83,7 @@ import {
   BarChartIcon,
   UserCircleIcon,
   LogoutIcon,
+  PageIcon,
 } from '@/components/icons'
 
 const route = useRoute()
@@ -92,6 +93,7 @@ const adminStore = useAdminAuthStore()
 const menuItems = [
   { name: 'Tổng quan', path: '/teacher/dashboard', icon: GridIcon },
   { name: 'Khóa học của tôi', path: '/teacher/courses', icon: BoxCubeIcon },
+  { name: 'Bài viết', path: '/teacher/posts', icon: PageIcon },
   { name: 'Thu nhập', path: '/teacher/earnings', icon: BarChartIcon },
   { name: 'Hồ sơ cá nhân', path: '/teacher/profile', icon: UserCircleIcon },
 ]
