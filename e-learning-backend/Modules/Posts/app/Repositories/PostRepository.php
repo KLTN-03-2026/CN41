@@ -34,6 +34,10 @@ class PostRepository extends BaseRepository implements PostRepositoryInterface
             $query->where('post_category_id', $filters['post_category_id']);
         }
 
+        if (! empty($filters['approval_status'])) {
+            $query->where('approval_status', $filters['approval_status']);
+        }
+
         return $query->paginate($perPage);
     }
 
@@ -99,5 +103,21 @@ class PostRepository extends BaseRepository implements PostRepositoryInterface
     public function incrementViews(int $id): void
     {
         $this->model->newQuery()->where('id', $id)->increment('views');
+    }
+
+    public function getFilteredForTeacher(int $authorId, array $filters, int $perPage): LengthAwarePaginator
+    {
+        $perPage = max(1, min($perPage, static::MAX_PER_PAGE));
+
+        $query = $this->model->newQuery()
+            ->where('author_id', $authorId)
+            ->with(['category', 'tags'])
+            ->latest();
+
+        if (! empty($filters['approval_status'])) {
+            $query->where('approval_status', $filters['approval_status']);
+        }
+
+        return $query->paginate($perPage);
     }
 }

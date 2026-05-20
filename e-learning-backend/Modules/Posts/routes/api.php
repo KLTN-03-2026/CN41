@@ -36,6 +36,8 @@ Route::prefix('v1/admin')->middleware(['auth:admin'])->group(function () {
     Route::patch('posts/{id}/toggle-publish', [AdminPostController::class, 'togglePublish'])->middleware('permission:posts.edit');
     Route::patch('posts/{id}/restore', [AdminPostController::class, 'restore'])->middleware('permission:posts.edit');
     Route::delete('posts/{id}/force-delete', [AdminPostController::class, 'forceDelete'])->middleware('permission:posts.delete');
+    Route::patch('posts/{id}/approve', [AdminPostController::class, 'approve'])->middleware('permission:posts.edit');
+    Route::patch('posts/{id}/reject', [AdminPostController::class, 'reject'])->middleware('permission:posts.edit');
 
     // Comments — static routes BEFORE parameterized
     Route::delete('comments/bulk-delete', [AdminCommentController::class, 'bulkDelete'])->middleware('permission:comments.delete');
