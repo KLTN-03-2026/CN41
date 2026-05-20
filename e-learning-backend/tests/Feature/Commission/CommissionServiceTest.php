@@ -116,4 +116,14 @@ class CommissionServiceTest extends TestCase
 
         $this->assertEquals(250000.0, $balance);
     }
+
+    public function test_order_placed_event_triggers_commission_recording(): void
+    {
+        CommissionSetting::create(['teacher_rate' => 70.00]);
+        $order = $this->makeOrder();
+
+        event(new \Modules\Payment\Events\OrderPlaced($order));
+
+        $this->assertDatabaseHas('teacher_earnings', ['type' => 'credit']);
+    }
 }
