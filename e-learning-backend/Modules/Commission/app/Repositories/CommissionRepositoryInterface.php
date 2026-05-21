@@ -3,7 +3,6 @@
 namespace Modules\Commission\Repositories;
 
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Collection;
 
 interface CommissionRepositoryInterface
 {
@@ -17,5 +16,5 @@ interface CommissionRepositoryInterface
 
     public function getEarningsForTeacher(int $teacherId, int $perPage): LengthAwarePaginator;
 
-    public function getTeachersSummary(): Collection;
+    public function getTeachersSummary(int $perPage): LengthAwarePaginator;
 }

@@ -18,7 +18,8 @@ class PayoutController extends Controller
         $perPage = max(1, min((int) $request->query('per_page', 15), 100));
         $query = TeacherPayout::with('teacher')->latest();
 
-        if ($request->filled('status')) {
+        $validStatuses = ['pending', 'approved', 'rejected', 'paid'];
+        if ($request->filled('status') && in_array($request->query('status'), $validStatuses, true)) {
             $query->where('status', $request->query('status'));
         }
         if ($request->filled('teacher_id')) {

@@ -65,6 +65,9 @@ class EarningsController extends Controller
         $teacher = Teachers::where('user_id', $user->id)->firstOrFail();
 
         $payout = DB::transaction(function () use ($request, $teacher) {
+            // Lock teacher row to serialize concurrent payout requests from the same teacher
+            Teachers::lockForUpdate()->findOrFail($teacher->id);
+
             $available = $this->repository->getAvailableBalance($teacher->id);
 
             if ($request->amount > $available) {

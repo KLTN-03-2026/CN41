@@ -3,7 +3,6 @@
 namespace Modules\Commission\Repositories;
 
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Modules\Commission\Models\TeacherEarning;
 use Modules\Commission\Models\TeacherPayout;
@@ -41,8 +40,10 @@ class CommissionRepository implements CommissionRepositoryInterface
         return TeacherEarning::where('teacher_id', $teacherId)->latest()->paginate($perPage);
     }
 
-    public function getTeachersSummary(): Collection
+    public function getTeachersSummary(int $perPage): LengthAwarePaginator
     {
+        $perPage = max(1, min($perPage, 100));
+
         // Correlated subqueries avoid cartesian product from joining both tables simultaneously
         return DB::table('teachers')
             ->whereNull('teachers.deleted_at')
@@ -53,8 +54,8 @@ class CommissionRepository implements CommissionRepositoryInterface
                 DB::raw("COALESCE((SELECT SUM(amount) FROM teacher_earnings WHERE teacher_id = teachers.id AND type = 'debit'), 0) as total_deducted"),
                 DB::raw("COALESCE((SELECT SUM(amount) FROM teacher_payouts WHERE teacher_id = teachers.id AND status IN ('pending', 'approved')), 0) as pending_payout"),
             ])
-            ->get()
-            ->map(function ($row) {
+            ->paginate($perPage)
+            ->through(function ($row) {
                 $row->available_balance = max(0, $row->total_earned - $row->total_deducted - $row->pending_payout);
 
                 return $row;
