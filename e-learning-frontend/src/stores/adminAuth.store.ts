@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import type { AdminUser } from '@/types'
+import type { AuthAdminUser } from '@/types'
 import { STORAGE_KEYS } from '@/constants/app'
 import { authService } from '@/services/auth.service'
 
@@ -22,7 +22,7 @@ function getStoredToken(): string | null {
 export const useAdminAuthStore = defineStore('adminAuth', {
   state: () => ({
     token: getStoredToken() as string | null,
-    user: null as AdminUser | null,
+    user: null as AuthAdminUser | null,
     loading: false,
   }),
 
@@ -52,7 +52,7 @@ export const useAdminAuthStore = defineStore('adminAuth', {
           return { success: false, message: 'Invalid response from server' }
         }
         this.token = res.data.data.token
-        this.user = res.data.data.user ?? null
+        this.user = (res.data.data.user as AuthAdminUser) ?? null
 
         // Lưu token theo lựa chọn "Ghi nhớ đăng nhập"
         if (remember) {
@@ -79,7 +79,7 @@ export const useAdminAuthStore = defineStore('adminAuth', {
     async fetchMe(): Promise<ActionResult> {
       try {
         const res = await authService.adminMe()
-        this.user = (res.data.data as AdminUser) ?? null
+        this.user = (res.data.data as AuthAdminUser) ?? null
         return { success: true }
       } catch {
         await this.logout()

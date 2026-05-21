@@ -15,8 +15,11 @@ Route::middleware(['auth:admin'])->prefix('admin')->group(function () {
     Route::get('users/roles', [UsersController::class, 'getRoles'])->middleware('permission:users.view');
     Route::post('users/bulk-assign-role', [UsersController::class, 'bulkAssignRole'])->middleware('permission:users.edit');
 
-    Route::apiResource('users', UsersController::class)->names('admin.users')
-        ->middleware('permission:users.view|users.create|users.edit|users.delete');
+    Route::get('users', [UsersController::class, 'index'])->middleware('permission:users.view');
+    Route::get('users/{id}', [UsersController::class, 'show'])->middleware('permission:users.view');
+    Route::post('users', [UsersController::class, 'store'])->middleware('permission:users.create');
+    Route::patch('users/{id}', [UsersController::class, 'update'])->middleware('permission:users.edit');
+    Route::delete('users/{id}', [UsersController::class, 'destroy'])->middleware('permission:users.delete');
 
     Route::post('users/{id}/assign-role', [UsersController::class, 'assignRole'])->middleware('permission:users.edit');
     Route::post('users/{id}/revoke-role', [UsersController::class, 'revokeRole'])->middleware('permission:users.edit');

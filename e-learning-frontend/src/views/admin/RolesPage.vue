@@ -9,6 +9,7 @@
         </p>
       </div>
       <button
+        v-permission="'users.create'"
         @click="openCreate"
         class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-colors"
       >
@@ -100,6 +101,7 @@
                     v-if="role.name !== 'super-admin'"
                   >
                     <button
+                      v-permission="'users.edit'"
                       @click="openEdit(role)"
                       class="p-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-500/10 text-gray-500 hover:text-blue-500 transition-colors"
                       title="Sửa"
@@ -117,6 +119,7 @@
                       </svg>
                     </button>
                     <button
+                      v-permission="'users.delete'"
                       @click="confirmDelete(role)"
                       class="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-500/10 text-gray-500 hover:text-red-500 transition-colors"
                       title="Xóa"
@@ -155,10 +158,10 @@
       class="fixed inset-0 z-[9999] flex items-center justify-center bg-gray-900/50 backdrop-blur-sm p-4 overflow-y-auto"
     >
       <div
-        class="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-3xl border border-gray-100 dark:border-gray-800 my-8"
+        class="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-3xl border border-gray-100 dark:border-gray-800 my-8 max-h-[90vh] flex flex-col"
       >
         <div
-          class="p-6 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center"
+          class="p-6 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center shrink-0"
         >
           <h3 class="text-xl font-bold text-gray-800 dark:text-white">
             {{ editingRole ? 'Cập nhật Vai trò' : 'Thêm Vai trò mới' }}
@@ -178,8 +181,8 @@
           </button>
         </div>
 
-        <form @submit.prevent="submitForm">
-          <div class="p-6 space-y-6">
+        <form @submit.prevent="submitForm" class="flex flex-col overflow-hidden flex-1">
+          <div class="p-6 space-y-6 overflow-y-auto flex-1">
             <!-- Tên Role -->
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5"
@@ -264,7 +267,7 @@
           </div>
 
           <div
-            class="p-6 border-t border-gray-100 dark:border-gray-800 flex justify-end gap-3 bg-gray-50/50 dark:bg-white/[0.01] rounded-b-2xl"
+            class="p-6 border-t border-gray-100 dark:border-gray-800 flex justify-end gap-3 bg-gray-50/50 dark:bg-white/[0.01] rounded-b-2xl shrink-0"
           >
             <button
               type="button"

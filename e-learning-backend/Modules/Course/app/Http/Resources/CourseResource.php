@@ -48,10 +48,15 @@ class CourseResource extends JsonResource
             return null;
         }
 
-        if (str_starts_with($this->thumbnail, 'http') || str_starts_with($this->thumbnail, '/storage')) {
+        if (str_starts_with($this->thumbnail, 'http')) {
             return $this->thumbnail;
         }
 
-        return '/storage/'.$this->thumbnail;
+        $path = ltrim($this->thumbnail, '/');
+        if (! str_starts_with($path, 'storage/')) {
+            $path = 'storage/'.$path;
+        }
+
+        return asset($path);
     }
 }

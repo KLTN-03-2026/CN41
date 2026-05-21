@@ -34,7 +34,7 @@ export const roleService = {
   update: (
     id: number,
     data: { name?: string; permissions?: string[] },
-  ): Promise<AxiosResponse<ApiResponse<Role>>> => http.put(`/admin/roles/${id}`, data),
+  ): Promise<AxiosResponse<ApiResponse<Role>>> => http.patch(`/admin/roles/${id}`, data),
 
   /** DELETE /admin/roles/{id} */
   destroy: (id: number): Promise<AxiosResponse<ApiResponse<null>>> =>

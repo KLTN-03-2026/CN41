@@ -142,3 +142,6 @@ Thumbs.db
 *.sln
 *.sw?
 *.timestamp-*-*.mjs
+
+# Superpowers brainstorming sessions
+.superpowers/

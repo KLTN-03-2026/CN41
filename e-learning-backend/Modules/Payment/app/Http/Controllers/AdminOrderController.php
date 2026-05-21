@@ -10,6 +10,7 @@ use Modules\Payment\Http\Requests\AdminIndexOrderRequest;
 use Modules\Payment\Http\Requests\AdminTrashedOrderRequest;
 use Modules\Payment\Http\Requests\BulkDeleteOrdersRequest;
 use Modules\Payment\Http\Requests\RevenueStatsRequest;
+use Modules\Payment\Events\OrderRefunded;
 use Modules\Payment\Http\Requests\UpdateOrderStatusRequest;
 use Modules\Payment\Http\Resources\OrderResource;
 use Modules\Payment\Repositories\OrderRepositoryInterface;
@@ -57,6 +58,11 @@ class AdminOrderController extends Controller
         }
 
         $updated = $this->repository->updateOrderStatus($id, $updateData);
+
+        if ($newStatus === 'refunded' && $oldStatus !== 'refunded') {
+            $updated->load('items.course.teacher');
+            event(new OrderRefunded($updated));
+        }
 
         return $this->success(
             new OrderResource($updated),

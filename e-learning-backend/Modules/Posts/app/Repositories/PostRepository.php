@@ -34,6 +34,10 @@ class PostRepository extends BaseRepository implements PostRepositoryInterface
             $query->where('post_category_id', $filters['post_category_id']);
         }
 
+        if (! empty($filters['approval_status'])) {
+            $query->where('approval_status', $filters['approval_status']);
+        }
+
         return $query->paginate($perPage);
     }
 
@@ -43,6 +47,7 @@ class PostRepository extends BaseRepository implements PostRepositoryInterface
 
         $query = $this->model->newQuery()
             ->where('is_published', true)
+            ->where('approval_status', 'approved')
             ->whereNotNull('published_at')
             ->where('published_at', '<=', now())
             ->with(['author', 'category', 'tags'])
@@ -50,6 +55,10 @@ class PostRepository extends BaseRepository implements PostRepositoryInterface
 
         if (! empty($filters['search'])) {
             $query->where('title', 'like', '%'.$filters['search'].'%');
+        }
+
+        if (! empty($filters['category_id'])) {
+            $query->where('post_category_id', $filters['category_id']);
         }
 
         if (! empty($filters['category_slug'])) {
@@ -72,6 +81,7 @@ class PostRepository extends BaseRepository implements PostRepositoryInterface
         return $this->model->newQuery()
             ->where('slug', $slug)
             ->where('is_published', true)
+            ->where('approval_status', 'approved')
             ->with(['author', 'category', 'tags', 'comments' => function ($q) {
                 $q->where('is_approved', true)->whereNull('parent_id')->with('replies.adminUser', 'replies.student', 'adminUser', 'student');
             }])
@@ -95,5 +105,21 @@ class PostRepository extends BaseRepository implements PostRepositoryInterface
     public function incrementViews(int $id): void
     {
         $this->model->newQuery()->where('id', $id)->increment('views');
+    }
+
+    public function getFilteredForTeacher(int $authorId, array $filters, int $perPage): LengthAwarePaginator
+    {
+        $perPage = max(1, min($perPage, static::MAX_PER_PAGE));
+
+        $query = $this->model->newQuery()
+            ->where('author_id', $authorId)
+            ->with(['category', 'tags'])
+            ->latest();
+
+        if (! empty($filters['approval_status'])) {
+            $query->where('approval_status', $filters['approval_status']);
+        }
+
+        return $query->paginate($perPage);
     }
 }

@@ -70,6 +70,17 @@
     <td class="px-6 py-2.5 text-right">
       <div class="flex items-center justify-end gap-2">
         <button
+          v-permission="'categories.create'"
+          @click="$emit('add-child', cat.id)"
+          class="p-1.5 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg dark:hover:bg-green-500/10 transition-colors"
+          title="Thêm danh mục con"
+        >
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+          </svg>
+        </button>
+        <button
+          v-permission="'categories.edit'"
           @click="$emit('edit', cat)"
           class="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg dark:hover:bg-blue-500/10 transition-colors"
           title="Chỉnh sửa"
@@ -79,6 +90,7 @@
           </svg>
         </button>
         <button
+          v-permission="'categories.delete'"
           @click="$emit('delete', cat)"
           class="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg dark:hover:bg-red-500/10 transition-colors"
           title="Xóa"
@@ -121,6 +133,7 @@ defineEmits<{
   'toggle-expand': [id: number]
   'edit': [cat: Category]
   'delete': [cat: Category]
+  'add-child': [parentId: number]
 }>()
 
 function highlightName(name: string): string {

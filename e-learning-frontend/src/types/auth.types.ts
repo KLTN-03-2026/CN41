@@ -7,6 +7,19 @@ export interface Student {
   email_verified_at?: string
 }
 
+/** Used by adminAuth store — /me returns roles as string[] */
+export interface AuthAdminUser {
+  id: number
+  name: string
+  email: string
+  avatar: string | null
+  email_verified_at?: string | null
+  status?: number
+  roles?: string[]
+  permissions?: string[]
+}
+
+/** Used by admin users list — /admin/users returns roles as {id, name}[] */
 export interface AdminUser {
   id: number
   name: string
@@ -14,7 +27,7 @@ export interface AdminUser {
   avatar: string | null
   email_verified_at?: string | null
   status?: number
-  roles?: string[] | { id: number; name: string }[]
+  roles?: { id: number; name: string }[]
   permissions?: string[]
   created_at?: string
   updated_at?: string

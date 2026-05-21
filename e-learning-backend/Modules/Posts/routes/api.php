@@ -9,6 +9,7 @@ use Modules\Posts\Http\Controllers\Admin\TagController;
 use Modules\Posts\Http\Controllers\Admin\TagController as AdminTagController;
 use Modules\Posts\Http\Controllers\Client\CommentController;
 use Modules\Posts\Http\Controllers\Client\PostController;
+use Modules\Posts\Http\Controllers\Teacher\TeacherPostController;
 
 Route::prefix('v1/admin')->middleware(['auth:admin'])->group(function () {
     // Post Categories
@@ -36,6 +37,8 @@ Route::prefix('v1/admin')->middleware(['auth:admin'])->group(function () {
     Route::patch('posts/{id}/toggle-publish', [AdminPostController::class, 'togglePublish'])->middleware('permission:posts.edit');
     Route::patch('posts/{id}/restore', [AdminPostController::class, 'restore'])->middleware('permission:posts.edit');
     Route::delete('posts/{id}/force-delete', [AdminPostController::class, 'forceDelete'])->middleware('permission:posts.delete');
+    Route::patch('posts/{id}/approve', [AdminPostController::class, 'approve'])->middleware('permission:posts.edit');
+    Route::patch('posts/{id}/reject', [AdminPostController::class, 'reject'])->middleware('permission:posts.edit');
 
     // Comments — static routes BEFORE parameterized
     Route::delete('comments/bulk-delete', [AdminCommentController::class, 'bulkDelete'])->middleware('permission:comments.delete');
@@ -57,4 +60,13 @@ Route::prefix('v1')->group(function () {
 // Client Auth Routes
 Route::prefix('v1')->middleware(['auth:api'])->group(function () {
     Route::post('posts/{id}/comments', [CommentController::class, 'store']);
+});
+
+// Teacher portal — posts
+Route::prefix('v1/teacher')->middleware(['auth:admin', 'role:teacher'])->group(function () {
+    Route::get('posts', [TeacherPostController::class, 'index']);
+    Route::post('posts', [TeacherPostController::class, 'store']);
+    Route::get('posts/{id}', [TeacherPostController::class, 'show']);
+    Route::patch('posts/{id}', [TeacherPostController::class, 'update']);
+    Route::delete('posts/{id}', [TeacherPostController::class, 'destroy']);
 });

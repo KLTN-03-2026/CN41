@@ -1,31 +1,18 @@
 import type { DirectiveBinding } from 'vue'
 import { useAdminAuthStore } from '@/stores/adminAuth.store'
 
+function applyPermission(el: HTMLElement, value: unknown) {
+  const adminStore = useAdminAuthStore()
+  if (value && typeof value === 'string') {
+    el.style.display = adminStore.hasPermission(value) ? '' : 'none'
+  }
+}
+
 export const permissionDirective = {
   mounted(el: HTMLElement, binding: DirectiveBinding) {
-    const { value } = binding
-    const adminStore = useAdminAuthStore()
-
-    if (value && typeof value === 'string') {
-      const hasPermission = adminStore.hasPermission(value)
-
-      if (!hasPermission) {
-        el.parentNode?.removeChild(el)
-      }
-    }
+    applyPermission(el, binding.value)
   },
   updated(el: HTMLElement, binding: DirectiveBinding) {
-    const { value } = binding
-    const adminStore = useAdminAuthStore()
-
-    if (value && typeof value === 'string') {
-      const hasPermission = adminStore.hasPermission(value)
-
-      if (!hasPermission) {
-        el.style.display = 'none'
-      } else {
-        el.style.display = ''
-      }
-    }
+    applyPermission(el, binding.value)
   },
 }

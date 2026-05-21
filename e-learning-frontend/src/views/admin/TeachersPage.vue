@@ -8,6 +8,7 @@
       </div>
       <button
         v-if="!isTrashed"
+        v-permission="'users.create'"
         @click="openCreate"
         class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-colors"
       >
@@ -198,6 +199,7 @@
                 <td class="px-4 py-3 text-right">
                   <div v-if="!isTrashed" class="flex items-center justify-end gap-1">
                     <button
+                      v-permission="'users.edit'"
                       @click="openEdit(t)"
                       class="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 text-gray-500 dark:text-gray-400 transition-colors"
                       title="Sửa"
@@ -215,6 +217,7 @@
                       </svg>
                     </button>
                     <button
+                      v-permission="'users.delete'"
                       @click="confirmDelete(t)"
                       class="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-500/10 text-gray-500 dark:text-gray-400 hover:text-red-500 transition-colors"
                       title="Xoá"

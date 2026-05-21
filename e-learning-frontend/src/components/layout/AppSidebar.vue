@@ -160,6 +160,8 @@ import {
   BoxCubeIcon,
   ListIcon,
   TaskIcon,
+  BarChartIcon,
+  SettingsIcon,
 } from '@/components/icons'
 import { useSidebar } from '@/composables/useSidebar'
 
@@ -167,7 +169,24 @@ const route = useRoute()
 
 const { isExpanded, isMobileOpen, isHovered, openSubmenu } = useSidebar()
 
-const rawMenuGroups = [
+type MenuItem = {
+  icon?: unknown
+  name: string
+  path?: string
+  permission?: string
+  hideForRoles?: string[]
+  showOnlyForRoles?: string[]
+  subItems?: MenuItem[]
+}
+
+type MenuGroup = {
+  title: string
+  hideForRoles?: string[]
+  showOnlyForRoles?: string[]
+  items: MenuItem[]
+}
+
+const rawMenuGroups: MenuGroup[] = [
   {
     title: 'Quản trị',
     items: [
@@ -230,6 +249,27 @@ const rawMenuGroups = [
     ],
   },
   {
+    title: 'Hoa hồng',
+    hideForRoles: ['teacher'],
+    items: [
+      {
+        icon: BarChartIcon,
+        name: 'Yêu cầu rút tiền',
+        path: '/admin/payouts',
+      },
+      {
+        icon: PieChartIcon,
+        name: 'Hoa hồng giảng viên',
+        path: '/admin/teacher-earnings',
+      },
+      {
+        icon: SettingsIcon,
+        name: 'Cài đặt tỷ lệ',
+        path: '/admin/commission-settings',
+      },
+    ],
+  },
+  {
     title: 'Hệ thống',
     items: [
       {
@@ -266,47 +306,50 @@ const rawMenuGroups = [
 import { useAdminAuthStore } from '@/stores/adminAuth.store'
 const adminStore = useAdminAuthStore()
 
-const hasPermission = (item: { permission?: string; hideForRoles?: string[] }) => {
-  const permission = item.permission
-  const hideForRoles = item.hideForRoles || []
+const hasPermission = (item: MenuItem) => {
+  const userRoles = adminStore.user?.roles || []
 
-  // Kiểm tra nếu role bị cấm xem mục này
-  if (hideForRoles.length > 0) {
-    const userRoles = adminStore.user?.roles || []
-    if (hideForRoles.some((r: string) => userRoles.includes(r))) {
-      return false
-    }
+  if (item.showOnlyForRoles?.length) {
+    if (!item.showOnlyForRoles.some((r) => userRoles.includes(r))) return false
   }
 
-  if (!permission) return true
-  // Super admin luôn có quyền
-  if (adminStore.user?.roles?.includes('super-admin')) return true
-  // Kiểm tra permission
-  return adminStore.user?.permissions?.includes(permission) || false
+  if (item.hideForRoles?.length) {
+    if (item.hideForRoles.some((r) => userRoles.includes(r))) return false
+  }
+
+  if (!item.permission) return true
+  if (userRoles.includes('super-admin')) return true
+  return adminStore.user?.permissions?.includes(item.permission) || false
 }
 
 const menuGroups = computed(() => {
-  return (
-    rawMenuGroups
-      .map((group) => {
-        // Lọc các items con
-        const filteredItems = group.items
-          .filter((item) => hasPermission(item))
-          .map((item) => {
-            if (item.subItems) {
-              const filteredSub = item.subItems.filter((sub) => hasPermission(sub))
-              return { ...item, subItems: filteredSub.length ? filteredSub : undefined }
-            }
-            return item
-          })
-          // Loại bỏ item cha nếu nó có subItems nhưng sau khi filter lại bị rỗng
-          .filter((item) => !item.subItems || item.subItems.length > 0)
+  const userRoles = adminStore.user?.roles || []
 
-        return { ...group, items: filteredItems }
-      })
-      // Ẩn group nếu không có item nào bên trong
-      .filter((group) => group.items.length > 0)
-  )
+  return rawMenuGroups
+    .filter((group) => {
+      if (group.showOnlyForRoles?.length) {
+        if (!group.showOnlyForRoles.some((r) => userRoles.includes(r))) return false
+      }
+      if (group.hideForRoles?.length) {
+        if (group.hideForRoles.some((r) => userRoles.includes(r))) return false
+      }
+      return true
+    })
+    .map((group) => {
+      const filteredItems = group.items
+        .filter((item) => hasPermission(item))
+        .map((item) => {
+          if (item.subItems) {
+            const filteredSub = item.subItems.filter((sub) => hasPermission(sub))
+            return { ...item, subItems: filteredSub.length ? filteredSub : undefined }
+          }
+          return item
+        })
+        .filter((item) => !item.subItems || item.subItems.length > 0)
+
+      return { ...group, items: filteredItems }
+    })
+    .filter((group) => group.items.length > 0)
 })
 
 const isActive = (path: string) => route.path === path || route.path.startsWith(path + '/')

@@ -13,16 +13,16 @@ use Modules\Payment\Http\Controllers\ZalopayController;
 */
 Route::middleware(['auth:admin'])->prefix('admin')->group(function () {
     // Extra routes trước để tránh conflict với {id}
-    Route::get('orders/trashed', [AdminOrderController::class, 'trashed']);
-    Route::delete('orders/bulk-delete', [AdminOrderController::class, 'bulkDelete']);
-    Route::get('orders/stats/revenue', [AdminOrderController::class, 'revenueStats']);
+    Route::get('orders/trashed', [AdminOrderController::class, 'trashed'])->middleware('permission:orders.view');
+    Route::delete('orders/bulk-delete', [AdminOrderController::class, 'bulkDelete'])->middleware('permission:orders.edit');
+    Route::get('orders/stats/revenue', [AdminOrderController::class, 'revenueStats'])->middleware('permission:orders.view');
 
     // Danh sách + chi tiết
-    Route::get('orders', [AdminOrderController::class, 'index']);
-    Route::get('orders/{id}', [AdminOrderController::class, 'show']);
-    Route::patch('orders/{id}/status', [AdminOrderController::class, 'updateStatus']);
-    Route::delete('orders/{id}', [AdminOrderController::class, 'destroy']);
-    Route::patch('orders/{id}/restore', [AdminOrderController::class, 'restore']);
+    Route::get('orders', [AdminOrderController::class, 'index'])->middleware('permission:orders.view');
+    Route::get('orders/{id}', [AdminOrderController::class, 'show'])->middleware('permission:orders.view');
+    Route::patch('orders/{id}/status', [AdminOrderController::class, 'updateStatus'])->middleware('permission:orders.edit');
+    Route::delete('orders/{id}', [AdminOrderController::class, 'destroy'])->middleware('permission:orders.edit');
+    Route::patch('orders/{id}/restore', [AdminOrderController::class, 'restore'])->middleware('permission:orders.edit');
 });
 
 /*

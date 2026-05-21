@@ -30,6 +30,9 @@ class Teachers extends Model
         'exp',
         'image',
         'status',
+        'bank_name',
+        'bank_account_number',
+        'bank_account_name',
     ];
 
     /**

@@ -7,6 +7,7 @@
         <p class="text-sm text-gray-500 mt-0.5">Quản lý tin tức và nội dung blog</p>
       </div>
       <router-link
+        v-permission="'posts.create'"
         to="/admin/posts/create"
         class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-colors"
       >
@@ -54,6 +55,17 @@
         <option value="1">Đã xuất bản</option>
         <option value="0">Bản nháp</option>
       </select>
+
+      <select
+        v-model="approvalStatusFilter"
+        @change="fetchPosts(1)"
+        class="border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white text-sm rounded-lg px-3 py-2 focus:outline-none"
+      >
+        <option value="">Tất cả duyệt</option>
+        <option value="pending">Chờ duyệt</option>
+        <option value="approved">Đã duyệt</option>
+        <option value="rejected">Từ chối</option>
+      </select>
     </div>
 
     <!-- Table -->
@@ -66,6 +78,7 @@
               <th class="text-left text-xs font-medium text-gray-500 px-4 py-3">Danh mục</th>
               <th class="text-left text-xs font-medium text-gray-500 px-4 py-3">Tác giả</th>
               <th class="text-left text-xs font-medium text-gray-500 px-4 py-3">Trạng thái</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Duyệt</th>
               <th class="text-left text-xs font-medium text-gray-500 px-4 py-3">Ngày tạo</th>
               <th class="text-right text-xs font-medium text-gray-500 px-4 py-3">Thao tác</th>
             </tr>
@@ -143,12 +156,41 @@
                     {{ post.is_published ? 'Đã xuất bản' : 'Bản nháp' }}
                   </span>
                 </td>
+                <td class="px-4 py-3 text-sm">
+                  <span
+                    :class="[
+                      'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium',
+                      post.approval_status === 'approved'
+                        ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                        : post.approval_status === 'rejected'
+                        ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                        : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
+                    ]"
+                  >
+                    {{ post.approval_status === 'approved' ? 'Đã duyệt' : post.approval_status === 'rejected' ? 'Từ chối' : 'Chờ duyệt' }}
+                  </span>
+                </td>
                 <td class="px-4 py-3 text-xs text-gray-500">
                   {{ formatDate(post.created_at) }}
                 </td>
                 <td class="px-4 py-3 text-right">
                   <div class="flex items-center justify-end gap-1">
+                    <template v-if="post.approval_status === 'pending'">
+                      <button
+                        @click="handleApprove(post.id)"
+                        class="text-green-600 hover:text-green-800 dark:text-green-400 text-xs font-medium"
+                      >
+                        Duyệt
+                      </button>
+                      <button
+                        @click="openRejectModal(post)"
+                        class="text-red-600 hover:text-red-800 dark:text-red-400 text-xs font-medium ml-2"
+                      >
+                        Từ chối
+                      </button>
+                    </template>
                     <router-link
+                      v-permission="'posts.edit'"
                       :to="`/admin/posts/${post.id}/edit`"
                       class="p-1.5 rounded-lg hover:bg-gray-100 text-gray-500 transition-colors"
                       title="Sửa"
@@ -166,6 +208,7 @@
                       </svg>
                     </router-link>
                     <button
+                      v-permission="'posts.delete'"
                       @click="deletePost(post.id)"
                       class="p-1.5 rounded-lg hover:bg-red-50 text-gray-500 hover:text-red-500 transition-colors"
                       title="Xoá"
@@ -187,7 +230,7 @@
               </tr>
             </template>
             <tr v-else>
-              <td colspan="6" class="px-4 py-12 text-center text-gray-400 text-sm">
+              <td colspan="7" class="px-4 py-12 text-center text-gray-400 text-sm">
                 Chưa có bài viết nào.
               </td>
             </tr>
@@ -205,11 +248,43 @@
         />
       </div>
     </div>
+
+    <!-- Reject Modal -->
+    <div
+      v-if="showRejectModal"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+    >
+      <div class="bg-white dark:bg-gray-900 rounded-xl shadow-xl p-6 w-full max-w-md mx-4">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Từ chối bài viết</h3>
+        <textarea
+          v-model="rejectReason"
+          rows="3"
+          placeholder="Nhập lý do từ chối..."
+          class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+        />
+        <div class="flex justify-end gap-3 mt-4">
+          <button
+            @click="showRejectModal = false"
+            class="px-4 py-2 text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400"
+          >
+            Hủy
+          </button>
+          <button
+            @click="handleReject()"
+            :disabled="!rejectReason.trim()"
+            class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm rounded-lg font-medium disabled:opacity-50"
+          >
+            Xác nhận từ chối
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
+import { useToast } from 'vue-toastification'
 import { PlusIcon } from '@/components/icons'
 import { usePosts } from '@/composables/usePosts'
 import { formatDate } from '@/utils/formatDate'
@@ -217,10 +292,24 @@ import PaginationBar from '@/components/common/PaginationBar.vue'
 import PostService from '@/services/post.service'
 import type { PostCategory } from '@/types/post.types'
 
-const { posts, loading, search, categoryFilter, statusFilter, pagination, fetchPosts, deletePost } =
-  usePosts()
+const toast = useToast()
+
+const {
+  posts,
+  loading,
+  search,
+  categoryFilter,
+  statusFilter,
+  approvalStatusFilter,
+  pagination,
+  fetchPosts,
+  deletePost,
+} = usePosts()
 
 const categories = ref<PostCategory[]>([])
+const showRejectModal = ref(false)
+const rejectReason = ref('')
+const rejectTargetId = ref<number | null>(null)
 
 async function fetchCategories() {
   try {
@@ -237,6 +326,34 @@ function debouncedFetch() {
   debounceTimer = setTimeout(() => {
     fetchPosts(1)
   }, 300)
+}
+
+async function handleApprove(id: number) {
+  try {
+    await PostService.approvePost(id)
+    toast.success('Đã duyệt bài viết.')
+    fetchPosts()
+  } catch {
+    toast.error('Không thể duyệt bài viết.')
+  }
+}
+
+function openRejectModal(post: { id: number }) {
+  rejectTargetId.value = post.id
+  rejectReason.value = ''
+  showRejectModal.value = true
+}
+
+async function handleReject() {
+  if (!rejectTargetId.value || !rejectReason.value.trim()) return
+  try {
+    await PostService.rejectPost(rejectTargetId.value, { rejection_reason: rejectReason.value })
+    toast.success('Đã từ chối bài viết.')
+    showRejectModal.value = false
+    fetchPosts()
+  } catch {
+    toast.error('Không thể từ chối bài viết.')
+  }
 }
 
 onMounted(() => {

@@ -7,6 +7,7 @@
         <p class="text-sm text-gray-500 mt-0.5">Quản lý các danh mục cho tin tức & blog</p>
       </div>
       <button
+        v-permission="'posts.create'"
         @click="openCreate"
         class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-colors"
       >
@@ -62,6 +63,7 @@
                 <td class="px-4 py-3 text-right">
                   <div class="flex items-center justify-end gap-1">
                     <button
+                      v-permission="'posts.edit'"
                       @click="openEdit(cat)"
                       class="p-1.5 rounded-lg hover:bg-gray-100 text-gray-500 transition-colors"
                       title="Sửa"
@@ -79,6 +81,7 @@
                       </svg>
                     </button>
                     <button
+                      v-permission="'posts.delete'"
                       @click="deleteCategory(cat.id)"
                       class="p-1.5 rounded-lg hover:bg-red-50 text-gray-500 hover:text-red-500 transition-colors"
                       title="Xoá"

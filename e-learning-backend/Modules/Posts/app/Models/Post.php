@@ -20,6 +20,8 @@ class Post extends Model
         'is_published',
         'published_at',
         'views',
+        'approval_status',
+        'rejection_reason',
     ];
 
     protected $casts = [

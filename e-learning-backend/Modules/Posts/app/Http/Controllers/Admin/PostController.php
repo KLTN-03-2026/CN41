@@ -8,6 +8,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Modules\Posts\Http\Requests\Admin\BulkDeletePostsRequest;
+use Modules\Posts\Http\Requests\Admin\RejectPostRequest;
 use Modules\Posts\Http\Requests\Admin\StorePostRequest;
 use Modules\Posts\Http\Requests\Admin\UpdatePostRequest;
 use Modules\Posts\Http\Resources\PostResource;
@@ -143,5 +144,35 @@ class PostController extends Controller
         $this->repository->forceDeleteById($id);
 
         return $this->success(null, 'Xóa vĩnh viễn bài viết thành công.');
+    }
+
+    public function approve(int $id): JsonResponse
+    {
+        $post = $this->repository->findOrFail($id);
+        $post->update([
+            'approval_status' => 'approved',
+            'is_published'    => true,
+            'published_at'    => $post->published_at ?? now(),
+        ]);
+
+        return $this->success(
+            new PostResource($post->fresh(['author', 'category', 'tags'])),
+            'Đã duyệt bài viết.'
+        );
+    }
+
+    public function reject(RejectPostRequest $request, int $id): JsonResponse
+    {
+        $post = $this->repository->findOrFail($id);
+        $post->update([
+            'approval_status'  => 'rejected',
+            'is_published'     => false,
+            'rejection_reason' => $request->rejection_reason,
+        ]);
+
+        return $this->success(
+            new PostResource($post->fresh(['author', 'category', 'tags'])),
+            'Đã từ chối bài viết.'
+        );
     }
 }

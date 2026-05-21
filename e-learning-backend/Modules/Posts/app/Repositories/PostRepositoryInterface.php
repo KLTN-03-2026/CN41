@@ -32,4 +32,9 @@ interface PostRepositoryInterface extends RepositoryInterface
      * Increment view count.
      */
     public function incrementViews(int $id): void;
+
+    /**
+     * Get paginated posts for a specific teacher (by author_id).
+     */
+    public function getFilteredForTeacher(int $authorId, array $filters, int $perPage): \Illuminate\Contracts\Pagination\LengthAwarePaginator;
 }

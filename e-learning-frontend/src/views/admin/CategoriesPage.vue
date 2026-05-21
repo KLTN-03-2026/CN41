@@ -30,6 +30,7 @@
             {{ allExpanded ? 'Thu gọn tất cả' : 'Mở rộng tất cả' }}
           </button>
           <button
+            v-permission="'categories.create'"
             @click="openCreate"
             class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-colors"
           >
@@ -75,6 +76,7 @@
       @toggle-expand="toggleExpand"
       @edit="openEdit"
       @delete="softDelete.confirm"
+      @add-child="openCreateChild"
       @page-change="fetchCategories"
     />
 
@@ -229,6 +231,7 @@ const {
   form,
   autoSlug,
   openCreate,
+  openCreateChild,
   openEdit,
   closeModal,
   submitForm,

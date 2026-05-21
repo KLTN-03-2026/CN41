@@ -106,22 +106,27 @@
 
             <!-- Price -->
             <div class="mt-auto">
-              <span
-                v-if="course.sale_price && Number(course.sale_price) > 0"
-                class="font-bold text-primary-600 text-sm"
-              >
-                {{ formatCurrency(Number(course.sale_price)) }}
-              </span>
-              <span
-                class="font-bold text-sm ml-1"
-                :class="
-                  course.sale_price && Number(course.sale_price) > 0
-                    ? 'line-through text-gray-400 text-xs'
-                    : 'text-primary-600'
-                "
-              >
-                {{ Number(course.price) === 0 ? 'Miễn phí' : formatCurrency(Number(course.price)) }}
-              </span>
+              <template v-if="effectivePrice(course) === 0">
+                <span class="font-bold text-green-600 text-sm">Miễn phí</span>
+              </template>
+              <template v-else>
+                <span
+                  v-if="course.sale_price && Number(course.sale_price) > 0"
+                  class="font-bold text-primary-600 text-sm"
+                >
+                  {{ formatCurrency(Number(course.sale_price)) }}
+                </span>
+                <span
+                  class="font-bold text-sm ml-1"
+                  :class="
+                    course.sale_price && Number(course.sale_price) > 0
+                      ? 'line-through text-gray-400 text-xs'
+                      : 'text-primary-600'
+                  "
+                >
+                  {{ formatCurrency(Number(course.price)) }}
+                </span>
+              </template>
             </div>
           </div>
         </router-link>
@@ -143,6 +148,14 @@ defineProps<{
 
 function levelLabel(level: string) {
   return { beginner: 'Cơ bản', intermediate: 'Trung cấp', advanced: 'Nâng cao' }[level] || level
+}
+
+function effectivePrice(course: Course) {
+  const sale = course.sale_price
+  if (sale !== null && sale !== undefined && Number(sale) < Number(course.price)) {
+    return Number(sale)
+  }
+  return Number(course.price)
 }
 
 function levelClass(level: string) {

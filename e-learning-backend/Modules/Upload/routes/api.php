@@ -12,16 +12,22 @@ use Modules\Upload\Http\Controllers\UploadController;
 */
 Route::middleware(['auth:admin'])->prefix('admin')->group(function () {
     // Local flow
-    Route::post('upload/video', [UploadController::class, 'uploadVideo']);
-    Route::post('upload/document', [UploadController::class, 'uploadDocument']);
-    Route::post('upload/image', [UploadController::class, 'uploadImage']);
+    Route::post('upload/video', [UploadController::class, 'uploadVideo'])
+        ->middleware('permission:lessons.create|lessons.edit');
+    Route::post('upload/document', [UploadController::class, 'uploadDocument'])
+        ->middleware('permission:lessons.create|lessons.edit');
+    Route::post('upload/image', [UploadController::class, 'uploadImage'])
+        ->middleware('permission:courses.create|courses.edit|users.edit|posts.create|posts.edit');
 
     // S3 flow
-    Route::post('upload/presigned', [UploadController::class, 'presigned']);
-    Route::post('upload/{id}/confirm', [UploadController::class, 'confirm']);
+    Route::post('upload/presigned', [UploadController::class, 'presigned'])
+        ->middleware('permission:lessons.create|lessons.edit|courses.create|courses.edit');
+    Route::post('upload/{id}/confirm', [UploadController::class, 'confirm'])
+        ->middleware('permission:lessons.create|lessons.edit|courses.create|courses.edit');
 
     // Delete (dùng chung cho cả 2 flow)
-    Route::delete('upload/{id}', [UploadController::class, 'destroy']);
+    Route::delete('upload/{id}', [UploadController::class, 'destroy'])
+        ->middleware('permission:courses.edit|courses.delete|lessons.edit|lessons.delete|posts.edit|posts.delete');
 });
 
 // Stream nội dung media — auth được xử lý trong controller (hỗ trợ token qua query param)

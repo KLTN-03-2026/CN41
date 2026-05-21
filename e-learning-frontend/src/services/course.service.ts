@@ -17,11 +17,11 @@ export const courseService = {
   store: (data: Record<string, unknown>): Promise<AxiosResponse<ApiResponse<Course>>> =>
     http.post('/admin/courses', data),
 
-  /** PUT /admin/courses/{id} */
+  /** PATCH /admin/courses/{id} */
   update: (
     id: number,
     data: Record<string, unknown>,
-  ): Promise<AxiosResponse<ApiResponse<Course>>> => http.put(`/admin/courses/${id}`, data),
+  ): Promise<AxiosResponse<ApiResponse<Course>>> => http.patch(`/admin/courses/${id}`, data),
 
   /** DELETE /admin/courses/{id} (soft delete) */
   destroy: (id: number): Promise<AxiosResponse<ApiResponse<null>>> =>

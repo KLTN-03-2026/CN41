@@ -28,15 +28,20 @@
       <p class="text-xs text-gray-500 mb-3">{{ course.teacher?.name || 'Giảng viên' }}</p>
       <div class="mt-auto flex items-center justify-between">
         <div>
-          <span v-if="course.sale_price" class="font-bold text-blue-600 text-sm">
-            {{ formatCurrency(Number(course.sale_price)) }}
-          </span>
-          <span
-            class="font-bold text-sm"
-            :class="course.sale_price ? 'line-through text-gray-400 text-xs ml-1' : 'text-blue-600'"
-          >
-            {{ formatCurrency(Number(course.price)) }}
-          </span>
+          <template v-if="isFree">
+            <span class="font-bold text-green-600 text-sm">Miễn phí</span>
+          </template>
+          <template v-else>
+            <span v-if="hasDiscount" class="font-bold text-blue-600 text-sm">
+              {{ formatCurrency(Number(course.sale_price)) }}
+            </span>
+            <span
+              class="font-bold text-sm"
+              :class="hasDiscount ? 'line-through text-gray-400 text-xs ml-1' : 'text-blue-600'"
+            >
+              {{ formatCurrency(Number(course.price)) }}
+            </span>
+          </template>
         </div>
         <span v-if="showStudents" class="text-xs text-gray-400">{{ course.total_students || 0 }} học viên</span>
       </div>
@@ -45,6 +50,7 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import { formatCurrency } from '@/utils/formatCurrency'
 
 interface Course {
@@ -59,7 +65,7 @@ interface Course {
   teacher?: { id: number; name: string } | null
 }
 
-withDefaults(defineProps<{
+const props = withDefaults(defineProps<{
   course: Course;
   imageClass?: string;
   titleClass?: string;
@@ -68,6 +74,19 @@ withDefaults(defineProps<{
   imageClass: 'h-44',
   titleClass: 'text-sm',
   showStudents: true
+})
+
+const hasDiscount = computed(() => {
+  const sale = props.course.sale_price
+  if (sale === null || sale === undefined) return false
+  return Number(sale) < Number(props.course.price)
+})
+
+const isFree = computed(() => {
+  const effective = hasDiscount.value
+    ? Number(props.course.sale_price)
+    : Number(props.course.price)
+  return effective === 0
 })
 
 function levelLabel(level: string) {
