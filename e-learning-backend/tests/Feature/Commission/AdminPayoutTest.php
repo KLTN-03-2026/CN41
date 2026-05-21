@@ -10,7 +10,7 @@ use Tests\Traits\HasAdminUser;
 
 class AdminPayoutTest extends TestCase
 {
-    use RefreshDatabase, HasAdminUser;
+    use HasAdminUser, RefreshDatabase;
 
     private function makeTeacher(): Teachers
     {

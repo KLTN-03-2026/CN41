@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Log;
 use Modules\Course\Models\Course;
 use Modules\Payment\Events\OrderPlaced;
 use Modules\Payment\Models\Order;
+use Modules\Payment\Models\OrderItem;
 use Modules\Payment\Models\Transaction;
 
 class VnpayService
@@ -244,7 +245,7 @@ class VnpayService
         // Auto-cancel các pending/failed orders khác chứa cùng courses (student đã sở hữu rồi)
         $courseIds = $order->items->pluck('course_id')->toArray();
         if (! empty($courseIds)) {
-            $siblingIds = \Modules\Payment\Models\OrderItem::whereIn('course_id', $courseIds)
+            $siblingIds = OrderItem::whereIn('course_id', $courseIds)
                 ->whereHas('order', fn ($q) => $q
                     ->where('student_id', $order->student_id)
                     ->whereIn('status', ['pending', 'failed'])

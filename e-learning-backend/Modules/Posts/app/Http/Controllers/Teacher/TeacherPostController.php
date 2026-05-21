@@ -39,9 +39,9 @@ class TeacherPostController extends Controller
     public function store(StoreTeacherPostRequest $request): JsonResponse
     {
         $data = array_merge($request->validated(), [
-            'author_id'       => $this->authorId(),
+            'author_id' => $this->authorId(),
             'approval_status' => 'pending',
-            'is_published'    => false,
+            'is_published' => false,
         ]);
 
         $post = DB::transaction(function () use ($data) {

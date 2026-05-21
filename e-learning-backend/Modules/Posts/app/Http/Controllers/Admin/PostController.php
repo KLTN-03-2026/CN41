@@ -151,8 +151,8 @@ class PostController extends Controller
         $post = $this->repository->findOrFail($id);
         $post->update([
             'approval_status' => 'approved',
-            'is_published'    => true,
-            'published_at'    => $post->published_at ?? now(),
+            'is_published' => true,
+            'published_at' => $post->published_at ?? now(),
         ]);
 
         return $this->success(
@@ -165,8 +165,8 @@ class PostController extends Controller
     {
         $post = $this->repository->findOrFail($id);
         $post->update([
-            'approval_status'  => 'rejected',
-            'is_published'     => false,
+            'approval_status' => 'rejected',
+            'is_published' => false,
             'rejection_reason' => $request->rejection_reason,
         ]);
 

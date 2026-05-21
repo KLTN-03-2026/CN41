@@ -10,7 +10,7 @@ use Tests\Traits\HasAdminUser;
 
 class TeacherEarningsTest extends TestCase
 {
-    use RefreshDatabase, HasAdminUser;
+    use HasAdminUser, RefreshDatabase;
 
     public function test_admin_can_get_teacher_earnings_summary(): void
     {

@@ -4,23 +4,24 @@ namespace Tests\Feature\Admin;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Modules\Posts\Models\Post;
+use Modules\Users\Models\User;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 use Tests\Traits\HasAdminUser;
 
 class TeacherPostTest extends TestCase
 {
-    use RefreshDatabase, HasAdminUser;
+    use HasAdminUser, RefreshDatabase;
 
     private function createPost(array $attrs = []): Post
     {
         return Post::create(array_merge([
-            'title'           => 'Test Post',
-            'slug'            => 'test-post-' . uniqid(),
-            'content'         => 'content',
-            'author_id'       => 1,
+            'title' => 'Test Post',
+            'slug' => 'test-post-'.uniqid(),
+            'content' => 'content',
+            'author_id' => 1,
             'approval_status' => 'pending',
-            'is_published'    => false,
+            'is_published' => false,
         ], $attrs));
     }
 
@@ -34,9 +35,9 @@ class TeacherPostTest extends TestCase
             ->assertJsonPath('success', true);
 
         $this->assertDatabaseHas('posts', [
-            'id'              => $post->id,
+            'id' => $post->id,
             'approval_status' => 'approved',
-            'is_published'    => true,
+            'is_published' => true,
         ]);
     }
 
@@ -52,9 +53,9 @@ class TeacherPostTest extends TestCase
             ->assertJsonPath('success', true);
 
         $this->assertDatabaseHas('posts', [
-            'id'               => $post->id,
-            'approval_status'  => 'rejected',
-            'is_published'     => false,
+            'id' => $post->id,
+            'approval_status' => 'rejected',
+            'is_published' => false,
             'rejection_reason' => 'Nội dung không phù hợp.',
         ]);
     }
@@ -81,16 +82,17 @@ class TeacherPostTest extends TestCase
         $this->assertEquals('pending', $res->json('data.0.approval_status'));
     }
 
-    private function setupTeacher(string $email = 'teacher@test.com'): \Modules\Users\Models\User
+    private function setupTeacher(string $email = 'teacher@test.com'): User
     {
         Role::firstOrCreate(['name' => 'teacher', 'guard_name' => 'admin']);
-        $user = \Modules\Users\Models\User::forceCreate([
-            'name'     => 'Teacher Test',
-            'email'    => $email,
+        $user = User::forceCreate([
+            'name' => 'Teacher Test',
+            'email' => $email,
             'password' => bcrypt('password'),
         ]);
         $user->assignRole('teacher');
         $this->actingAs($user, 'admin');
+
         return $user;
     }
 
@@ -99,18 +101,18 @@ class TeacherPostTest extends TestCase
         $this->setupTeacher();
 
         $res = $this->postJson('/api/v1/teacher/posts', [
-            'title'            => 'My Teaching Post',
-            'slug'             => 'my-teaching-post',
-            'content'          => 'Educational content here.',
+            'title' => 'My Teaching Post',
+            'slug' => 'my-teaching-post',
+            'content' => 'Educational content here.',
             'post_category_id' => null,
-            'tag_ids'          => [],
+            'tag_ids' => [],
         ]);
 
         $res->assertStatus(201)->assertJsonPath('success', true);
         $this->assertDatabaseHas('posts', [
-            'slug'            => 'my-teaching-post',
+            'slug' => 'my-teaching-post',
             'approval_status' => 'pending',
-            'is_published'    => false,
+            'is_published' => false,
         ]);
     }
 
@@ -145,14 +147,14 @@ class TeacherPostTest extends TestCase
         $post = $this->createPost(['author_id' => $teacher->id]);
 
         $this->patchJson("/api/v1/teacher/posts/{$post->id}", [
-            'title'   => 'Updated Title',
+            'title' => 'Updated Title',
             'content' => 'Updated content.',
         ])
             ->assertStatus(200)
             ->assertJsonPath('success', true);
 
         $this->assertDatabaseHas('posts', [
-            'id'    => $post->id,
+            'id' => $post->id,
             'title' => 'Updated Title',
         ]);
     }
@@ -173,9 +175,9 @@ class TeacherPostTest extends TestCase
     {
         // Create a plain admin (not teacher role)
         Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'admin']);
-        $admin = \Modules\Users\Models\User::forceCreate([
-            'name'     => 'Plain Admin',
-            'email'    => 'plain_admin@test.com',
+        $admin = User::forceCreate([
+            'name' => 'Plain Admin',
+            'email' => 'plain_admin@test.com',
             'password' => bcrypt('password'),
         ]);
         $admin->assignRole('admin');

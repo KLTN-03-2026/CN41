@@ -9,7 +9,7 @@ use Tests\Traits\HasAdminUser;
 
 class CommissionSettingsTest extends TestCase
 {
-    use RefreshDatabase, HasAdminUser;
+    use HasAdminUser, RefreshDatabase;
 
     public function test_get_returns_current_rate(): void
     {

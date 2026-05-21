@@ -24,7 +24,7 @@ class RejectPostRequest extends FormRequest
     {
         return [
             'rejection_reason.required' => 'Vui lòng nhập lý do từ chối.',
-            'rejection_reason.max'      => 'Lý do từ chối không quá 500 ký tự.',
+            'rejection_reason.max' => 'Lý do từ chối không quá 500 ký tự.',
         ];
     }
 
@@ -33,7 +33,7 @@ class RejectPostRequest extends FormRequest
         throw new HttpResponseException(response()->json([
             'success' => false,
             'message' => 'Dữ liệu không hợp lệ.',
-            'errors'  => $validator->errors(),
+            'errors' => $validator->errors(),
         ], 422));
     }
 }

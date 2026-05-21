@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Modules\Categories\Database\Seeders\CategoriesDatabaseSeeder;
+use Modules\Commission\Database\Seeders\CommissionSettingSeeder;
 use Modules\Coupons\Database\Seeders\CouponsDatabaseSeeder;
 use Modules\Course\Database\Seeders\CourseDatabaseSeeder;
 use Modules\Lessons\Database\Seeders\LessonDatabaseSeeder;
@@ -15,7 +16,6 @@ use Modules\Quiz\Database\Seeders\QuizDatabaseSeeder;
 use Modules\Students\Database\Seeders\StudentsDatabaseSeeder;
 use Modules\Teachers\Database\Seeders\TeachersDatabaseSeeder;
 use Modules\Upload\Database\Seeders\MediaFileSeeder;
-use Modules\Commission\Database\Seeders\CommissionSettingSeeder;
 use Modules\Users\Database\Seeders\AdminUserSeeder;
 use Modules\Users\Database\Seeders\RolePermissionSeeder;
 

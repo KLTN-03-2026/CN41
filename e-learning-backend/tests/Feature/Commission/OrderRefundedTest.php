@@ -15,7 +15,7 @@ use Tests\Traits\HasAdminUser;
 
 class OrderRefundedTest extends TestCase
 {
-    use RefreshDatabase, HasAdminUser;
+    use HasAdminUser, RefreshDatabase;
 
     public function test_updating_order_to_refunded_creates_debit_earnings(): void
     {

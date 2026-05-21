@@ -8,6 +8,7 @@ use Modules\Commission\Models\TeacherEarning;
 use Modules\Commission\Models\TeacherPayout;
 use Modules\Commission\Services\CommissionService;
 use Modules\Course\Models\Course;
+use Modules\Payment\Events\OrderPlaced;
 use Modules\Payment\Models\Order;
 use Modules\Payment\Models\OrderItem;
 use Modules\Students\Models\Student;
@@ -122,7 +123,7 @@ class CommissionServiceTest extends TestCase
         CommissionSetting::create(['teacher_rate' => 70.00]);
         $order = $this->makeOrder();
 
-        event(new \Modules\Payment\Events\OrderPlaced($order));
+        event(new OrderPlaced($order));
 
         $this->assertDatabaseHas('teacher_earnings', ['type' => 'credit']);
     }

@@ -36,5 +36,5 @@ interface PostRepositoryInterface extends RepositoryInterface
     /**
      * Get paginated posts for a specific teacher (by author_id).
      */
-    public function getFilteredForTeacher(int $authorId, array $filters, int $perPage): \Illuminate\Contracts\Pagination\LengthAwarePaginator;
+    public function getFilteredForTeacher(int $authorId, array $filters, int $perPage): LengthAwarePaginator;
 }
