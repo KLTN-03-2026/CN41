@@ -47,6 +47,7 @@ class PostRepository extends BaseRepository implements PostRepositoryInterface
 
         $query = $this->model->newQuery()
             ->where('is_published', true)
+            ->where('approval_status', 'approved')
             ->whereNotNull('published_at')
             ->where('published_at', '<=', now())
             ->with(['author', 'category', 'tags'])
@@ -80,6 +81,7 @@ class PostRepository extends BaseRepository implements PostRepositoryInterface
         return $this->model->newQuery()
             ->where('slug', $slug)
             ->where('is_published', true)
+            ->where('approval_status', 'approved')
             ->with(['author', 'category', 'tags', 'comments' => function ($q) {
                 $q->where('is_approved', true)->whereNull('parent_id')->with('replies.adminUser', 'replies.student', 'adminUser', 'student');
             }])
