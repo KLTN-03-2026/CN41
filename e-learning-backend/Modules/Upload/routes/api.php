@@ -33,3 +33,4 @@ Route::middleware(['auth:admin'])->prefix('admin')->group(function () {
 // Stream nội dung media — auth được xử lý trong controller (hỗ trợ token qua query param)
 Route::get('media/{id}/stream', [UploadController::class, 'stream'])->name('media.stream');
 Route::get('media/{id}/hls-key', [UploadController::class, 'hlsKey'])->name('media.hls-key');
+Route::get('media/{id}/document', [UploadController::class, 'streamDocument'])->name('media.document');
