@@ -7,6 +7,7 @@ use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 use Modules\Course\Models\Course;
 use Modules\Course\Repositories\CourseRepositoryInterface;
@@ -17,9 +18,12 @@ use Modules\Lessons\Http\Requests\BulkRestoreLessonRequest;
 use Modules\Lessons\Http\Requests\IndexLessonRequest;
 use Modules\Lessons\Http\Requests\ReorderLessonRequest;
 use Modules\Lessons\Http\Requests\StoreLessonRequest;
+use Modules\Lessons\Http\Requests\StoreNoteRequest;
 use Modules\Lessons\Http\Requests\UpdateLessonRequest;
+use Modules\Lessons\Http\Requests\UpdateNoteRequest;
 use Modules\Lessons\Http\Requests\UpdateProgressRequest;
 use Modules\Lessons\Http\Resources\LessonResource;
+use Modules\Lessons\Models\LessonNote;
 use Modules\Lessons\Repositories\LessonRepositoryInterface;
 use Modules\Lessons\Repositories\SectionRepositoryInterface;
 
@@ -278,16 +282,21 @@ class LessonController extends Controller
             return $this->error('Bài học không tồn tại.', 404);
         }
 
-        $token = $request->bearerToken();
-        $videoUrl = $lesson->video
-            ? url('api/v1/media/'.$lesson->video->id.'/stream').($token ? '?token='.urlencode($token) : '')
-            : null;
+        $videoUrl = null;
+        if ($lesson->video) {
+            if ($lesson->video->hls_status === 'ready' && $lesson->video->hls_path) {
+                $videoUrl = asset('storage/'.$lesson->video->hls_path);
+            } else {
+                $videoUrl = URL::temporarySignedRoute('api.media.stream', now()->addHours(2), ['id' => $lesson->video->id]);
+            }
+        }
 
         return $this->success([
             'id' => $lesson->id,
             'title' => $lesson->title,
             'type' => $lesson->type,
             'video_url' => $videoUrl,
+            'document_id' => $lesson->document ? $lesson->document->id : null,
             'document_url' => $lesson->document ? $lesson->document->url : null,
             'content' => $lesson->content,
             'course_name' => $course->name,
@@ -380,6 +389,84 @@ class LessonController extends Controller
             'percent' => $percent,
             'sections' => $sections,
         ], 'Lấy tiến độ học thành công.');
+    }
+
+    public function myNotes(int $id): JsonResponse
+    {
+        $lesson = $this->repository->find($id);
+
+        if (! $lesson) {
+            return $this->error('Bài giảng không tồn tại.', 404);
+        }
+
+        if (! $this->courseRepo->isEnrolled($lesson->course_id, auth('api')->id())) {
+            return $this->error('Bạn chưa mua khóa học này.', 403);
+        }
+
+        $notes = LessonNote::where('student_id', auth('api')->id())
+            ->where('lesson_id', $id)
+            ->orderBy('timestamp_seconds')
+            ->orderBy('created_at')
+            ->get(['id', 'content', 'timestamp_seconds', 'created_at', 'updated_at']);
+
+        return $this->success($notes, 'Lấy danh sách ghi chú thành công.');
+    }
+
+    public function storeNote(StoreNoteRequest $request, int $id): JsonResponse
+    {
+        $lesson = $this->repository->find($id);
+
+        if (! $lesson) {
+            return $this->error('Bài giảng không tồn tại.', 404);
+        }
+
+        if (! $this->courseRepo->isEnrolled($lesson->course_id, auth('api')->id())) {
+            return $this->error('Bạn chưa mua khóa học này.', 403);
+        }
+
+        $note = LessonNote::create([
+            'student_id' => auth('api')->id(),
+            'lesson_id' => $id,
+            'content' => $request->validated()['content'],
+            'timestamp_seconds' => $request->validated()['timestamp_seconds'] ?? null,
+        ]);
+
+        return $this->success(
+            $note->only(['id', 'content', 'timestamp_seconds', 'created_at', 'updated_at']),
+            'Đã thêm ghi chú.',
+            201
+        );
+    }
+
+    public function updateNote(UpdateNoteRequest $request, int $noteId): JsonResponse
+    {
+        $note = LessonNote::where('id', $noteId)
+            ->where('student_id', auth('api')->id())
+            ->first();
+
+        if (! $note) {
+            return $this->error('Ghi chú không tồn tại.', 404);
+        }
+
+        $note->update(['content' => $request->validated()['content']]);
+
+        return $this->success(
+            $note->fresh(['id', 'content', 'timestamp_seconds', 'created_at', 'updated_at']),
+            'Đã cập nhật ghi chú.'
+        );
+    }
+
+    public function destroyNote(int $noteId): JsonResponse
+    {
+        $deleted = LessonNote::where('id', $noteId)
+            ->where('student_id', auth('api')->id())
+            ->delete();
+
+        if (! $deleted) {
+            return $this->error('Ghi chú không tồn tại.', 404);
+        }
+
+        return $this->success(null, 'Đã xóa ghi chú.');
     }
 
     private function formatLesson($lesson, $progressMap): array
