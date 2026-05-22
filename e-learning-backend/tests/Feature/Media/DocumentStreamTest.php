@@ -100,4 +100,19 @@ class DocumentStreamTest extends TestCase
 
         $response->assertStatus(400);
     }
+
+    public function test_returns_422_when_watermark_service_throws(): void
+    {
+        $admin = $this->setupAdmin();
+        $media = $this->makePdfMedia($admin->id);
+
+        $this->mock(DocumentWatermarkService::class)
+            ->shouldReceive('applyWatermark')
+            ->once()
+            ->andThrow(new \RuntimeException('PDF parse error'));
+
+        $response = $this->get("/api/v1/media/{$media->id}/document");
+
+        $response->assertStatus(422);
+    }
 }

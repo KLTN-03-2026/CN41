@@ -256,12 +256,20 @@ class UploadController extends Controller
             $email = $admin->email.' (admin)';
         }
 
-        $watermarked = app(DocumentWatermarkService::class)
-            ->applyWatermark($pdfBytes, $email);
+        try {
+            $watermarked = app(DocumentWatermarkService::class)
+                ->applyWatermark($pdfBytes, $email);
+        } catch (\RuntimeException $e) {
+            Log::error('Document watermark failed', [
+                'media_id' => $id,
+                'error' => $e->getMessage(),
+            ]);
+            abort(422, 'Không thể xử lý tài liệu.');
+        }
 
         return response($watermarked, 200, [
             'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'inline; filename="'.$mediaFile->original_name.'"',
+            'Content-Disposition' => 'inline; filename="'.addcslashes(basename($mediaFile->original_name), '"\\').'"',
             'Cache-Control' => 'no-store, no-cache',
         ]);
     }
