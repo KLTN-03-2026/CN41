@@ -2,14 +2,18 @@
 
 namespace Modules\Upload\Services;
 
-class WatermarkPdf extends \setasign\Fpdi\Fpdi
+use setasign\Fpdi\Fpdi;
+use setasign\Fpdi\PdfParser\CrossReferenceException;
+use setasign\Fpdi\PdfParser\PdfParserException;
+
+class WatermarkPdf extends Fpdi
 {
     /** @var array<string, array{ca: float, CA: float, n?: int}> */
     private array $extGStates = [];
 
     public function setAlphaValue(float $alpha): void
     {
-        $gsId = 'GS' . (count($this->extGStates) + 1);
+        $gsId = 'GS'.(count($this->extGStates) + 1);
         $this->extGStates[$gsId] = ['ca' => $alpha, 'CA' => $alpha];
         $this->_out("/{$gsId} gs");
     }
@@ -20,9 +24,9 @@ class WatermarkPdf extends \setasign\Fpdi\Fpdi
      * then places a text cell at the rotated position.
      *
      * @param  float  $angle  Rotation angle in degrees (counter-clockwise)
-     * @param  float  $cx     Center X in mm (page coordinates)
-     * @param  float  $cy     Center Y in mm (page coordinates)
-     * @param  string $text   Text to render
+     * @param  float  $cx  Center X in mm (page coordinates)
+     * @param  float  $cy  Center Y in mm (page coordinates)
+     * @param  string  $text  Text to render
      */
     public function rotatedText(float $angle, float $cx, float $cy, string $text): void
     {
@@ -79,7 +83,7 @@ class WatermarkPdf extends \setasign\Fpdi\Fpdi
         foreach ($this->extGStates as $id => &$state) {
             $this->_newobj();
             $state['n'] = $this->n;
-            $this->_out('<</Type /ExtGState /ca ' . $state['ca'] . ' /CA ' . $state['CA'] . '>>');
+            $this->_out('<</Type /ExtGState /ca '.$state['ca'].' /CA '.$state['CA'].'>>');
             $this->_out('endobj');
         }
         unset($state);
@@ -105,11 +109,12 @@ class DocumentWatermarkService
 {
     public function applyWatermark(string $pdfContent, string $email): string
     {
-        $tmpIn = tempnam(sys_get_temp_dir(), 'wm_in_') . '.pdf';
+        $tmpBase = tempnam(sys_get_temp_dir(), 'wm_in_');
+        $tmpIn = $tmpBase.'.pdf';
         file_put_contents($tmpIn, $pdfContent);
 
         try {
-            $pdf = new WatermarkPdf();
+            $pdf = new WatermarkPdf;
             $pageCount = $pdf->setSourceFile($tmpIn);
 
             for ($i = 1; $i <= $pageCount; $i++) {
@@ -128,7 +133,7 @@ class DocumentWatermarkService
                 }
 
                 // Email diagonal watermark
-                if ($email !== '') {
+                if (trim($email) !== '') {
                     $pdf->SetFont('Helvetica', '', 11);
                     $pdf->SetTextColor(180, 180, 180);
                     $pdf->setAlphaValue(0.25);
@@ -143,8 +148,11 @@ class DocumentWatermarkService
             }
 
             return $pdf->Output('S');
+        } catch (CrossReferenceException|PdfParserException $e) {
+            throw new \RuntimeException('Cannot watermark PDF: '.$e->getMessage(), 0, $e);
         } finally {
             @unlink($tmpIn);
+            @unlink($tmpBase);
         }
     }
 }

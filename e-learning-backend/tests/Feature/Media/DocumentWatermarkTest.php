@@ -2,20 +2,18 @@
 
 namespace Tests\Feature\Media;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Modules\Upload\Services\DocumentWatermarkService;
 use Tests\TestCase;
 
 class DocumentWatermarkTest extends TestCase
 {
-    use RefreshDatabase;
-
     private function makeMinimalPdf(): string
     {
-        $fpdf = new \FPDF();
+        $fpdf = new \FPDF;
         $fpdf->AddPage();
         $fpdf->SetFont('Arial', '', 14);
         $fpdf->Cell(0, 10, 'Test Document');
+
         return $fpdf->Output('S');
     }
 
