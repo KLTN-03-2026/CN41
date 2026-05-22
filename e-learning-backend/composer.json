@@ -17,6 +17,8 @@
         "laravel/tinker": "^2.10.1",
         "nwidart/laravel-modules": "^12.0",
         "opcodesio/log-viewer": "^3.23",
+        "setasign/fpdf": "^1.8",
+        "setasign/fpdi": "^2.6",
         "spatie/laravel-activitylog": "^4.0",
         "spatie/laravel-pdf": "^2.4",
         "spatie/laravel-permission": "^6.24"
