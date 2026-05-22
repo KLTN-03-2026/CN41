@@ -4,7 +4,8 @@
       ref="videoEl"
       :src="isHls ? undefined : url"
       controls
-      controlsList="nodownload nofullscreen"
+      controlsList="nodownload nofullscreen noremoteplayback"
+      disablePictureInPicture
       class="video-player"
       @loadedmetadata="onLoadedMetadata"
       @timeupdate="onTimeUpdate"
@@ -185,6 +186,20 @@ defineExpose({ videoElement: videoEl })
 </script>
 
 <style scoped>
+.video-wrapper {
+  position: relative;
+  width: 100%;
+  background: #000;
+  overflow: hidden;
+}
+
+.video-player {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+}
+
 .logo-watermark {
   position: absolute;
   bottom: 12px;
@@ -219,17 +234,28 @@ defineExpose({ videoElement: videoEl })
   opacity: 1;
 }
 
-.video-wrapper:fullscreen,
-.video-wrapper:-webkit-full-screen {
-  background: #000;
+/* Tách thành 2 rule riêng — trình duyệt bỏ cả rule nếu gặp selector không hiểu */
+.video-wrapper:fullscreen {
   width: 100vw;
   height: 100vh;
+  background: #000;
 }
 
-.video-wrapper:fullscreen .video-player,
+.video-wrapper:-webkit-full-screen {
+  width: 100vw;
+  height: 100vh;
+  background: #000;
+}
+
+.video-wrapper:fullscreen .video-player {
+  width: 100%;
+  height: 100vh;
+  object-fit: contain;
+}
+
 .video-wrapper:-webkit-full-screen .video-player {
   width: 100%;
-  height: 100%;
+  height: 100vh;
   object-fit: contain;
 }
 </style>
