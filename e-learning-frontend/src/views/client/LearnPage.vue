@@ -135,8 +135,8 @@
 
           <!-- Document viewer -->
           <LearnDocumentViewer
-            v-if="currentLesson.type === 'document' && lessonDetail?.document_url"
-            :url="lessonDetail.document_url"
+            v-if="currentLesson.type === 'document' && documentUrl"
+            :url="documentUrl"
             :title="currentLesson.title"
           />
 
@@ -384,6 +384,13 @@ const currentVideoTime = ref(0)
 const expandedSections = reactive<Record<number, boolean>>({})
 
 // ── Computed ───────────────────────────────────────────────────
+const documentUrl = computed(() => {
+  if (!lessonDetail.value?.document_id) return null
+  const base = import.meta.env.VITE_API_URL ?? '/api/v1'
+  const token = studentAuthStore.token
+  return `${base}/media/${lessonDetail.value.document_id}/document${token ? '?token=' + encodeURIComponent(token) : ''}`
+})
+
 const currentIndex = computed(() =>
   lessons.value.findIndex((l) => l.id === currentLesson.value?.id),
 )

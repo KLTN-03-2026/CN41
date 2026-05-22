@@ -25,6 +25,7 @@ export interface Lesson {
   duration?: number
   is_preview?: boolean
   video_url?: string
+  document_id?: number
   document_url?: string
   content?: string
   course_name?: string
@@ -40,4 +41,12 @@ export interface Section {
   id: number | null
   title: string
   lessons: Lesson[]
+}
+
+export interface LessonNote {
+  id: number
+  content: string
+  timestamp_seconds: number | null
+  created_at: string
+  updated_at: string
 }
