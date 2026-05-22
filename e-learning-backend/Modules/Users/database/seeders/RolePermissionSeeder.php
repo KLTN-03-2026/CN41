@@ -11,20 +11,31 @@ class RolePermissionSeeder extends Seeder
 {
     public function run(): void
     {
-        // Reset cache
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
         $guard = 'admin';
 
-        // ── Permissions ──
+        // Delete renamed permissions so they don't linger in the DB
+        Permission::where('guard_name', $guard)
+            ->whereIn('name', [
+                'users.view', 'users.create', 'users.edit', 'users.delete',
+                'categories.view', 'categories.create', 'categories.edit', 'categories.delete',
+            ])
+            ->delete();
+
         $permissions = [
-            // Users & Roles
-            'users.view', 'users.create', 'users.edit', 'users.delete',
+            // Admin-user management (staff accounts — /admin/users)
+            'admin_users.view', 'admin_users.create', 'admin_users.edit', 'admin_users.delete',
+            // Roles & permissions management (/admin/roles)
             'roles.view', 'roles.create', 'roles.edit', 'roles.delete',
+            // Teacher account management (/admin/teachers)
+            'teachers.view', 'teachers.create', 'teachers.edit', 'teachers.delete',
             // Courses
             'courses.view', 'courses.create', 'courses.edit', 'courses.delete',
-            // Categories
-            'categories.view', 'categories.create', 'categories.edit', 'categories.delete',
+            // Course categories (/admin/categories)
+            'course_categories.view', 'course_categories.create', 'course_categories.edit', 'course_categories.delete',
+            // Post categories (/admin/post-categories)
+            'post_categories.view', 'post_categories.create', 'post_categories.edit', 'post_categories.delete',
             // Lessons
             'lessons.view', 'lessons.create', 'lessons.edit', 'lessons.delete',
             // Quizzes
@@ -34,13 +45,17 @@ class RolePermissionSeeder extends Seeder
             'coupons.view', 'coupons.create', 'coupons.edit', 'coupons.delete',
             // Students
             'students.view', 'students.edit',
-            // Posts (News)
+            // Posts / News
             'posts.view', 'posts.create', 'posts.edit', 'posts.delete',
             'tags.view', 'tags.create', 'tags.edit', 'tags.delete',
             'comments.view', 'comments.delete',
+            // Commission module
+            'payouts.view', 'payouts.approve',
+            'teacher_earnings.view',
+            'commission_settings.view', 'commission_settings.update',
             // Dashboard
             'dashboard.view',
-            // System Logs
+            // System logs
             'system.logs.view', 'system.logs.delete',
         ];
 
@@ -48,28 +63,27 @@ class RolePermissionSeeder extends Seeder
             Permission::firstOrCreate(['name' => $permission, 'guard_name' => $guard]);
         }
 
-        // ── Roles ──
         $superAdmin = Role::firstOrCreate(['name' => 'super-admin', 'guard_name' => $guard]);
         $admin = Role::firstOrCreate(['name' => 'admin',       'guard_name' => $guard]);
         $teacher = Role::firstOrCreate(['name' => 'teacher',     'guard_name' => $guard]);
 
-        // super-admin có tất cả permissions
+        // super-admin gets all permissions
         $superAdmin->syncPermissions(Permission::where('guard_name', $guard)->get());
 
-        // admin có tất cả trừ users.delete
+        // admin gets all except admin_users.delete (cannot delete other admins)
         $admin->syncPermissions(
             Permission::where('guard_name', $guard)
-                ->where('name', '!=', 'users.delete')
+                ->where('name', '!=', 'admin_users.delete')
                 ->get()
         );
 
-        // teacher chỉ quản lý courses & lessons của mình
+        // teacher manages only their own courses/lessons (portal at /teacher/*)
         $teacher->syncPermissions([
             'courses.view', 'courses.create', 'courses.edit', 'courses.delete',
             'lessons.view', 'lessons.create', 'lessons.edit', 'lessons.delete',
             'quizzes.view', 'quizzes.create', 'quizzes.edit',
             'dashboard.view',
-            'categories.view',
+            'course_categories.view',
         ]);
     }
 }
