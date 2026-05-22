@@ -115,10 +115,23 @@
             v-if="currentLesson.type === 'video'"
             ref="videoPlayerRef"
             :url="lessonDetail?.video_url"
+            :watermark-text="studentAuthStore.student?.email ?? undefined"
+            logo-url="/images/logo/logo.svg"
             :watched-seconds="currentLesson.progress?.watched_seconds"
             @timeupdate="onTimeUpdate"
             @ended="onVideoEnded"
           />
+
+          <!-- Enrolled notice for video -->
+          <div
+            v-if="currentLesson.type === 'video' && isPurchased"
+            class="enrolled-notice"
+          >
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+            </svg>
+            <span>Video được đánh dấu thủy ấn bằng email của bạn để bảo vệ bản quyền. Vui lòng không chia sẻ nội dung này.</span>
+          </div>
 
           <!-- Document viewer -->
           <LearnDocumentViewer
@@ -127,11 +140,30 @@
             :title="currentLesson.title"
           />
 
+          <!-- Enrolled notice for document -->
+          <div
+            v-if="currentLesson.type === 'document' && isPurchased"
+            class="enrolled-notice"
+          >
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+            </svg>
+            <span>Tài liệu dành riêng cho học viên đã đăng ký khóa học. Vui lòng không chia sẻ nội dung này.</span>
+          </div>
+
           <!-- Quiz panel -->
           <LearnQuizPanel
             v-if="currentLesson.type === 'quiz'"
             :lesson-id="currentLesson.id"
             @completed="markComplete(true)"
+          />
+
+          <!-- Note panel (chỉ hiện cho học viên đã mua) -->
+          <LearnLessonNote
+            v-if="isPurchased && currentLesson"
+            :lesson-id="currentLesson.id"
+            :current-video-time="currentLesson.type === 'video' ? currentVideoTime : undefined"
+            @seek-to="seekVideo"
           />
 
           <!-- Lesson detail -->
@@ -325,11 +357,14 @@ import LearnSidebar from '@/components/shared/client/LearnSidebar.vue'
 import LearnVideoPlayer from '@/components/shared/client/LearnVideoPlayer.vue'
 import LearnDocumentViewer from '@/components/shared/client/LearnDocumentViewer.vue'
 import LearnQuizPanel from '@/components/shared/client/LearnQuizPanel.vue'
+import LearnLessonNote from '@/components/shared/client/LearnLessonNote.vue'
+import { useStudentAuthStore } from '@/stores/studentAuth.store'
 
 import type { Lesson, Section } from '@/types/common.types'
 
 const route = useRoute()
 const toast = useToast()
+const studentAuthStore = useStudentAuthStore()
 
 const slug = computed(() => route.params.slug as string)
 const courseName = ref('')
@@ -344,6 +379,7 @@ const currentLesson = ref<Lesson | null>(null)
 const lessonDetail = ref<Lesson | null>(null)
 const videoPlayerRef = ref<{ videoElement?: HTMLVideoElement } | null>(null)
 const isPurchased = ref(true)
+const currentVideoTime = ref(0)
 
 const expandedSections = reactive<Record<number, boolean>>({})
 
@@ -367,20 +403,17 @@ function toggleSection(idx: number) {
 onMounted(async () => {
   try {
     let rawData = null
-    let purchased = true
-    try {
+    let purchased = false
+    
+    const { courseService } = await import('@/services/course.service')
+    const publicRes = await courseService.publicLessons(slug.value)
+    purchased = publicRes.data.data.is_purchased
+    
+    if (purchased) {
       const res = await lessonService.myLessons(slug.value)
       rawData = res.data.data
-    } catch (err: unknown) {
-      const axiosError = err as { response?: { status?: number } }
-      if (axiosError.response?.status === 403 || axiosError.response?.status === 401) {
-        purchased = false
-        const { courseService } = await import('@/services/course.service')
-        const res2 = await courseService.publicLessons(slug.value)
-        rawData = res2.data.data
-      } else {
-        throw err
-      }
+    } else {
+      rawData = publicRes.data.data
     }
 
     isPurchased.value = purchased
@@ -483,10 +516,18 @@ async function selectLesson(lesson: Lesson) {
 let lastSavedSeconds = 0
 
 function onTimeUpdate(currentTime: number) {
+  currentVideoTime.value = currentTime
   if (!currentLesson.value || !isPurchased.value) return
   if (currentTime - lastSavedSeconds >= 10) {
     lastSavedSeconds = currentTime
     saveProgress(currentTime, false)
+  }
+}
+
+function seekVideo(seconds: number) {
+  if (videoPlayerRef.value?.videoElement) {
+    videoPlayerRef.value.videoElement.currentTime = seconds
+    videoPlayerRef.value.videoElement.play().catch(() => {})
   }
 }
 

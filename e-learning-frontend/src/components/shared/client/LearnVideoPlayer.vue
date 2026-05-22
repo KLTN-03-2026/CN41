@@ -17,6 +17,23 @@
     >
       {{ watermarkText }}
     </div>
+
+    <img
+      v-if="logoUrl"
+      :src="logoUrl"
+      aria-hidden="true"
+      :style="{
+        position: 'absolute',
+        bottom: '12px',
+        right: '14px',
+        width: '72px',
+        opacity: 0.22,
+        pointerEvents: 'none',
+        userSelect: 'none',
+        zIndex: 10,
+        filter: 'brightness(10)',
+      }"
+    />
   </div>
   <div v-else class="video-placeholder">
     <svg class="w-16 h-16 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
@@ -35,6 +52,7 @@ const props = defineProps<{
   url?: string
   watchedSeconds?: number
   watermarkText?: string
+  logoUrl?: string
 }>()
 
 const emit = defineEmits<{
