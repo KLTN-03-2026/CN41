@@ -1,10 +1,10 @@
 <template>
-  <div v-if="url" ref="wrapperEl" class="video-wrapper" @contextmenu.prevent>
+  <div v-if="url" ref="wrapperEl" class="video-wrapper" :class="{ 'is-fullscreen': isFullscreen }" @contextmenu.prevent>
     <video
       ref="videoEl"
       :src="isHls ? undefined : url"
       controls
-      controlsList="nodownload nofullscreen noremoteplayback"
+      controlsList="nodownload noremoteplayback"
       disablePictureInPicture
       class="video-player"
       @loadedmetadata="onLoadedMetadata"
@@ -78,12 +78,13 @@ const watermarkStyle = computed(() => ({
   position: 'absolute' as const,
   left: `${watermarkX.value}%`,
   top: `${watermarkY.value}%`,
-  color: 'rgba(255, 255, 255, 0.28)',
-  fontSize: '13px',
+  color: 'rgba(255, 255, 255, 0.5)',
+  fontSize: '15px',
+  fontWeight: '600',
   fontFamily: 'monospace',
   pointerEvents: 'none' as const,
   userSelect: 'none' as const,
-  textShadow: '0 1px 3px rgba(0,0,0,0.7)',
+  textShadow: '0 1px 4px rgba(0,0,0,0.9), 0 0 2px rgba(0,0,0,0.8)',
   zIndex: 10,
   whiteSpace: 'nowrap' as const,
   transition: 'left 1s ease, top 1s ease',
@@ -95,13 +96,44 @@ function moveWatermark() {
 }
 
 function onFullscreenChange() {
-  isFullscreen.value = !!(document.fullscreenElement ?? (document as any).webkitFullscreenElement)
+  const fsEl = document.fullscreenElement ?? (document as any).webkitFullscreenElement
+  isFullscreen.value = !!fsEl
+
+  if (fsEl && wrapperEl.value) {
+    wrapperEl.value.style.width = '100vw'
+    wrapperEl.value.style.height = '100vh'
+    wrapperEl.value.style.display = 'flex'
+    wrapperEl.value.style.alignItems = 'center'
+    wrapperEl.value.style.justifyContent = 'center'
+    wrapperEl.value.style.background = '#000'
+    if (videoEl.value) {
+      videoEl.value.style.width = '100vw'
+      videoEl.value.style.height = '100vh'
+      videoEl.value.style.maxHeight = '100vh'
+      videoEl.value.style.objectFit = 'contain'
+    }
+  } else if (wrapperEl.value) {
+    wrapperEl.value.style.width = ''
+    wrapperEl.value.style.height = ''
+    wrapperEl.value.style.display = ''
+    wrapperEl.value.style.alignItems = ''
+    wrapperEl.value.style.justifyContent = ''
+    wrapperEl.value.style.background = ''
+    if (videoEl.value) {
+      videoEl.value.style.width = ''
+      videoEl.value.style.height = ''
+      videoEl.value.style.maxHeight = ''
+      videoEl.value.style.objectFit = ''
+    }
+  }
 }
 
 function toggleFullscreen() {
   if (!isFullscreen.value) {
     if (wrapperEl.value?.requestFullscreen) {
-      wrapperEl.value.requestFullscreen()
+      wrapperEl.value.requestFullscreen().catch(() => {
+        ;(wrapperEl.value as any)?.webkitRequestFullscreen?.()
+      })
     } else {
       ;(wrapperEl.value as any)?.webkitRequestFullscreen?.()
     }
@@ -200,62 +232,79 @@ defineExpose({ videoElement: videoEl })
   object-fit: contain;
 }
 
+.video-player::-webkit-media-controls-fullscreen-button {
+  display: none !important;
+}
+
 .logo-watermark {
   position: absolute;
-  bottom: 12px;
-  right: 14px;
-  width: 72px;
-  opacity: 0.22;
+  top: 20px;
+  left: 20px;
+  width: 120px;
+  opacity: 0.65;
   pointer-events: none;
   user-select: none;
   z-index: 10;
-  filter: brightness(10);
+  filter: brightness(10) drop-shadow(0 2px 4px rgba(0,0,0,0.5));
 }
 
 .fullscreen-btn {
   position: absolute;
-  top: 8px;
-  right: 8px;
+  bottom: 60px; /* Nằm ngay trên thanh control mặc định */
+  right: 16px;
   z-index: 20;
-  background: rgba(0, 0, 0, 0.45);
-  border: none;
-  border-radius: 4px;
-  padding: 5px 6px;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  padding: 8px;
   cursor: pointer;
   color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
   opacity: 0;
-  transition: opacity 0.2s;
+  transition: all 0.2s ease-in-out;
+  backdrop-filter: blur(4px);
+}
+
+.fullscreen-btn:hover {
+  background: rgba(0, 0, 0, 0.8);
+  transform: scale(1.05);
 }
 
 .video-wrapper:hover .fullscreen-btn {
   opacity: 1;
 }
 
-/* Tách thành 2 rule riêng — trình duyệt bỏ cả rule nếu gặp selector không hiểu */
-.video-wrapper:fullscreen {
-  width: 100vw;
-  height: 100vh;
+/* :global() bắt buộc vì Vue scoped thêm [data-v-xxx] vào selector,
+   nhưng browser không cho attribute selector kết hợp với :fullscreen */
+:global(.video-wrapper:fullscreen) {
+  width: 100vw !important;
+  height: 100vh !important;
   background: #000;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
 }
 
-.video-wrapper:-webkit-full-screen {
-  width: 100vw;
-  height: 100vh;
-  background: #000;
-}
-
-.video-wrapper:fullscreen .video-player {
-  width: 100%;
-  height: 100vh;
+:global(.video-wrapper:fullscreen) .video-player {
+  width: 100vw !important;
+  height: 100vh !important;
   object-fit: contain;
 }
 
-.video-wrapper:-webkit-full-screen .video-player {
-  width: 100%;
-  height: 100vh;
+:global(.video-wrapper:-webkit-full-screen) {
+  width: 100vw !important;
+  height: 100vh !important;
+  background: #000;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+}
+
+:global(.video-wrapper:-webkit-full-screen) .video-player {
+  width: 100vw !important;
+  height: 100vh !important;
   object-fit: contain;
 }
 </style>
