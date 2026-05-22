@@ -22,17 +22,7 @@
       v-if="logoUrl"
       :src="logoUrl"
       aria-hidden="true"
-      :style="{
-        position: 'absolute',
-        bottom: '12px',
-        right: '14px',
-        width: '72px',
-        opacity: 0.22,
-        pointerEvents: 'none',
-        userSelect: 'none',
-        zIndex: 10,
-        filter: 'brightness(10)',
-      }"
+      class="logo-watermark"
     />
   </div>
   <div v-else class="video-placeholder">
@@ -157,4 +147,18 @@ function onVideoEnded() {
 
 defineExpose({ videoElement: videoEl })
 </script>
+
+<style scoped>
+.logo-watermark {
+  position: absolute;
+  bottom: 12px;
+  right: 14px;
+  width: 72px;
+  opacity: 0.22;
+  pointer-events: none;
+  user-select: none;
+  z-index: 10;
+  filter: brightness(10);
+}
+</style>
 
