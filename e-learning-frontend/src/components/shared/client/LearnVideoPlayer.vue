@@ -4,7 +4,7 @@
       ref="videoEl"
       :src="isHls ? undefined : url"
       controls
-      controlsList="nodownload"
+      controlsList="nodownload nofullscreen"
       class="video-player"
       @loadedmetadata="onLoadedMetadata"
       @timeupdate="onTimeUpdate"
@@ -25,6 +25,15 @@
       aria-hidden="true"
       class="logo-watermark"
     />
+
+    <button class="fullscreen-btn" @click="toggleFullscreen" :aria-label="isFullscreen ? 'Thoát toàn màn hình' : 'Toàn màn hình'">
+      <svg v-if="!isFullscreen" xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 24 24">
+        <path d="M3 3h6v2H5v4H3V3zm12 0h6v6h-2V5h-4V3zM3 15h2v4h4v2H3v-6zm14 4h-4v2h6v-6h-2v4z"/>
+      </svg>
+      <svg v-else xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 24 24">
+        <path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/>
+      </svg>
+    </button>
   </div>
   <div v-else class="video-placeholder">
     <svg class="w-16 h-16 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
@@ -53,6 +62,7 @@ const emit = defineEmits<{
 
 const videoEl = ref<HTMLVideoElement | null>(null)
 const wrapperEl = ref<HTMLDivElement | null>(null)
+const isFullscreen = ref(false)
 const watermarkX = ref(10)
 const watermarkY = ref(10)
 let wmTimer: ReturnType<typeof setInterval> | null = null
@@ -84,16 +94,22 @@ function moveWatermark() {
 }
 
 function onFullscreenChange() {
-  const fsEl = document.fullscreenElement ?? (document as any).webkitFullscreenElement
-  if (fsEl === videoEl.value) {
-    const exit = document.exitFullscreen?.() ?? (document as any).webkitExitFullscreen?.()
-    Promise.resolve(exit).then(() => {
-      if (wrapperEl.value?.requestFullscreen) {
-        wrapperEl.value.requestFullscreen()
-      } else {
-        ;(wrapperEl.value as any)?.webkitRequestFullscreen?.()
-      }
-    })
+  isFullscreen.value = !!(document.fullscreenElement ?? (document as any).webkitFullscreenElement)
+}
+
+function toggleFullscreen() {
+  if (!isFullscreen.value) {
+    if (wrapperEl.value?.requestFullscreen) {
+      wrapperEl.value.requestFullscreen()
+    } else {
+      ;(wrapperEl.value as any)?.webkitRequestFullscreen?.()
+    }
+  } else {
+    if (document.exitFullscreen) {
+      document.exitFullscreen()
+    } else {
+      ;(document as any).webkitExitFullscreen?.()
+    }
   }
 }
 
@@ -181,6 +197,28 @@ defineExpose({ videoElement: videoEl })
   filter: brightness(10);
 }
 
+.fullscreen-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 20;
+  background: rgba(0, 0, 0, 0.45);
+  border: none;
+  border-radius: 4px;
+  padding: 5px 6px;
+  cursor: pointer;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.video-wrapper:hover .fullscreen-btn {
+  opacity: 1;
+}
+
 .video-wrapper:fullscreen,
 .video-wrapper:-webkit-full-screen {
   background: #000;
@@ -195,4 +233,3 @@ defineExpose({ videoElement: videoEl })
   object-fit: contain;
 }
 </style>
-
