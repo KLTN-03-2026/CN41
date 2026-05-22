@@ -111,7 +111,7 @@ const docFullscreen = ref(false)
 const isPdf = computed(() => {
   if (!props.url) return false
   const lower = props.url.toLowerCase()
-  return lower.endsWith('.pdf') || lower.includes('.pdf?')
+  return lower.endsWith('.pdf') || lower.includes('.pdf?') || lower.includes('/document')
 })
 
 const isImage = computed(() => {

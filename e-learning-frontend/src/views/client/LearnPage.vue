@@ -491,6 +491,7 @@ function expandSectionOf(lesson: Lesson) {
 
 // ── Select lesson ─────────────────────────────────────────────
 async function selectLesson(lesson: Lesson) {
+  lastSavedSeconds = 0
   currentLesson.value = lesson
   lessonDetail.value = null
   contentLoading.value = true

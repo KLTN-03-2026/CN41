@@ -26,7 +26,6 @@ export interface Lesson {
   is_preview?: boolean
   video_url?: string
   document_id?: number
-  document_url?: string
   content?: string
   course_name?: string
   order?: number
