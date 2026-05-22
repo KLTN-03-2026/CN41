@@ -3,38 +3,26 @@
 use Illuminate\Support\Facades\Route;
 use Modules\Teachers\Http\Controllers\TeachersController;
 
-/*
-|--------------------------------------------------------------------------
-| Admin Routes (auth:admin middleware)
-|--------------------------------------------------------------------------
-*/
 Route::middleware(['auth:admin'])->prefix('admin')->group(function () {
-    // Extra routes (đặt TRƯỚC apiResource để tránh bị match bởi {teacher})
-    Route::get('teachers/trashed', [TeachersController::class, 'trashed'])->middleware('permission:users.view');
+    // Static/bulk routes BEFORE parameterized routes
+    Route::get('teachers/trashed', [TeachersController::class, 'trashed'])->middleware('permission:teachers.view');
 
-    // Bulk routes
-    Route::patch('teachers/bulk-restore', [TeachersController::class, 'bulkRestore'])->middleware('permission:users.edit');
-    Route::delete('teachers/bulk-delete', [TeachersController::class, 'bulkDelete'])->middleware('permission:users.delete');
-    Route::delete('teachers/bulk-force-delete', [TeachersController::class, 'bulkForceDelete'])->middleware('permission:users.delete');
+    Route::patch('teachers/bulk-restore', [TeachersController::class, 'bulkRestore'])->middleware('permission:teachers.edit');
+    Route::delete('teachers/bulk-delete', [TeachersController::class, 'bulkDelete'])->middleware('permission:teachers.delete');
+    Route::delete('teachers/bulk-force-delete', [TeachersController::class, 'bulkForceDelete'])->middleware('permission:teachers.delete');
 
-    // Standard CRUD - từng route riêng để phân quyền chính xác
-    Route::get('teachers', [TeachersController::class, 'index'])->middleware('permission:users.view|courses.view');
-    Route::post('teachers', [TeachersController::class, 'store'])->middleware('permission:users.create');
-    Route::get('teachers/{teacher}', [TeachersController::class, 'show'])->middleware('permission:users.view|courses.view');
-    Route::patch('teachers/{teacher}', [TeachersController::class, 'update'])->middleware('permission:users.edit');
-    Route::delete('teachers/{teacher}', [TeachersController::class, 'destroy'])->middleware('permission:users.delete');
+    // courses.view also grants read access so course managers can pick a teacher when creating a course
+    Route::get('teachers', [TeachersController::class, 'index'])->middleware('permission:teachers.view|courses.view');
+    Route::post('teachers', [TeachersController::class, 'store'])->middleware('permission:teachers.create');
+    Route::get('teachers/{teacher}', [TeachersController::class, 'show'])->middleware('permission:teachers.view|courses.view');
+    Route::patch('teachers/{teacher}', [TeachersController::class, 'update'])->middleware('permission:teachers.edit');
+    Route::delete('teachers/{teacher}', [TeachersController::class, 'destroy'])->middleware('permission:teachers.delete');
 
-    // Per-item actions (đặt SAU apiResource)
-    Route::patch('teachers/{id}/toggle-status', [TeachersController::class, 'toggleStatus'])->middleware('permission:users.edit');
-    Route::patch('teachers/{id}/restore', [TeachersController::class, 'restore'])->middleware('permission:users.edit');
-    Route::delete('teachers/{id}/force-delete', [TeachersController::class, 'forceDelete'])->middleware('permission:users.delete');
+    Route::patch('teachers/{id}/toggle-status', [TeachersController::class, 'toggleStatus'])->middleware('permission:teachers.edit');
+    Route::patch('teachers/{id}/restore', [TeachersController::class, 'restore'])->middleware('permission:teachers.edit');
+    Route::delete('teachers/{id}/force-delete', [TeachersController::class, 'forceDelete'])->middleware('permission:teachers.delete');
 });
 
-/*
-|--------------------------------------------------------------------------
-| Public Routes (không cần auth)
-|--------------------------------------------------------------------------
-*/
 Route::group([], function () {
     Route::get('teachers', [TeachersController::class, 'publicIndex']);
     Route::get('teachers/{slug}', [TeachersController::class, 'publicShow']);
