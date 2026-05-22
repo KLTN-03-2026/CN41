@@ -17,7 +17,7 @@ Route::middleware(['auth:admin'])->prefix('admin')->group(function () {
     Route::post('upload/document', [UploadController::class, 'uploadDocument'])
         ->middleware('permission:lessons.create|lessons.edit');
     Route::post('upload/image', [UploadController::class, 'uploadImage'])
-        ->middleware('permission:courses.create|courses.edit|users.edit|posts.create|posts.edit');
+        ->middleware('permission:courses.create|courses.edit|admin_users.edit|posts.create|posts.edit');
 
     // S3 flow
     Route::post('upload/presigned', [UploadController::class, 'presigned'])
@@ -31,4 +31,5 @@ Route::middleware(['auth:admin'])->prefix('admin')->group(function () {
 });
 
 // Stream nội dung media — auth được xử lý trong controller (hỗ trợ token qua query param)
-Route::get('media/{id}/stream', [UploadController::class, 'stream']);
+Route::get('media/{id}/stream', [UploadController::class, 'stream'])->name('media.stream');
+Route::get('media/{id}/hls-key', [UploadController::class, 'hlsKey'])->name('media.hls-key');

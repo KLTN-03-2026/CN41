@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Modules\Upload\Jobs\TranscodeToHlsJob;
 use Modules\Upload\Models\MediaFile;
 
 class UploadService
@@ -23,7 +24,7 @@ class UploadService
         $metadata = $this->extractVideoMetadata($file);
         $fileData = $this->storeFile($file, 'videos');
 
-        return MediaFile::create(array_merge([
+        $media = MediaFile::create(array_merge([
             'disk' => $fileData['disk'],
             'type' => 'video',
             'original_name' => $file->getClientOriginalName(),
@@ -34,6 +35,12 @@ class UploadService
             'status' => 'ready',
             'uploaded_by' => $uploadedBy,
         ], $metadata));
+
+        if (in_array($media->disk, ['local', 'public'])) {
+            TranscodeToHlsJob::dispatch($media->id);
+        }
+
+        return $media;
     }
 
     public function uploadDocument(UploadedFile $file, ?int $uploadedBy = null): MediaFile
