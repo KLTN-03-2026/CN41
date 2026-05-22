@@ -164,25 +164,22 @@ import {
   SettingsIcon,
 } from '@/components/icons'
 import { useSidebar } from '@/composables/useSidebar'
+import { useAdminAuthStore } from '@/stores/adminAuth.store'
 
 const route = useRoute()
-
 const { isExpanded, isMobileOpen, isHovered, openSubmenu } = useSidebar()
+const adminStore = useAdminAuthStore()
 
 type MenuItem = {
   icon?: unknown
   name: string
   path?: string
   permission?: string
-  hideForRoles?: string[]
-  showOnlyForRoles?: string[]
   subItems?: MenuItem[]
 }
 
 type MenuGroup = {
   title: string
-  hideForRoles?: string[]
-  showOnlyForRoles?: string[]
   items: MenuItem[]
 }
 
@@ -208,25 +205,15 @@ const rawMenuGroups: MenuGroup[] = [
         icon: ListIcon,
         name: 'Danh mục',
         path: '/admin/categories',
-        permission: 'categories.view',
+        permission: 'course_categories.view',
       },
       {
         icon: UserGroupIcon,
         name: 'Người dùng',
         subItems: [
-          {
-            name: 'Quản trị viên',
-            path: '/admin/users',
-            permission: 'users.view',
-            hideForRoles: ['teacher'],
-          },
-          {
-            name: 'Giảng viên',
-            path: '/admin/teachers',
-            permission: 'users.view',
-            hideForRoles: ['teacher'],
-          },
-          { name: 'Học viên', path: '/admin/students', permission: 'students.view' },
+          { name: 'Quản trị viên', path: '/admin/users',    permission: 'admin_users.view' },
+          { name: 'Giảng viên',    path: '/admin/teachers', permission: 'teachers.view' },
+          { name: 'Học viên',      path: '/admin/students', permission: 'students.view' },
         ],
       },
     ],
@@ -250,22 +237,24 @@ const rawMenuGroups: MenuGroup[] = [
   },
   {
     title: 'Hoa hồng',
-    hideForRoles: ['teacher'],
     items: [
       {
         icon: BarChartIcon,
         name: 'Yêu cầu rút tiền',
         path: '/admin/payouts',
+        permission: 'payouts.view',
       },
       {
         icon: PieChartIcon,
         name: 'Hoa hồng giảng viên',
         path: '/admin/teacher-earnings',
+        permission: 'teacher_earnings.view',
       },
       {
         icon: SettingsIcon,
         name: 'Cài đặt tỷ lệ',
         path: '/admin/commission-settings',
+        permission: 'commission_settings.view',
       },
     ],
   },
@@ -293,48 +282,25 @@ const rawMenuGroups: MenuGroup[] = [
         icon: PageIcon,
         name: 'Tin tức',
         subItems: [
-          { name: 'Bài viết', path: '/admin/posts', permission: 'posts.view' },
-          { name: 'Danh mục', path: '/admin/post-categories', permission: 'categories.view' },
-          { name: 'Thẻ (Tags)', path: '/admin/tags', permission: 'tags.view' },
-          { name: 'Bình luận', path: '/admin/post-comments', permission: 'comments.view' },
+          { name: 'Bài viết',    path: '/admin/posts',          permission: 'posts.view' },
+          { name: 'Danh mục',    path: '/admin/post-categories', permission: 'post_categories.view' },
+          { name: 'Thẻ (Tags)',  path: '/admin/tags',            permission: 'tags.view' },
+          { name: 'Bình luận',   path: '/admin/post-comments',   permission: 'comments.view' },
         ],
       },
     ],
   },
 ]
 
-import { useAdminAuthStore } from '@/stores/adminAuth.store'
-const adminStore = useAdminAuthStore()
-
-const hasPermission = (item: MenuItem) => {
-  const userRoles = adminStore.user?.roles || []
-
-  if (item.showOnlyForRoles?.length) {
-    if (!item.showOnlyForRoles.some((r) => userRoles.includes(r))) return false
-  }
-
-  if (item.hideForRoles?.length) {
-    if (item.hideForRoles.some((r) => userRoles.includes(r))) return false
-  }
-
+const hasPermission = (item: MenuItem): boolean => {
   if (!item.permission) return true
+  const userRoles = adminStore.user?.roles || []
   if (userRoles.includes('super-admin')) return true
-  return adminStore.user?.permissions?.includes(item.permission) || false
+  return adminStore.user?.permissions?.includes(item.permission) ?? false
 }
 
 const menuGroups = computed(() => {
-  const userRoles = adminStore.user?.roles || []
-
   return rawMenuGroups
-    .filter((group) => {
-      if (group.showOnlyForRoles?.length) {
-        if (!group.showOnlyForRoles.some((r) => userRoles.includes(r))) return false
-      }
-      if (group.hideForRoles?.length) {
-        if (group.hideForRoles.some((r) => userRoles.includes(r))) return false
-      }
-      return true
-    })
     .map((group) => {
       const filteredItems = group.items
         .filter((item) => hasPermission(item))
@@ -346,7 +312,6 @@ const menuGroups = computed(() => {
           return item
         })
         .filter((item) => !item.subItems || item.subItems.length > 0)
-
       return { ...group, items: filteredItems }
     })
     .filter((group) => group.items.length > 0)
@@ -362,7 +327,7 @@ const toggleSubmenu = (groupIndex: number, itemIndex: number) => {
 const isAnySubmenuRouteActive = computed(() => {
   return menuGroups.value.some((group) =>
     group.items.some(
-      (item) => item.subItems && item.subItems.some((subItem) => isActive(subItem.path)),
+      (item) => item.subItems && item.subItems.some((subItem) => isActive(subItem.path!)),
     ),
   )
 })
@@ -373,7 +338,7 @@ const isSubmenuOpen = (groupIndex: number, itemIndex: number) => {
     openSubmenu.value === key ||
     (isAnySubmenuRouteActive.value &&
       menuGroups.value[groupIndex]?.items[itemIndex]?.subItems?.some((subItem) =>
-        isActive(subItem.path),
+        isActive(subItem.path!),
       ))
   )
 }
@@ -383,7 +348,7 @@ const startTransition = (el: Element) => {
   htmlEl.style.height = 'auto'
   const height = htmlEl.scrollHeight
   htmlEl.style.height = '0px'
-  void htmlEl.offsetHeight // force reflow
+  void htmlEl.offsetHeight
   htmlEl.style.height = height + 'px'
 }
 
