@@ -8,6 +8,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\URL;
 use Modules\Course\Http\Requests\BulkDeleteCourseRequest;
 use Modules\Course\Http\Requests\BulkForceDeleteCourseRequest;
 use Modules\Course\Http\Requests\BulkRestoreCourseRequest;
@@ -365,11 +366,20 @@ class CourseController extends Controller
             return $this->error('Đây không phải bài học thử.', 403);
         }
 
+        $videoUrl = null;
+        if ($lesson->video) {
+            if ($lesson->video->hls_status === 'ready' && $lesson->video->hls_path) {
+                $videoUrl = asset('storage/'.$lesson->video->hls_path);
+            } else {
+                $videoUrl = URL::temporarySignedRoute('api.media.stream', now()->addHours(2), ['id' => $lesson->video->id]);
+            }
+        }
+
         return $this->success([
             'id' => $lesson->id,
             'title' => $lesson->title,
             'type' => $lesson->type,
-            'video_url' => $lesson->video ? $lesson->video->url : null,
+            'video_url' => $videoUrl,
             'document_url' => $lesson->document ? $lesson->document->url : null,
             'content' => $lesson->content,
             'is_preview' => $lesson->is_preview,
