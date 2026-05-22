@@ -1,9 +1,10 @@
 <template>
-  <div v-if="url" class="video-wrapper" style="position: relative; overflow: hidden">
+  <div v-if="url" ref="wrapperEl" class="video-wrapper" @contextmenu.prevent>
     <video
       ref="videoEl"
       :src="isHls ? undefined : url"
       controls
+      controlsList="nodownload"
       class="video-player"
       @loadedmetadata="onLoadedMetadata"
       @timeupdate="onTimeUpdate"
@@ -51,6 +52,7 @@ const emit = defineEmits<{
 }>()
 
 const videoEl = ref<HTMLVideoElement | null>(null)
+const wrapperEl = ref<HTMLDivElement | null>(null)
 const watermarkX = ref(10)
 const watermarkY = ref(10)
 let wmTimer: ReturnType<typeof setInterval> | null = null
@@ -81,15 +83,33 @@ function moveWatermark() {
   watermarkY.value = Math.floor(Math.random() * 75) + 5   // 5–80 %
 }
 
+function onFullscreenChange() {
+  const fsEl = document.fullscreenElement ?? (document as any).webkitFullscreenElement
+  if (fsEl === videoEl.value) {
+    const exit = document.exitFullscreen?.() ?? (document as any).webkitExitFullscreen?.()
+    Promise.resolve(exit).then(() => {
+      if (wrapperEl.value?.requestFullscreen) {
+        wrapperEl.value.requestFullscreen()
+      } else {
+        ;(wrapperEl.value as any)?.webkitRequestFullscreen?.()
+      }
+    })
+  }
+}
+
 onMounted(() => {
   if (props.watermarkText) {
     wmTimer = setInterval(moveWatermark, 30_000)
   }
+  document.addEventListener('fullscreenchange', onFullscreenChange)
+  document.addEventListener('webkitfullscreenchange', onFullscreenChange)
 })
 
 onUnmounted(() => {
   if (wmTimer) clearInterval(wmTimer)
   if (hlsInstance) hlsInstance.destroy()
+  document.removeEventListener('fullscreenchange', onFullscreenChange)
+  document.removeEventListener('webkitfullscreenchange', onFullscreenChange)
 })
 
 function initHls() {
@@ -159,6 +179,20 @@ defineExpose({ videoElement: videoEl })
   user-select: none;
   z-index: 10;
   filter: brightness(10);
+}
+
+.video-wrapper:fullscreen,
+.video-wrapper:-webkit-full-screen {
+  background: #000;
+  width: 100vw;
+  height: 100vh;
+}
+
+.video-wrapper:fullscreen .video-player,
+.video-wrapper:-webkit-full-screen .video-player {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 </style>
 
