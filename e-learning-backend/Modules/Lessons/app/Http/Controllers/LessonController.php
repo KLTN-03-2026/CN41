@@ -297,7 +297,6 @@ class LessonController extends Controller
             'type' => $lesson->type,
             'video_url' => $videoUrl,
             'document_id' => $lesson->document ? $lesson->document->id : null,
-            'document_url' => $lesson->document ? $lesson->document->url : null,
             'content' => $lesson->content,
             'course_name' => $course->name,
         ], 'Lấy chi tiết bài học thành công.');
