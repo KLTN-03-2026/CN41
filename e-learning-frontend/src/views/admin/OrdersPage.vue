@@ -3,8 +3,20 @@
     <!-- Header -->
     <div class="flex items-center justify-between mb-6">
       <h1 class="text-2xl font-bold text-gray-900">Quản lý đơn hàng</h1>
-      <div class="flex items-center gap-2 text-sm text-gray-500">
-        <span class="font-medium text-gray-800">{{ activePagination?.total ?? 0 }}</span> đơn hàng
+      <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2 text-sm text-gray-500">
+          <span class="font-medium text-gray-800">{{ activePagination?.total ?? 0 }}</span> đơn hàng
+        </div>
+        <button
+          v-permission="'orders.export'"
+          @click="showExportModal = true"
+          class="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-xl transition-colors"
+        >
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+          </svg>
+          Xuất Excel
+        </button>
       </div>
     </div>
 
@@ -199,6 +211,21 @@
       @close="showDetail = false"
       @updated="loadPage(activeCurrentPage)"
     />
+
+    <ExportExcelModal
+      :show="showExportModal"
+      title="Xuất danh sách đơn hàng"
+      endpoint="/admin/orders/export"
+      :has-status-filter="true"
+      :status-options="[
+        { value: 'paid', label: 'Đã thanh toán' },
+        { value: 'pending', label: 'Chờ thanh toán' },
+        { value: 'failed', label: 'Thất bại' },
+        { value: 'cancelled', label: 'Đã hủy' },
+        { value: 'refunded', label: 'Hoàn tiền' },
+      ]"
+      @close="showExportModal = false"
+    />
   </div>
 </template>
 
@@ -211,6 +238,7 @@ import { formatDatetime } from '@/utils/formatDate'
 import OrderStatusBadge from '@/components/common/OrderStatusBadge.vue'
 import OrderDetailModal from '@/components/shared/admin/OrderDetailModal.vue'
 import ConfirmModal from '@/components/common/ConfirmModal.vue'
+import ExportExcelModal from '@/components/common/ExportExcelModal.vue'
 import { usePagination } from '@/composables/usePagination'
 import { useDebounceSearch } from '@/composables/useDebounceSearch'
 import { useDeleteConfirm } from '@/composables/useDeleteConfirm'
@@ -231,6 +259,7 @@ const filters = reactive({
 
 const showDetail = ref(false)
 const selectedOrderId = ref<number | null>(null)
+const showExportModal = ref(false)
 
 // ── Fetch with usePagination ──────────────────────────────────
 async function loadPage(page = 1) {

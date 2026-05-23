@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { useEarnings } from '@/composables/useEarnings'
+import ExportExcelModal from '@/components/common/ExportExcelModal.vue'
 
 const { balance, earnings, payouts, loading, payoutLoading, loadEarnings, loadMyPayouts, requestPayout } = useEarnings()
 
 const showPayoutModal = ref(false)
+const showExportModal = ref(false)
 const payoutAmount = ref<number>(0)
 const payoutNote = ref('')
 
@@ -34,7 +36,18 @@ onMounted(async () => {
 
 <template>
   <div class="p-6">
-    <h1 class="text-2xl font-bold mb-6">Thu nhập của tôi</h1>
+    <div class="flex items-center justify-between mb-6">
+      <h1 class="text-2xl font-bold">Thu nhập của tôi</h1>
+      <button
+        @click="showExportModal = true"
+        class="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-xl transition-colors"
+      >
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+        </svg>
+        Xuất Excel
+      </button>
+    </div>
 
     <!-- KPI Cards -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
@@ -145,5 +158,12 @@ onMounted(async () => {
         </div>
       </div>
     </div>
+
+    <ExportExcelModal
+      :show="showExportModal"
+      title="Xuất thu nhập của tôi"
+      endpoint="/teacher/earnings/export"
+      @close="showExportModal = false"
+    />
   </div>
 </template>

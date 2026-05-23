@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { usePayouts } from '@/composables/usePayouts'
+import ExportExcelModal from '@/components/common/ExportExcelModal.vue'
 
 const { payouts, loading, filters, loadPayouts, approvePayout, rejectPayout, markPaid } = usePayouts()
 
 const confirmModal = ref({ show: false, id: 0, action: '', note: '' })
+const showExportModal = ref(false)
 
 function openModal(id: number, action: string) {
   confirmModal.value = { show: true, id, action, note: '' }
@@ -33,7 +35,19 @@ onMounted(loadPayouts)
 
 <template>
   <div class="p-6">
-    <h1 class="text-2xl font-bold mb-6">Quản lý rút tiền</h1>
+    <div class="flex items-center justify-between mb-6">
+      <h1 class="text-2xl font-bold">Quản lý rút tiền</h1>
+      <button
+        v-permission="'payouts.export'"
+        @click="showExportModal = true"
+        class="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-xl transition-colors"
+      >
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+        </svg>
+        Xuất Excel
+      </button>
+    </div>
 
     <div class="flex gap-4 mb-4">
       <select v-model="filters.status" @change="loadPayouts" class="border rounded px-3 py-2 text-sm">
@@ -107,5 +121,19 @@ onMounted(loadPayouts)
         </div>
       </div>
     </div>
+
+    <ExportExcelModal
+      :show="showExportModal"
+      title="Xuất danh sách rút tiền"
+      endpoint="/admin/payouts/export"
+      :has-status-filter="true"
+      :status-options="[
+        { value: 'pending', label: 'Chờ duyệt' },
+        { value: 'approved', label: 'Đã duyệt' },
+        { value: 'rejected', label: 'Từ chối' },
+        { value: 'paid', label: 'Đã thanh toán' },
+      ]"
+      @close="showExportModal = false"
+    />
   </div>
 </template>
