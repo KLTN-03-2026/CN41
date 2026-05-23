@@ -22,15 +22,16 @@
 
 > **Lưu ý:** Repository này là phần **Backend**. Frontend đang được phát triển riêng.
 
-### Tính năng dự kiến
+### Tính năng đã triển khai
 
 - **Quản lý khóa học Video (VOD)** — upload, tổ chức và phân phối bài giảng video
-- **Hệ thống giỏ hàng & thanh toán** — tích hợp VNPAY/MoMo, xử lý giao dịch an toàn
-- **AI Auto-Quiz** — tự động sinh câu hỏi trắc nghiệm từ tài liệu PDF/TXT (Google Gemini / OpenAI GPT-4o-mini)
-- **Tự động hủy đơn hàng** — đơn "Chờ thanh toán" quá 15 phút sẽ tự động chuyển sang "Đã hủy" và gửi email thông báo cho học viên
+- **Hệ thống giỏ hàng & thanh toán** — tích hợp VNPAY/ZaloPay, xử lý giao dịch an toàn qua IPN webhook
+- **AI Auto-Quiz (Gemini 2.5 Flash)** — tự động sinh câu hỏi trắc nghiệm từ PDF (fallback Gemini Flash Lite, lọc câu vi phạm, hỗ trợ chọn PDF theo chương)
+- **Thông báo real-time (Laravel Reverb)** — WebSocket tự host, đẩy thông báo tức thời đến Admin và Giảng viên theo các sự kiện: đăng ký khóa học, yêu cầu rút tiền, duyệt khóa học, bình luận mới
+- **Tự động hủy đơn hàng** — đơn "Chờ thanh toán" quá hạn tự động chuyển "Đã hủy" và gửi email thông báo
 - **Dashboard thống kê** — theo dõi doanh thu, tiến độ học tập
-- **Phân quyền đa vai trò** — Admin / Giảng viên / Học viên
-- **Mã giảm giá (Coupon)** và thông báo real-time
+- **Phân quyền đa vai trò** — Admin / Giảng viên / Học viên (RBAC, anti-privilege escalation)
+- **Mã giảm giá (Coupon)** — tỉ lệ %, số tiền cố định, giới hạn lượt dùng, kiểm tra race condition
 
 ---
 
@@ -39,18 +40,19 @@
 ### Backend
 | Công nghệ | Mô tả |
 |-----------|-------|
-| **PHP 8.1+ / Laravel 11** | Framework chính — kiến trúc Modular (Nwidart Modules) |
+| **PHP 8.2+ / Laravel 12** | Framework chính — kiến trúc Modular (Nwidart Modules) |
 | **MySQL 8.0** | Cơ sở dữ liệu quan hệ |
-| **Laravel Sanctum** | Xác thực API token |
+| **Laravel Sanctum** | Xác thực API token (hai guard riêng: `admin` / `api`) |
+| **Laravel Reverb** | WebSocket server tự host (Pusher protocol) — thông báo real-time |
 | **Spatie Laravel Permission** | Quản lý phân quyền theo vai trò (RBAC) |
 
 ### Tích hợp & Dịch vụ
 | Công nghệ | Mô tả |
 |-----------|-------|
-| **VNPAY / MoMo API** | Cổng thanh toán trực tuyến |
+| **VNPAY / ZaloPay API** | Cổng thanh toán trực tuyến (IPN webhook, HMAC-SHA512) |
+| **Google Gemini 2.5 Flash** | AI sinh câu hỏi trắc nghiệm từ PDF (fallback: Gemini 2.5 Flash Lite) |
 | **Laravel Storage (Local)** | Lưu trữ file/video bài giảng trên server cục bộ (`storage/app/public`) |
-| **OpenAI GPT-4o-mini** | Tính năng AI Auto-Quiz tự động tạo câu hỏi |
-| **Spatie PDF-to-Text** | Trích xuất văn bản từ tài liệu PDF |
+| **pdftotext / gzuncompress** | Trích xuất văn bản từ tài liệu PDF |
 
 ### Quy trình phát triển
 - Phương pháp **Agile/Scrum** — chia 3 Sprint
@@ -59,11 +61,12 @@
 
 ## Yêu cầu hệ thống
 
-- PHP >= 8.1
+- PHP >= 8.2
 - Composer >= 2.x
 - Node.js >= 18.x & NPM
 - MySQL >= 8.0
 - Git
+- `pdftotext` (poppler-utils) — tùy chọn, cải thiện độ chính xác trích xuất PDF cho AI Quiz
 
 ---
 
@@ -118,14 +121,45 @@ php artisan storage:link
 # Terminal 1 — API server
 php artisan serve
 
-# Terminal 2 — Queue worker (xử lý mail, AI, v.v.)
-php artisan queue:work
+# Terminal 2 — Queue worker: xử lý email/payment
+php artisan queue:work --queue=default --tries=3
 
-# Terminal 3 — Scheduler (tự động hủy đơn hàng chờ thanh toán quá hạn, v.v.)
+# Terminal 3 — Queue worker: AI quiz generation (bắt buộc khi dùng tính năng AI)
+php artisan queue:work --queue=ai --timeout=130 --tries=1
+
+# Terminal 4 — Reverb WebSocket server (bắt buộc để nhận thông báo real-time)
+php artisan reverb:start
+
+# Terminal 5 — Scheduler: tự động hủy đơn hàng quá hạn, cleanup file orphan
 php artisan schedule:work
 ```
 
-Truy cập: `http://localhost:8000`
+> Truy cập API: `http://localhost:8000`
+> WebSocket: `ws://localhost:8080`
+>
+> 💡 Trên Windows/WSL: chạy `./start.sh` từ thư mục gốc để mở tất cả 6 tiến trình cùng lúc.
+
+**Cấu hình `.env` cần thiết:**
+```env
+# Database
+DB_DATABASE=e_learning
+
+# Broadcasting (Real-time notifications)
+BROADCAST_CONNECTION=reverb
+REVERB_APP_ID=<generate_random>
+REVERB_APP_KEY=<generate_random>
+REVERB_APP_SECRET=<generate_random>
+REVERB_HOST=localhost
+REVERB_PORT=8080
+REVERB_SCHEME=http
+
+# AI Quiz
+GEMINI_API_KEY=<your_google_ai_key>
+
+# Payment
+VNPAY_TMN_CODE=<your_code>
+VNPAY_HASH_SECRET=<your_secret>
+```
 
 ---
 
@@ -187,7 +221,9 @@ e-learning-backend/
 │   ├── Feature/                    # Kiểm thử tính năng (API, tích hợp)
 │   └── Unit/                       # Kiểm thử đơn vị (logic nhỏ, helper)
 │
-├── modules_statuses.json           # Trạng thái các module
+├── modules_statuses.json           # Trạng thái các module (Auth, Course, Lessons, Quiz, Notifications, ...)
+├── routes/
+│   └── channels.php               # Khai báo private channel Reverb (admin.{id}, teacher.{id})
 ├── composer.json
 ├── package.json
 ├── vite.config.js
@@ -206,7 +242,7 @@ Hệ thống sử dụng các cơ chế bảo mật mặc định của Laravel:
 - **Authentication & Authorization** — Laravel Sanctum + Spatie Permission (RBAC)
 - **Anti-Privilege Escalation** — Chặn Admin can thiệp tài khoản Super Admin hoặc tự nâng quyền trái phép
 - **Role-Scoping** — Giới hạn truy vấn người dùng (chỉ được quản lý Student/Teacher) cho các tài khoản không phải Super Admin
-- **Automated Testing** — Hệ thống Feature Tests phủ kín các module quan trọng (126/126 cases passed)
+- **Automated Testing** — Hệ thống Feature Tests phủ kín các module quan trọng (225/225 cases passed)
 
 ---
 

@@ -22,13 +22,15 @@
 
 ### Tính năng chính
 
-- 🎬 **Quản lý khóa học Video (VOD)** — Upload, tổ chức và phân phối bài giảng video
-- 💳 **Giỏ hàng & Thanh toán trực tuyến** — Tích hợp VNPAY/MoMo, xử lý giao dịch an toàn
-- 🤖 **AI Auto-Quiz (Gemini AI)** — Tự động sinh câu hỏi trắc nghiệm thông minh từ tài liệu PDF (hỗ trợ Tiếng Việt 100%, cơ chế fallback tự động).
-- 📊 **Dashboard thống kê** — Theo dõi doanh thu, tiến độ học tập
+- 🎬 **Quản lý khóa học Video (VOD)** — Upload, tổ chức và phân phối bài giảng video; bảo vệ nội dung bằng watermark logo + email trên video/tài liệu
+- 💳 **Giỏ hàng & Thanh toán trực tuyến** — Tích hợp VNPAY/ZaloPay, xử lý giao dịch an toàn qua IPN webhook
+- 🤖 **AI Auto-Quiz (Gemini 2.5 Flash)** — Tự động sinh câu hỏi trắc nghiệm thông minh từ tài liệu PDF (hỗ trợ Tiếng Việt 100%, cơ chế fallback tự động, lọc câu hỏi vi phạm)
+- 🔔 **Thông báo real-time (Laravel Reverb)** — WebSocket tự host, thông báo tức thời cho Admin và Giảng viên (đăng ký khóa học, yêu cầu rút tiền, duyệt khóa học, bình luận mới)
+- 👨‍🏫 **Teacher Portal (Giảng viên)** — Dashboard thu nhập, quản lý khóa học/sections/lessons, bài viết (Quill editor), hồ sơ cá nhân + bảo mật tài khoản (đổi email/mật khẩu qua OTP), yêu cầu rút tiền
+- 📊 **Dashboard thống kê** — Theo dõi doanh thu, tiến độ học tập (Admin + Giảng viên)
 - 🔐 **Bảo mật & Phân quyền nâng cao** — RBAC chuyên sâu, Role-scoping (Admin chỉ quản lý Student/Teacher), chặn leo thang đặc quyền (Anti-Privilege Escalation)
-- 🧪 **Kiểm thử tự động** — Hệ thống Feature Tests đạt độ ổn định cao (126/126 passed)
-- 🏷️ **Mã giảm giá (Coupon)** và thông báo real-time
+- 🧪 **Kiểm thử tự động** — Hệ thống Feature Tests đạt độ ổn định cao (225/225 passed)
+- 🏷️ **Mã giảm giá (Coupon)** — Hỗ trợ tỉ lệ %, số tiền cố định, giới hạn lượt dùng, kiểm tra race condition
 
 ---
 
@@ -46,7 +48,7 @@ e-learning/
 | Thành phần | Mô tả | Tài liệu |
 |-----------|-------|-----------|
 | **[e-learning-backend](./e-learning-backend)** | REST API server xử lý logic nghiệp vụ, xác thực, phân quyền, thanh toán. Kiến trúc Modular (Nwidart Modules). | 📄 [Backend README](./e-learning-backend/README.md) |
-| **[e-learning-frontend](./e-learning-frontend)** | SPA giao diện người dùng gồm Admin Dashboard (TailAdmin) và Client UI (Flowbite). Hỗ trợ Dark Mode. | 📄 [Frontend README](./e-learning-frontend/README.md) |
+| **[e-learning-frontend](./e-learning-frontend)** | SPA giao diện người dùng gồm Admin Dashboard (TailAdmin), Teacher Portal và Client UI (Flowbite). Hỗ trợ Dark Mode, thông báo real-time. | 📄 [Frontend README](./e-learning-frontend/README.md) |
 
 ---
 
@@ -56,30 +58,35 @@ e-learning/
 
 | Công nghệ | Mô tả |
 |-----------|--------|
-| **PHP 8.1+ / Laravel 11** | Framework chính — Kiến trúc Modular (Nwidart Modules) |
+| **PHP 8.2+ / Laravel 12** | Framework chính — Kiến trúc Modular (Nwidart Modules) |
 | **MySQL 8.0** | Cơ sở dữ liệu quan hệ |
-| **Laravel Sanctum** | Xác thực API token |
+| **Laravel Sanctum** | Xác thực API token (hai guard: admin / api) |
+| **Laravel Reverb** | WebSocket server tự host — thông báo real-time |
 | **Spatie Laravel Permission** | Quản lý phân quyền theo vai trò (RBAC) |
 
 ### Frontend (`e-learning-frontend/`) — [Xem chi tiết](./e-learning-frontend/README.md)
 
 | Công nghệ | Mô tả |
 |-----------|--------|
-| **Vue.js 3 + Vite + TypeScript** | SPA framework chính |
-| **Vue Router 4 + Pinia** | Routing & State management |
+| **Vue.js 3 + Vite + TypeScript** | SPA framework chính — Composition API (`<script setup>`) |
+| **Vue Router 4 + Pinia** | Routing (3 guards: admin/teacher/student) & State management |
 | **Tailwind CSS v3** | Styling framework (hỗ trợ Dark Mode) |
 | **TailAdmin Vue** | Admin dashboard UI template |
 | **Flowbite Vue** | Client-side UI components |
 | **VeeValidate + Zod** | Form validation |
 | **Axios** | HTTP client kết nối Backend API |
-| **Video.js** | Video player cho khóa học |
+| **Laravel Echo + pusher-js** | WebSocket client — thông báo real-time qua Reverb |
+| **Video.js** | Video player với watermark bảo vệ nội dung |
+| **@vueup/vue-quill** | Rich text editor (Giảng viên soạn bài viết) |
 | **vue3-apexcharts** | Biểu đồ thống kê Dashboard |
 
 ### Tích hợp & Dịch vụ
 
 | Công nghệ | Mô tả |
 |-----------|--------|
-| **VNPAY / MoMo API** | Cổng thanh toán trực tuyến |
+| **VNPAY / ZaloPay API** | Cổng thanh toán trực tuyến (IPN webhook, HMAC-SHA512) |
+| **Google Gemini 2.5 Flash** | AI sinh câu hỏi trắc nghiệm từ PDF (fallback: Gemini Flash Lite) |
+| **Laravel Reverb** | WebSocket server (Pusher protocol) — thông báo real-time |
 
 ---
 
@@ -87,7 +94,7 @@ e-learning/
 
 ### Yêu cầu hệ thống
 
-- PHP >= 8.1 + Composer >= 2.x
+- PHP >= 8.2 + Composer >= 2.x
 - Node.js >= 18.x + NPM
 - MySQL >= 8.0
 - Git
@@ -116,13 +123,16 @@ php artisan storage:link
 # Khởi chạy (mỗi lệnh chạy ở tab terminal riêng)
 php artisan serve                                                          # Tab 1 — API server
 php artisan queue:work --queue=default --tries=3                          # Tab 2 — Worker email/payment
-php artisan queue:work --queue=ai --timeout=${QUEUE_AI_TIMEOUT:-130} --tries=1   # Tab 3 — Worker AI quiz
-php artisan schedule:work                                                  # Tab 4 — Scheduler (cleanup)
+php artisan queue:work --queue=ai --timeout=130 --tries=1                 # Tab 3 — Worker AI quiz
+php artisan reverb:start                                                   # Tab 4 — WebSocket server (thông báo real-time)
+php artisan schedule:work                                                  # Tab 5 — Scheduler (cleanup)
 ```
 
-> Backend chạy tại: `http://localhost:8000`
+> Backend chạy tại: `http://localhost:8000` | WebSocket tại: `ws://localhost:8080`
 >
 > ⚠️ **Tab 3 (AI worker) là bắt buộc** khi dùng tính năng sinh câu hỏi AI — nếu không bật, job sẽ nằm mãi ở trạng thái `pending`.
+>
+> ⚠️ **Tab 4 (Reverb) là bắt buộc** để nhận thông báo real-time — Admin và Giảng viên sẽ không nhận được push notification nếu không khởi chạy.
 
 ### Frontend
 
@@ -161,12 +171,15 @@ npm run dev
 ```bash
 php artisan serve                                                          # Khởi chạy API server
 php artisan queue:work --queue=default --tries=3                          # Worker email/payment
-php artisan queue:work --queue=ai --timeout=${QUEUE_AI_TIMEOUT:-130} --tries=1   # Worker AI quiz generation
+php artisan queue:work --queue=ai --timeout=130 --tries=1                 # Worker AI quiz generation
+php artisan reverb:start                                                   # WebSocket server (real-time notifications)
 php artisan schedule:work                                                  # Scheduler (cleanup jobs/files)
-php artisan module:migrate Quiz                                            # Migrate module cụ thể
+php artisan module:migrate Notifications                                   # Migrate module thông báo
 php artisan migrate --seed                                                 # Migrate toàn bộ + seed
-php artisan test                                                           # Chạy feature tests
+php artisan test                                                           # Chạy feature tests (225 cases)
 ```
+
+> 💡 **Shortcut:** Chạy `./start.sh` (Linux/macOS/WSL) từ thư mục gốc để mở tất cả 6 tiến trình cùng lúc trong các cửa sổ terminal riêng.
 
 ### Frontend
 ```bash
