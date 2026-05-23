@@ -12,5 +12,6 @@
     "Dashboard": true,
     "Coupons": true,
     "Posts": true,
-    "Commission": true
+    "Commission": true,
+    "Notifications": true
 }

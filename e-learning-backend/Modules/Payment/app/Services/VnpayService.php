@@ -7,6 +7,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Modules\Course\Models\Course;
+use Modules\Notifications\Services\NotificationService;
 use Modules\Payment\Events\OrderPlaced;
 use Modules\Payment\Models\Order;
 use Modules\Payment\Models\OrderItem;
@@ -221,7 +222,7 @@ class VnpayService
 
     public function enrollStudent(Order $order): void
     {
-        $order->load('items');
+        $order->load(['items', 'student']);
 
         foreach ($order->items as $item) {
             $exists = DB::table('students_course')
@@ -239,6 +240,22 @@ class VnpayService
                 ]);
 
                 Course::where('id', $item->course_id)->increment('total_students');
+
+                // Notify the teacher about the new enrollment
+                $course = Course::select('id', 'title', 'teacher_id')->find($item->course_id);
+                if ($course && $course->teacher_id) {
+                    $studentName = $order->student?->name ?? 'Học viên';
+                    try {
+                        app(NotificationService::class)->notifyEnrollment(
+                            teacherId: $course->teacher_id,
+                            studentName: $studentName,
+                            courseTitle: $course->title,
+                            courseId: $course->id,
+                        );
+                    } catch (\Throwable) {
+                        // Notifications are non-critical — never block enrollment
+                    }
+                }
             }
         }
 

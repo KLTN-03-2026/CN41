@@ -81,15 +81,22 @@ class AuthController extends Controller
      */
     public function me(Request $request): JsonResponse
     {
-        $user = $request->user();
+        $user = $request->user()->load('teacher');
 
-        return $this->success([
+        $data = [
             'id' => $user->id,
             'name' => $user->name,
             'email' => $user->email,
             'roles' => $user->getRoleNames(),
             'permissions' => $user->getAllPermissions()->pluck('name'),
             'created_at' => $user->created_at,
-        ]);
+        ];
+
+        // Expose teacher ID so the frontend can subscribe to teacher broadcast channel
+        if ($user->teacher) {
+            $data['teacher_id'] = $user->teacher->id;
+        }
+
+        return $this->success($data);
     }
 }

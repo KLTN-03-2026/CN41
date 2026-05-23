@@ -17,6 +17,7 @@ export interface AuthAdminUser {
   status?: number
   roles?: string[]
   permissions?: string[]
+  teacher_id?: number
 }
 
 /** Used by admin users list — /admin/users returns roles as {id, name}[] */

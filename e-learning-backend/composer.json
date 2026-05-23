@@ -13,6 +13,7 @@
         "james-heinrich/getid3": "^1.9",
         "kalnoy/nestedset": "^6.0",
         "laravel/framework": "^12.0",
+        "laravel/reverb": "^1.10",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.10.1",
         "nwidart/laravel-modules": "^12.0",
@@ -84,7 +85,10 @@
             "Modules\\Quiz\\Database\\Seeders\\": "Modules/Quiz/database/seeders/",
             "Modules\\Commission\\": "Modules/Commission/app/",
             "Modules\\Commission\\Database\\Factories\\": "Modules/Commission/database/factories/",
-            "Modules\\Commission\\Database\\Seeders\\": "Modules/Commission/database/seeders/"
+            "Modules\\Commission\\Database\\Seeders\\": "Modules/Commission/database/seeders/",
+            "Modules\\Notifications\\": "Modules/Notifications/app/",
+            "Modules\\Notifications\\Database\\Factories\\": "Modules/Notifications/database/factories/",
+            "Modules\\Notifications\\Database\\Seeders\\": "Modules/Notifications/database/seeders/"
         }
     },
     "autoload-dev": {

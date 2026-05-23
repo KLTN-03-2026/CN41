@@ -13,7 +13,9 @@ use Modules\Commission\Http\Resources\TeacherEarningResource;
 use Modules\Commission\Http\Resources\TeacherPayoutResource;
 use Modules\Commission\Models\TeacherPayout;
 use Modules\Commission\Repositories\CommissionRepositoryInterface;
+use Modules\Notifications\Services\NotificationService;
 use Modules\Teachers\Models\Teachers;
+use Modules\Users\Models\User;
 
 class EarningsController extends Controller
 {
@@ -83,6 +85,21 @@ class EarningsController extends Controller
                 'status' => 'pending',
             ]);
         });
+
+        // Notify all admin/super-admin users about the new payout request
+        try {
+            $notificationService = app(NotificationService::class);
+            User::role(['admin', 'super-admin'])->get()->each(function ($admin) use ($notificationService, $teacher, $payout) {
+                $notificationService->notifyPayoutRequest(
+                    adminId: $admin->id,
+                    teacherName: $teacher->name,
+                    amount: (float) $payout->amount,
+                    payoutId: $payout->id,
+                );
+            });
+        } catch (\Throwable) {
+            // Notifications are non-critical
+        }
 
         return $this->success(new TeacherPayoutResource($payout), 'Yêu cầu rút tiền đã được gửi.', 201);
     }

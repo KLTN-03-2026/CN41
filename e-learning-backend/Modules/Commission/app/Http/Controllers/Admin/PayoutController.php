@@ -8,6 +8,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Modules\Commission\Http\Resources\TeacherPayoutResource;
 use Modules\Commission\Models\TeacherPayout;
+use Modules\Notifications\Services\NotificationService;
 
 class PayoutController extends Controller
 {
@@ -42,6 +43,16 @@ class PayoutController extends Controller
 
         $payout->update(['status' => 'approved', 'admin_note' => $request->input('admin_note'), 'processed_at' => now()]);
 
+        try {
+            app(NotificationService::class)->notifyPayoutDecision(
+                teacherId: $payout->teacher_id,
+                status: 'approved',
+                amount: (float) $payout->amount,
+                payoutId: $payout->id,
+            );
+        } catch (\Throwable) {
+        }
+
         return $this->success(new TeacherPayoutResource($payout->load('teacher')), 'Yêu cầu đã được duyệt.');
     }
 
@@ -54,6 +65,16 @@ class PayoutController extends Controller
         }
 
         $payout->update(['status' => 'rejected', 'admin_note' => $request->input('admin_note'), 'processed_at' => now()]);
+
+        try {
+            app(NotificationService::class)->notifyPayoutDecision(
+                teacherId: $payout->teacher_id,
+                status: 'rejected',
+                amount: (float) $payout->amount,
+                payoutId: $payout->id,
+            );
+        } catch (\Throwable) {
+        }
 
         return $this->success(new TeacherPayoutResource($payout->load('teacher')), 'Yêu cầu đã bị từ chối.');
     }

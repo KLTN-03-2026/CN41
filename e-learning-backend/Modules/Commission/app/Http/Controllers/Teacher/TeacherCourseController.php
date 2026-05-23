@@ -10,6 +10,8 @@ use Modules\Course\Http\Requests\StoreCourseRequest;
 use Modules\Course\Http\Requests\UpdateCourseRequest;
 use Modules\Course\Http\Resources\CourseResource;
 use Modules\Course\Repositories\CourseRepositoryInterface;
+use Modules\Notifications\Services\NotificationService;
+use Modules\Users\Models\User;
 
 class TeacherCourseController extends Controller
 {
@@ -77,6 +79,24 @@ class TeacherCourseController extends Controller
         $course = $this->repository->toggleStatus($id); // auto-scoped
 
         $statusText = $course->status === 1 ? 'xuất bản' : 'chuyển về nháp';
+
+        // When published, notify admins for review
+        if ($course->status === 1) {
+            try {
+                $teacher = auth('admin')->user()->teacher;
+                $teacherName = $teacher?->name ?? 'Giảng viên';
+                $notificationService = app(NotificationService::class);
+                User::role(['admin', 'super-admin'])->get()->each(function ($admin) use ($notificationService, $teacherName, $course) {
+                    $notificationService->notifyCoursePending(
+                        adminId: $admin->id,
+                        teacherName: $teacherName,
+                        courseTitle: $course->title,
+                        courseId: $course->id,
+                    );
+                });
+            } catch (\Throwable) {
+            }
+        }
 
         return $this->success(new CourseResource($course), "Khóa học đã được {$statusText}.");
     }
