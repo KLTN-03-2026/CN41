@@ -77,7 +77,7 @@
                       formatRole(role.name)
                     }}</span>
                     <span
-                      v-if="role.name === 'super-admin'"
+                      v-if="['super-admin', 'admin', 'teacher'].includes(role.name)"
                       class="px-2 py-0.5 text-[10px] font-bold uppercase rounded bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400 border border-red-200 dark:border-red-500/30"
                       >Mặc định</span
                     >
@@ -98,7 +98,7 @@
                 <td class="px-6 py-4 text-right">
                   <div
                     class="flex items-center justify-end gap-1"
-                    v-if="role.name !== 'super-admin'"
+                    v-if="!['super-admin', 'admin', 'teacher'].includes(role.name)"
                   >
                     <button
                       v-permission="'users.edit'"

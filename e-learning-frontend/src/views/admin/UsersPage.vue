@@ -249,6 +249,27 @@
                 <td class="px-4 py-3 text-right">
                   <div v-if="!isTrashed" class="flex items-center justify-end gap-1">
                     <button
+                      v-if="!u.email_verified_at"
+                      @click="doVerifyEmail(u)"
+                      :disabled="verifyingId === u.id"
+                      class="p-1.5 rounded-lg hover:bg-green-50 dark:hover:bg-green-500/10 text-gray-500 hover:text-green-600 transition-colors disabled:opacity-50"
+                      title="Xác thực email"
+                    >
+                      <svg
+                        class="w-4 h-4"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        stroke-width="2"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                    </button>
+                    <button
                       @click="openResetPassword(u)"
                       class="p-1.5 rounded-lg hover:bg-orange-50 dark:hover:bg-orange-500/10 text-gray-500 hover:text-orange-500 transition-colors"
                       title="Đổi mật khẩu"
@@ -987,6 +1008,24 @@ async function submitForm() {
     }
   } finally {
     submitting.value = false
+  }
+}
+
+// ── Verify Email ──
+const verifyingId = ref<number | null>(null)
+
+async function doVerifyEmail(u: AdminUser) {
+  verifyingId.value = u.id
+  try {
+    const res = await userService.verifyEmail(u.id)
+    const idx = users.value.findIndex((x) => x.id === u.id)
+    if (idx !== -1) users.value[idx] = res.data.data
+    toast.success('Đã xác thực tài khoản thành công!')
+  } catch (err) {
+    const error = err as { response?: { data?: { message?: string } } }
+    toast.error(error.response?.data?.message || 'Xác thực thất bại.')
+  } finally {
+    verifyingId.value = null
   }
 }
 

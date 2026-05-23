@@ -7,6 +7,8 @@ use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+use Modules\Teachers\Models\Teachers;
 use Modules\Users\Http\Requests\AssignRoleRequest;
 use Modules\Users\Http\Requests\BulkActionUsersRequest;
 use Modules\Users\Http\Requests\BulkAssignRoleRequest;
@@ -17,6 +19,7 @@ use Modules\Users\Http\Requests\RevokeRoleRequest;
 use Modules\Users\Http\Requests\StoreUsersRequest;
 use Modules\Users\Http\Requests\UpdateUsersRequest;
 use Modules\Users\Http\Resources\UserResource;
+use Modules\Users\Models\User;
 use Modules\Users\Repositories\UsersRepositoryInterface;
 use Spatie\Permission\Models\Role;
 
@@ -56,8 +59,13 @@ class UsersController extends Controller
 
         $user = DB::transaction(function () use ($request) {
             $user = $this->repository->create($request->validated());
+            $user->forceFill(['email_verified_at' => now()])->save();
+
             if ($request->filled('role')) {
                 $user->assignRole($request->role);
+                if ($request->role === 'teacher') {
+                    $this->createTeacherProfileIfNeeded($user);
+                }
             }
 
             return $user;
@@ -105,6 +113,9 @@ class UsersController extends Controller
             $user = $this->repository->update($id, $request->validated());
             if ($request->filled('role')) {
                 $user->syncRoles([$request->role]);
+                if ($request->role === 'teacher') {
+                    $this->createTeacherProfileIfNeeded($user);
+                }
             }
 
             return $user;
@@ -258,10 +269,50 @@ class UsersController extends Controller
         );
     }
 
+    public function verifyEmail(int $id): JsonResponse
+    {
+        $user = $this->repository->findOrFail($id);
+
+        if ($user->email_verified_at) {
+            return $this->error('Tài khoản này đã được xác thực.', 422);
+        }
+
+        $user->forceFill(['email_verified_at' => now()])->save();
+
+        $user->load('roles');
+
+        return $this->success(new UserResource($user), 'Xác thực tài khoản thành công.');
+    }
+
     public function getRoles(): JsonResponse
     {
         $roles = Role::where('guard_name', 'admin')->get(['id', 'name']);
 
         return $this->success($roles);
+    }
+
+    private function createTeacherProfileIfNeeded(User $user): void
+    {
+        if ($user->teacher()->exists()) {
+            return;
+        }
+
+        $baseSlug = Str::slug($user->name);
+        if (empty($baseSlug)) {
+            $baseSlug = 'giang-vien-'.$user->id;
+        }
+
+        $slug = $baseSlug;
+        $i = 1;
+        while (Teachers::where('slug', $slug)->exists()) {
+            $slug = $baseSlug.'-'.$i++;
+        }
+
+        Teachers::create([
+            'user_id' => $user->id,
+            'name' => $user->name,
+            'slug' => $slug,
+            'status' => 1,
+        ]);
     }
 }

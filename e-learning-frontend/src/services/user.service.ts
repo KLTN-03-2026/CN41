@@ -67,4 +67,8 @@ export const userService = {
   /** GET /admin/users/roles */
   getRoles: (): Promise<AxiosResponse<ApiResponse<{ id: number; name: string }[]>>> =>
     http.get('/admin/users/roles'),
+
+  /** PATCH /admin/users/{id}/verify-email */
+  verifyEmail: (id: number): Promise<AxiosResponse<ApiResponse<AdminUser>>> =>
+    http.patch(`/admin/users/${id}/verify-email`),
 }

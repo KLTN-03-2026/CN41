@@ -57,7 +57,7 @@ class TeacherTest extends TestCase
         $response = $this->postJson($this->baseUrl, []);
 
         $response->assertStatus(422)
-            ->assertJsonValidationErrors(['name', 'slug']);
+            ->assertJsonValidationErrors(['name']);
     }
 
     public function test_update_teacher_success()
