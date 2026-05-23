@@ -74,7 +74,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
+import { reactive, ref, watch } from 'vue'
 import { useToast } from 'vue-toastification'
 import http from '@/plugins/axios'
 
@@ -101,12 +101,17 @@ const loading = ref(false)
 
 function defaultFrom(): string {
   const d = new Date()
-  d.setDate(1)
-  return d.toISOString().slice(0, 10)
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  return `${y}-${m}-01`
 }
 
 function defaultTo(): string {
-  return new Date().toISOString().slice(0, 10)
+  const d = new Date()
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
 }
 
 const form = reactive({
@@ -115,13 +120,38 @@ const form = reactive({
   status: '',
 })
 
+watch(
+  () => props.show,
+  (val) => {
+    if (val) {
+      form.from = defaultFrom()
+      form.to = defaultTo()
+      form.status = ''
+    }
+  },
+)
+
+function extractFilename(contentDisposition: string | undefined): string {
+  if (!contentDisposition) return 'export.xlsx'
+  // RFC 5987: filename*=UTF-8''encoded-name
+  const rfc5987 = contentDisposition.match(/filename\*=UTF-8''([^;\n]+)/i)
+  if (rfc5987?.[1]) return decodeURIComponent(rfc5987[1])
+  // Fallback: filename="name" or filename=name
+  const plain = contentDisposition.match(/filename="?([^";\n]+)"?/)
+  return plain?.[1] ?? 'export.xlsx'
+}
+
 async function handleExport() {
   loading.value = true
   try {
     const params: Record<string, string | number> = {
       from: form.from,
       to: form.to,
-      ...props.extraParams,
+      ...(props.extraParams
+        ? Object.fromEntries(
+            Object.entries(props.extraParams).filter(([, v]) => v !== undefined),
+          )
+        : {}),
     }
     if (props.hasStatusFilter && form.status) {
       params.status = form.status
@@ -132,9 +162,7 @@ async function handleExport() {
       responseType: 'blob',
     })
 
-    const contentDisposition = res.headers['content-disposition'] as string | undefined
-    const match = contentDisposition?.match(/filename="?([^";\n]+)"?/)
-    const filename = match?.[1] ?? 'export.xlsx'
+    const filename = extractFilename(res.headers['content-disposition'] as string | undefined)
 
     const url = URL.createObjectURL(new Blob([res.data]))
     const a = document.createElement('a')
@@ -146,7 +174,8 @@ async function handleExport() {
     URL.revokeObjectURL(url)
 
     emit('close')
-  } catch {
+  } catch (err) {
+    console.error('ExportExcelModal: export failed', err)
     toast.error('Xuất file thất bại. Vui lòng thử lại.')
   } finally {
     loading.value = false
