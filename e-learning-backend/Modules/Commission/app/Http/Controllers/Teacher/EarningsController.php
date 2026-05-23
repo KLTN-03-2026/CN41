@@ -8,6 +8,9 @@ use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
+use Modules\Commission\Exports\TeacherEarningsExport;
+use Modules\Commission\Http\Requests\ExportEarningsRequest;
 use Modules\Commission\Http\Requests\StorePayoutRequest;
 use Modules\Commission\Http\Resources\TeacherEarningResource;
 use Modules\Commission\Http\Resources\TeacherPayoutResource;
@@ -16,12 +19,34 @@ use Modules\Commission\Repositories\CommissionRepositoryInterface;
 use Modules\Notifications\Services\NotificationService;
 use Modules\Teachers\Models\Teachers;
 use Modules\Users\Models\User;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class EarningsController extends Controller
 {
     use ApiResponse;
 
     public function __construct(private CommissionRepositoryInterface $repository) {}
+
+    public function export(ExportEarningsRequest $request): BinaryFileResponse
+    {
+        $user = auth('admin')->user();
+        $teacher = Teachers::where('user_id', $user->id)->firstOrFail();
+
+        $from = $request->query('from', now()->startOfMonth()->format('Y-m-d'));
+        $to = $request->query('to', now()->format('Y-m-d'));
+
+        $filename = "thu-nhap_{$from}_{$to}.xlsx";
+
+        return Excel::download(
+            new TeacherEarningsExport(
+                from: $from,
+                to: $to,
+                teacherId: $teacher->id,
+                showTeacherColumn: false,
+            ),
+            $filename
+        );
+    }
 
     public function index(Request $request): JsonResponse
     {

@@ -27,11 +27,14 @@ Route::middleware(['auth:admin'])->prefix('admin')->group(function () {
     Route::patch('payouts/{id}/mark-paid', [PayoutController::class, 'markPaid'])
         ->middleware('permission:payouts.approve');
 
+    Route::get('teacher-earnings/export', [TeacherEarningsController::class, 'export'])
+        ->middleware('permission:teacher_earnings.export');
     Route::get('teacher-earnings', [TeacherEarningsController::class, 'index'])
         ->middleware('permission:teacher_earnings.view');
 });
 
 Route::middleware(['auth:admin', 'role:teacher'])->prefix('teacher')->group(function () {
+    Route::get('earnings/export', [EarningsController::class, 'export']);
     Route::get('earnings', [EarningsController::class, 'index']);
     Route::get('payouts', [EarningsController::class, 'myPayouts']);
     Route::post('payouts', [EarningsController::class, 'requestPayout']);

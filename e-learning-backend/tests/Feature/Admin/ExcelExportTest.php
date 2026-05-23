@@ -4,6 +4,7 @@ namespace Tests\Feature\Admin;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Maatwebsite\Excel\Facades\Excel;
+use Modules\Commission\Models\TeacherEarning;
 use Modules\Commission\Models\TeacherPayout;
 use Modules\Course\Models\Course;
 use Modules\Payment\Models\Order;
@@ -133,5 +134,42 @@ class ExcelExportTest extends TestCase
         $this->actingAs($admin, 'admin');
 
         $this->getJson('/api/v1/admin/payouts/export')->assertStatus(403);
+    }
+
+    public function test_admin_can_export_teacher_earnings(): void
+    {
+        Excel::fake();
+        $this->setupAdmin();
+
+        $from = now()->startOfMonth()->format('Y-m-d');
+        $to   = now()->format('Y-m-d');
+
+        $this->getJson("/api/v1/admin/teacher-earnings/export?from={$from}&to={$to}")
+            ->assertStatus(200);
+
+        Excel::assertDownloaded("thu-nhap_{$from}_{$to}.xlsx");
+    }
+
+    public function test_teacher_can_export_own_earnings(): void
+    {
+        Excel::fake();
+
+        $this->seed(RolePermissionSeeder::class);
+        $user = User::forceCreate([
+            'name' => 'Teacher Export', 'email' => 'teacher_export@test.com', 'password' => 'pw',
+        ]);
+        $teacherRole = \Spatie\Permission\Models\Role::where('name', 'teacher')->where('guard_name', 'admin')->first();
+        $user->assignRole($teacherRole);
+        $this->actingAs($user, 'admin');
+
+        Teachers::create(['user_id' => $user->id, 'name' => 'T Export', 'slug' => 't-export', 'exp' => 1, 'status' => 1]);
+
+        $from = now()->startOfMonth()->format('Y-m-d');
+        $to   = now()->format('Y-m-d');
+
+        $this->getJson("/api/v1/teacher/earnings/export?from={$from}&to={$to}")
+            ->assertStatus(200);
+
+        Excel::assertDownloaded("thu-nhap_{$from}_{$to}.xlsx");
     }
 }
