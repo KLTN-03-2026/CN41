@@ -560,6 +560,25 @@
   display: block;
 }
 
+/* max-height: 65vh bị cascade vào trong fullscreen element,
+   phải reset về 100% để video fill toàn màn hình */
+.video-wrapper:fullscreen .video-player,
+.video-wrapper:-webkit-full-screen .video-player {
+  max-height: 100vh !important;
+  height: 100vh !important;
+  width: 100vw !important;
+}
+
+.video-wrapper:fullscreen,
+.video-wrapper:-webkit-full-screen {
+  width: 100vw !important;
+  height: 100vh !important;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  background: #000;
+}
+
 .video-placeholder {
   background: linear-gradient(135deg, #0f0f1a, #1a1a2e);
   display: flex;
@@ -573,6 +592,253 @@
 .video-placeholder p {
   color: rgba(255,255,255,0.35);
   font-size: 14px;
+}
+
+/* ── Enrolled Notice ──────────────────────────────────────── */
+.enrolled-notice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 16px;
+  background: rgba(99, 102, 241, 0.05);
+  border-bottom: 1px solid rgba(99, 102, 241, 0.08);
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.38);
+  line-height: 1.5;
+}
+
+.enrolled-notice svg {
+  color: #6366f1;
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
+/* ── Lesson Note Panel ────────────────────────────────────── */
+.lesson-note-panel {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px 32px 8px;
+  width: 100%;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.note-panel-header {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 12px;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.note-count {
+  background: rgba(99, 102, 241, 0.2);
+  color: #818cf8;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 10px;
+}
+
+.note-empty {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.25);
+  padding: 4px 0 12px;
+}
+
+/* Note list */
+.note-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.note-item {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 8px;
+  padding: 10px 12px;
+  position: relative;
+}
+
+.note-timestamp {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(99, 102, 241, 0.15);
+  color: #818cf8;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  margin-bottom: 6px;
+  transition: background 0.15s;
+  font-family: monospace;
+}
+
+.note-timestamp:hover {
+  background: rgba(99, 102, 241, 0.3);
+}
+
+.note-content {
+  font-size: 13.5px;
+  color: rgba(255, 255, 255, 0.75);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  margin: 0;
+  padding-right: 52px;
+}
+
+.note-actions {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.note-item:hover .note-actions {
+  opacity: 1;
+}
+
+.note-btn-edit,
+.note-btn-delete {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 3px;
+  border-radius: 4px;
+  transition: background 0.15s;
+}
+
+.note-btn-edit  { color: rgba(255, 255, 255, 0.4); }
+.note-btn-edit:hover { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.8); }
+.note-btn-delete { color: rgba(255, 255, 255, 0.3); }
+.note-btn-delete:hover { background: rgba(239, 68, 68, 0.15); color: #f87171; }
+
+/* Textarea */
+.note-textarea {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 7px;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 13.5px;
+  line-height: 1.6;
+  padding: 9px 11px;
+  resize: vertical;
+  min-height: 80px;
+  outline: none;
+  transition: border-color 0.15s;
+  font-family: inherit;
+}
+
+.note-textarea:focus {
+  border-color: rgba(99, 102, 241, 0.45);
+  background: rgba(99, 102, 241, 0.03);
+}
+
+.note-textarea::placeholder { color: rgba(255, 255, 255, 0.2); }
+
+/* Edit mode actions */
+.note-edit-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 7px;
+  justify-content: flex-end;
+}
+
+/* Add form */
+.note-add-form {
+  margin-bottom: 10px;
+}
+
+.note-add-timestamp {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.4);
+  margin-bottom: 7px;
+}
+
+.note-add-timestamp strong {
+  color: #818cf8;
+  font-family: monospace;
+}
+
+.note-add-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 6px;
+}
+
+.note-add-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.note-charcount {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.2);
+}
+
+/* Buttons */
+.btn-note-save {
+  background: #6366f1;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 12.5px;
+  font-weight: 500;
+  padding: 5px 14px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btn-note-save:hover:not(:disabled) { background: #4f46e5; }
+.btn-note-save:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-note-cancel {
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.55);
+  border: none;
+  border-radius: 6px;
+  font-size: 12.5px;
+  padding: 5px 12px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btn-note-cancel:hover { background: rgba(255, 255, 255, 0.1); }
+
+/* Add note button */
+.btn-add-note {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: 1px dashed rgba(99, 102, 241, 0.3);
+  border-radius: 7px;
+  color: rgba(99, 102, 241, 0.7);
+  font-size: 13px;
+  padding: 7px 14px;
+  cursor: pointer;
+  width: 100%;
+  margin-bottom: 4px;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+
+.btn-add-note:hover {
+  border-color: rgba(99, 102, 241, 0.6);
+  color: #818cf8;
+  background: rgba(99, 102, 241, 0.05);
 }
 
 /* ── Lesson Content Area ──────────────────────────────────── */

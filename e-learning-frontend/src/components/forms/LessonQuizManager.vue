@@ -92,16 +92,36 @@
           Chương này chưa có tài liệu PDF nào.
         </div>
         <div v-else class="space-y-1">
-          <p class="text-xs text-gray-500 mb-2">
-            AI sẽ đọc tất cả {{ chapterPdfs.length }} file PDF dưới đây:
-          </p>
-          <div
+          <div class="flex items-center justify-between mb-2">
+            <p class="text-xs text-gray-500">
+              Đã chọn {{ selectedPdfIds.length }}/{{ chapterPdfs.length }} PDF
+            </p>
+            <button
+              @click="toggleSelectAll"
+              class="text-xs text-purple-600 dark:text-purple-400 hover:underline"
+            >
+              {{ selectedPdfIds.length === chapterPdfs.length ? 'Bỏ chọn tất cả' : 'Chọn tất cả' }}
+            </button>
+          </div>
+          <label
             v-for="pdf in chapterPdfs"
             :key="pdf.id"
-            class="flex items-center gap-2 px-3 py-2 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 text-xs text-gray-700 dark:text-gray-300"
+            class="flex items-center gap-2 px-3 py-2 bg-white dark:bg-gray-800 rounded-lg border cursor-pointer transition-colors"
+            :class="
+              selectedPdfIds.includes(pdf.id)
+                ? 'border-purple-400 dark:border-purple-500'
+                : 'border-gray-200 dark:border-gray-700'
+            "
           >
-            <span>📄</span> {{ pdf.name }}
-          </div>
+            <input
+              type="checkbox"
+              :value="pdf.id"
+              v-model="selectedPdfIds"
+              class="rounded accent-purple-500"
+            />
+            <span>📄</span>
+            <span class="text-xs text-gray-700 dark:text-gray-300 flex-1 truncate">{{ pdf.name }}</span>
+          </label>
         </div>
       </div>
 
@@ -148,7 +168,7 @@
         :disabled="
           generating ||
           (genSource === 'upload' && !uploadedFile) ||
-          (genSource === 'chapter' && !chapterPdfs.length)
+          (genSource === 'chapter' && selectedPdfIds.length === 0)
         "
         class="w-full py-2 text-sm font-medium rounded-lg bg-purple-500 text-white hover:bg-purple-600 disabled:opacity-50 flex items-center justify-center gap-2 transition-colors"
       >
@@ -264,6 +284,7 @@ const uploadedFile = ref<File | null>(null)
 const pdfInput = ref<HTMLInputElement>()
 const chapterPdfs = ref<ChapterPdf[]>([])
 const loadingPdfs = ref(false)
+const selectedPdfIds = ref<number[]>([])
 
 onMounted(() => loadQuiz())
 
@@ -288,10 +309,19 @@ async function loadChapterPdfs() {
   try {
     const res = await quizService.lessonQuizChapterPdfs(props.lessonId)
     chapterPdfs.value = res.data.data ?? []
+    selectedPdfIds.value = chapterPdfs.value.map((p) => p.id)
   } catch {
     toast.error('Không thể tải danh sách PDF')
   } finally {
     loadingPdfs.value = false
+  }
+}
+
+function toggleSelectAll() {
+  if (selectedPdfIds.value.length === chapterPdfs.value.length) {
+    selectedPdfIds.value = []
+  } else {
+    selectedPdfIds.value = chapterPdfs.value.map((p) => p.id)
   }
 }
 
@@ -306,6 +336,9 @@ async function doGenerate() {
     if (customPrompt.value) formData.append('custom_prompt', customPrompt.value)
     if (genSource.value === 'upload' && uploadedFile.value) {
       formData.append('file', uploadedFile.value)
+    }
+    if (genSource.value === 'chapter') {
+      selectedPdfIds.value.forEach((id) => formData.append('pdf_ids[]', String(id)))
     }
 
     const res = await quizService.lessonQuizGenerate(props.lessonId, formData)

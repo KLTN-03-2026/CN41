@@ -1,6 +1,6 @@
 import type { AxiosResponse } from 'axios'
 import http from '@/plugins/axios'
-import type { ApiResponse, PaginatedResponse, Lesson } from '@/types'
+import type { ApiResponse, PaginatedResponse, Lesson, LessonNote } from '@/types'
 
 export const lessonService = {
   // ── Admin ──────────────────────────────────────────────────
@@ -84,4 +84,20 @@ export const lessonService = {
   /** GET /courses/{slug}/progress */
   courseProgress: (courseSlug: string): Promise<AxiosResponse<ApiResponse<unknown>>> =>
     http.get(`/courses/${courseSlug}/progress`),
+
+  /** GET /lessons/{id}/notes */
+  listNotes: (lessonId: number): Promise<AxiosResponse<ApiResponse<LessonNote[]>>> =>
+    http.get(`/lessons/${lessonId}/notes`),
+
+  /** POST /lessons/{id}/notes */
+  createNote: (lessonId: number, content: string, timestampSeconds?: number): Promise<AxiosResponse<ApiResponse<LessonNote>>> =>
+    http.post(`/lessons/${lessonId}/notes`, { content, timestamp_seconds: timestampSeconds ?? null }),
+
+  /** PATCH /lesson-notes/{noteId} */
+  updateNote: (noteId: number, content: string): Promise<AxiosResponse<ApiResponse<LessonNote>>> =>
+    http.patch(`/lesson-notes/${noteId}`, { content }),
+
+  /** DELETE /lesson-notes/{noteId} */
+  deleteNote: (noteId: number): Promise<AxiosResponse<ApiResponse<null>>> =>
+    http.delete(`/lesson-notes/${noteId}`),
 }
