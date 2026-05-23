@@ -53,6 +53,10 @@ Route::middleware(['auth:api', 'email.verified'])->group(function () {
     Route::get('my-courses/{slug}/lessons/{lesson_slug}', [LessonController::class, 'myLessonDetail']);
     Route::post('lessons/{id}/progress', [LessonController::class, 'updateProgress']);
     Route::get('courses/{slug}/progress', [LessonController::class, 'courseProgress']);
+    Route::get('lessons/{id}/notes', [LessonController::class, 'myNotes']);
+    Route::post('lessons/{id}/notes', [LessonController::class, 'storeNote']);
+    Route::patch('lesson-notes/{noteId}', [LessonController::class, 'updateNote']);
+    Route::delete('lesson-notes/{noteId}', [LessonController::class, 'destroyNote']);
 });
 
 // ── Public routes (không cần auth) ────────────────────────

@@ -45,6 +45,8 @@ class GenerateQuizJob implements ShouldQueue
             if ($payload['source'] === 'upload' && ! empty($payload['temp_path'])) {
                 $fullPath = Storage::disk('local')->path($payload['temp_path']);
                 $pdfText = $aiService->extractPdfTextFromPath($fullPath);
+            } elseif (! empty($payload['pdf_ids'])) {
+                $pdfText = $aiService->extractPdfTextByIds($payload['pdf_ids']);
             } else {
                 $pdfText = $aiService->extractChapterPdfText($lesson);
             }

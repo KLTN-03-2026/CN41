@@ -24,7 +24,7 @@ class StoreTeachersRequest extends FormRequest
     {
         return [
             'name' => 'required|string|max:100',
-            'slug' => 'required|string|max:100|unique:teachers,slug|regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/',
+            'slug' => 'nullable|string|max:100|unique:teachers,slug|regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/',
             'description' => 'nullable|string|max:5000',
             'exp' => 'nullable|numeric|min:0|max:100',
             'image' => 'nullable|url|max:2048',

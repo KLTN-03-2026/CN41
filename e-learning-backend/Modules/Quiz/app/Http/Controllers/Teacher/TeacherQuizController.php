@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\Quiz\Http\Controllers\Admin;
+namespace Modules\Quiz\Http\Controllers\Teacher;
 
 use App\Http\Controllers\Controller;
 use App\Traits\ApiResponse;
@@ -16,18 +16,19 @@ use Modules\Quiz\Models\QuizGenerationJob;
 use Modules\Quiz\Models\QuizQuestion;
 use Modules\Quiz\Services\AIQuizService;
 
-class QuizGenerateController extends Controller
+class TeacherQuizController extends Controller
 {
     use ApiResponse;
 
     public function __construct(private AIQuizService $aiService) {}
 
     /**
-     * Lấy thông tin quiz của một lesson (tạo mới nếu chưa có).
-     * GET /admin/lessons/{lessonId}/quiz
+     * Lấy thông tin quiz của một lesson thuộc giảng viên (tự động scoped).
+     * GET /teacher/lesson-quiz/{lessonId}
      */
     public function show(int $lessonId): JsonResponse
     {
+        // ScopesToTeacher trên Lesson tự động chặn nếu không phải bài học của mình
         $lesson = Lesson::findOrFail($lessonId);
         $quiz = Quiz::where('lesson_id', $lessonId)->with('questions')->first();
 
@@ -42,11 +43,12 @@ class QuizGenerateController extends Controller
     }
 
     /**
-     * Sinh câu hỏi quiz từ PDF upload hoặc PDF trong chương (async via queue).
-     * POST /admin/lesson-quiz/{lessonId}/generate
+     * Sinh câu hỏi quiz từ tài liệu của giảng viên (tự động scoped).
+     * POST /teacher/lesson-quiz/{lessonId}/generate
      */
     public function generate(GenerateQuizRequest $request, int $lessonId): JsonResponse
     {
+        // ScopesToTeacher check ownership
         Lesson::findOrFail($lessonId);
 
         $tempPath = null;
@@ -75,12 +77,15 @@ class QuizGenerateController extends Controller
     }
 
     /**
-     * Kiểm tra trạng thái job sinh câu hỏi AI.
-     * GET /admin/lesson-quiz/jobs/{jobId}
+     * Kiểm tra trạng thái job sinh câu hỏi AI cho giảng viên.
+     * GET /teacher/lesson-quiz/jobs/{jobId}
      */
     public function jobStatus(int $jobId): JsonResponse
     {
         $job = QuizGenerationJob::findOrFail($jobId);
+
+        // Bảo mật: check xem bài học có thuộc quyền sở hữu của giảng viên hay không
+        Lesson::findOrFail($job->lesson_id);
 
         if ($job->status === 'done') {
             $quiz = Quiz::where('lesson_id', $job->lesson_id)->with('questions')->first();
@@ -100,34 +105,46 @@ class QuizGenerateController extends Controller
     }
 
     /**
-     * Cập nhật một câu hỏi (admin sửa sau khi AI sinh).
-     * PATCH /admin/quiz-questions/{questionId}
+     * Giảng viên cập nhật một câu hỏi trong quiz của mình.
+     * PATCH /teacher/quiz-questions/{questionId}
      */
     public function updateQuestion(UpdateQuizQuestionRequest $request, int $questionId): JsonResponse
     {
         $question = QuizQuestion::findOrFail($questionId);
+
+        // Bảo mật: check ownership qua Quiz -> Lesson
+        $quiz = Quiz::findOrFail($question->quiz_id);
+        Lesson::findOrFail($quiz->lesson_id);
+
         $question->update($request->only(['question', 'option_a', 'option_b', 'option_c', 'option_d', 'correct_option']));
 
         return $this->success(new QuizQuestionResource($question), 'Cập nhật câu hỏi thành công');
     }
 
     /**
-     * Xóa một câu hỏi.
-     * DELETE /admin/quiz-questions/{questionId}
+     * Giảng viên xóa câu hỏi trong quiz của mình.
+     * DELETE /teacher/quiz-questions/{questionId}
      */
     public function deleteQuestion(int $questionId): JsonResponse
     {
-        QuizQuestion::findOrFail($questionId)->delete();
+        $question = QuizQuestion::findOrFail($questionId);
+
+        // Bảo mật: check ownership qua Quiz -> Lesson
+        $quiz = Quiz::findOrFail($question->quiz_id);
+        Lesson::findOrFail($quiz->lesson_id);
+
+        $question->delete();
 
         return $this->success(null, 'Đã xóa câu hỏi');
     }
 
     /**
-     * Lấy danh sách PDF trong chương để admin xem trước.
-     * GET /admin/lessons/{lessonId}/chapter-pdfs
+     * Lấy danh sách PDF trong chương thuộc giảng viên.
+     * GET /teacher/lesson-quiz/{lessonId}/chapter-pdfs
      */
     public function chapterPdfs(int $lessonId): JsonResponse
     {
+        // ScopesToTeacher check ownership
         $lesson = Lesson::with(['section.lessons.document'])->findOrFail($lessonId);
         $pdfs = $this->aiService->getChapterDocuments($lesson);
 

@@ -19,6 +19,7 @@ class StoreTeacherPostRequest extends FormRequest
             'title' => 'required|string|max:255',
             'slug' => 'required|string|max:255|unique:posts,slug|regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/',
             'content' => 'required|string',
+            'thumbnail' => 'nullable|string',
             'post_category_id' => 'nullable|exists:post_categories,id',
             'tag_ids' => 'nullable|array',
             'tag_ids.*' => 'exists:tags,id',

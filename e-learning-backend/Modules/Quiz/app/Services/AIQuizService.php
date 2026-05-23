@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Modules\Lessons\Models\Lesson;
+use Modules\Upload\Models\MediaFile;
 
 class AIQuizService
 {
@@ -42,46 +43,83 @@ class AIQuizService
             throw new \Exception('GEMINI_API_KEY chưa được cấu hình.');
         }
 
-        // ~20,000 chars — gemini-2.0-flash supports large context
         $truncated = mb_substr($pdfText, 0, 20000);
+        $subject = $lessonContext ?: 'môn học này';
 
-        $contextHint = $lessonContext
-            ? "Bài học này thuộc chủ đề: {$lessonContext}. Hãy tập trung vào các khái niệm quan trọng nhất của chủ đề này.\n\n"
-            : '';
+        // Request 40% extra to absorb questions that get filtered
+        $requestCount = min(20, (int) ceil($count * 1.4));
 
         $prompt = <<<PROMPT
-Bạn là một chuyên gia biên soạn câu hỏi trắc nghiệm cho hệ thống e-learning. Nhiệm vụ của bạn là tạo ra {$count} câu hỏi trắc nghiệm chất lượng cao dựa trên nội dung tài liệu bên dưới.
+Bạn là giáo sư đang soạn đề thi cuối kỳ cho môn: {$subject}
+Sinh viên sẽ làm bài thi KHÔNG có tài liệu, sách vở hay thiết bị gì.
 
-{$contextHint}Nội dung tài liệu:
----
+════════════════════════════════════════
+LUẬT BẤT DI BẤT DỊCH (đọc trước khi làm gì khác)
+════════════════════════════════════════
+Đề thi kiểm tra SỰ HIỂU BIẾT — không kiểm tra xem sinh viên có ĐỌC tài liệu không.
+
+CẤM tuyệt đối các từ sau trong câu hỏi và đáp án:
+  tài liệu · văn bản · bài học · bài giảng · chương · đề cập · nêu trên · như trên · như đã học · trong bài · theo bài · theo văn bản · gợi ý rằng · nhắc đến
+
+CẤM các dạng câu hỏi:
+  ✗ "... được đề cập trong ...?"
+  ✗ "... tài liệu gợi ý ...?"
+  ✗ "Nội dung chính của ... là gì?"
+  ✗ "Điều nào sau đây được nhắc đến?"
+  ✗ Bất kỳ câu hỏi nào cần đọc tài liệu gốc mới trả lời được
+
+════════════════════════════════════════
+PHONG CÁCH ĐỀ THI ĐÚNG
+════════════════════════════════════════
+Câu hỏi hỏi thẳng vào kiến thức — không nhắc nguồn gốc:
+
+  ▸ Lập trình:
+    "Đoạn code sau in ra gì?  nums=[1,2,3]; print(sum(nums)*len(nums))"
+    "Độ phức tạp O() của Binary Search trong trường hợp trung bình là?"
+    "Khi nào nên dùng HashMap thay vì ArrayList?"
+
+  ▸ Thiết kế / Editing:
+    "Kỹ thuật J-cut trong dựng phim đạt hiệu quả gì?"
+    "Màu bổ túc (complementary) của màu đỏ trên color wheel là?"
+
+  ▸ Kinh tế / Kinh doanh:
+    "Khi lãi suất tăng từ 5% lên 8%, đầu tư tư nhân sẽ?"
+    "Công ty có doanh thu 800tr, chi phí biến đổi 500tr, cố định 200tr — lợi nhuận là?"
+
+  ▸ Ngoại ngữ / Kỹ năng:
+    "Câu nào dùng Past Perfect đúng ngữ pháp?"
+    "Kỹ thuật paraphrasing trong active listening dùng để làm gì?"
+
+════════════════════════════════════════
+NHIỆM VỤ
+════════════════════════════════════════
+Viết {$requestCount} câu hỏi trắc nghiệm. Phân bổ:
+  • ~30% định nghĩa / khái niệm cơ bản
+  • ~40% phân tích / so sánh / quan hệ nhân-quả
+  • ~30% tình huống có số liệu hoặc code snippet cụ thể
+
+Tiêu chuẩn:
+  ✓ Đáp án đúng: rõ ràng, không tranh cãi
+  ✓ 3 đáp án sai: hợp lý, liên quan, đủ để người chưa kỹ nhầm
+  ✓ Thuật ngữ kỹ thuật (tên hàm, tool, framework): giữ nguyên tiếng Anh
+  ✓ Phần còn lại: tiếng Việt học thuật
+
+KIỂM TRA TRƯỚC KHI OUTPUT:
+Đọc lại từng câu — nếu vi phạm luật trên → xóa và thay câu mới.
+
+════════════════════════════════════════
+[CHỈ ĐỂ THAM KHẢO NỘI BỘ — KHÔNG NHẮC ĐẾN TRONG CÂU HỎI]
+════════════════════════════════════════
 {$truncated}
----
+════════════════════════════════════════
 
-Yêu cầu bắt buộc:
-1. Tất cả câu hỏi và đáp án PHẢI bằng tiếng Việt
-2. Mỗi câu hỏi có đúng 4 lựa chọn (A, B, C, D), chỉ 1 đáp án đúng
-3. Câu hỏi phải bám sát nội dung tài liệu, KHÔNG được bịa đặt thông tin ngoài tài liệu
-4. Phân bổ cấp độ tư duy đa dạng:
-   - Nhận biết (20%): hỏi về định nghĩa, khái niệm, sự kiện cụ thể trong tài liệu
-   - Thông hiểu (50%): hỏi về ý nghĩa, giải thích, so sánh các khái niệm
-   - Vận dụng (30%): hỏi về áp dụng kiến thức vào tình huống thực tế
-5. Các đáp án sai (nhiễu) phải hợp lý, liên quan đến chủ đề, KHÔNG được quá dễ loại trừ
-6. Câu hỏi phải rõ ràng, không mơ hồ, không có 2 đáp án đều đúng
-
-Chỉ trả về JSON array hợp lệ (không có markdown, không có giải thích), theo đúng định dạng sau:
-[
-  {
-    "question": "...",
-    "option_a": "...",
-    "option_b": "...",
-    "option_c": "...",
-    "option_d": "...",
-    "correct_option": "A"
-  }
-]
+OUTPUT: Chỉ JSON array thuần, không markdown, không text khác.
+[{"question":"...","option_a":"...","option_b":"...","option_c":"...","option_d":"...","correct_option":"A"}]
 PROMPT;
 
-        return $this->callAndParse($prompt);
+        $all = $this->filterBannedPhrases($this->callAndParse($prompt));
+
+        return array_slice($all, 0, $count);
     }
 
     // ── PDF helpers ───────────────────────────────────────────────────────────
@@ -99,6 +137,31 @@ PROMPT;
         } catch (\Throwable) {
             return '';
         }
+    }
+
+    public function extractPdfTextByIds(array $pdfIds): string
+    {
+        $mediaFiles = MediaFile::whereIn('id', $pdfIds)->get();
+
+        $allText = '';
+        foreach ($mediaFiles as $file) {
+            if (empty($file->path)) {
+                continue;
+            }
+
+            $fullPath = Storage::disk($file->disk ?? 'public')->path($file->path);
+            if (! file_exists($fullPath)) {
+                continue;
+            }
+
+            $text = $this->extractPdfTextFromPath($fullPath);
+            if ($text) {
+                $name = basename($file->path);
+                $allText .= "\n\n--- Document: {$name} ---\n".$text;
+            }
+        }
+
+        return $allText;
     }
 
     public function extractChapterPdfText(Lesson $lesson): string
@@ -157,31 +220,26 @@ PROMPT;
     private function buildContextPrompt(string $context, int $count): string
     {
         return <<<PROMPT
-Bạn là một chuyên gia biên soạn câu hỏi trắc nghiệm cho hệ thống e-learning. Tạo ra {$count} câu hỏi trắc nghiệm về chủ đề sau:
+[VAI TRÒ]
+Bạn là giáo sư đại học đang soạn đề thi cuối kỳ cho môn: {$context}
+Sinh viên làm bài thi không có tài liệu trước mặt.
 
-Chủ đề: {$context}
+[VIẾT {$count} CÂU HỎI TRẮC NGHIỆM]
+Phân bổ: ~30% định nghĩa/khái niệm | ~40% phân tích/nhân-quả | ~30% tình huống số liệu
 
-Yêu cầu bắt buộc:
-1. Tất cả câu hỏi và đáp án PHẢI bằng tiếng Việt
-2. Mỗi câu hỏi có đúng 4 lựa chọn (A, B, C, D), chỉ 1 đáp án đúng
-3. Phân bổ cấp độ tư duy đa dạng:
-   - Nhận biết: hỏi về định nghĩa, khái niệm cơ bản
-   - Thông hiểu: hỏi về ý nghĩa, giải thích nguyên lý
-   - Vận dụng: hỏi về áp dụng vào tình huống thực tế
-4. Các đáp án sai phải hợp lý, liên quan đến chủ đề, không quá dễ loại trừ
-5. Câu hỏi phải cụ thể, rõ ràng, kiến thức đúng về chuyên môn
+[LUẬT CỨNG]
+CẤM từ: "tài liệu" | "bài học" | "chương" | "đề cập" | "nêu trên" | "theo bài"
+CẤM hỏi về cấu trúc, bố cục, hay nguồn gốc kiến thức.
+Hỏi thẳng vào kiến thức: "X là gì?" không phải "Theo bài học, X là gì?"
 
-Chỉ trả về JSON array hợp lệ (không có markdown, không có giải thích), theo đúng định dạng sau:
-[
-  {
-    "question": "...",
-    "option_a": "...",
-    "option_b": "...",
-    "option_c": "...",
-    "option_d": "...",
-    "correct_option": "A"
-  }
-]
+[TIÊU CHUẨN]
+✓ Câu hỏi tự đứng được, không cần tài liệu gốc
+✓ 3 đáp án sai đủ hợp lý, liên quan chủ đề
+✓ Câu tình huống bắt buộc có số liệu cụ thể
+✓ 100% tiếng Việt, học thuật
+
+[OUTPUT — CHỈ JSON ARRAY, KHÔNG MARKDOWN]
+[{"question":"...","option_a":"...","option_b":"...","option_c":"...","option_d":"...","correct_option":"A"}]
 PROMPT;
     }
 
@@ -277,6 +335,31 @@ PROMPT;
             'correct_option' => strtoupper($q['correct_option'] ?? 'A'),
             'order' => $i,
         ], $questions, array_keys($questions)));
+    }
+
+    private function filterBannedPhrases(array $questions): array
+    {
+        $banned = [
+            'tài liệu', 'văn bản', 'bài học', 'bài giảng',
+            'đề cập', 'nêu trên', 'như trên', 'như đã học',
+            'trong bài', 'theo bài', 'theo văn bản', 'gợi ý rằng', 'nhắc đến',
+        ];
+
+        return array_values(array_filter($questions, function ($q) use ($banned) {
+            $text = mb_strtolower($q['question']);
+            foreach ($banned as $word) {
+                if (str_contains($text, $word)) {
+                    Log::warning('Filtered quiz question with banned phrase', [
+                        'phrase' => $word,
+                        'question' => $q['question'],
+                    ]);
+
+                    return false;
+                }
+            }
+
+            return true;
+        }));
     }
 
     private function extractPdfTextRaw(string $filePath): string

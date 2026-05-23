@@ -22,6 +22,8 @@ class GenerateQuizRequest extends FormRequest
             'custom_prompt' => 'nullable|string|max:500',
             'max_attempts' => 'nullable|integer|min:1|max:10',
             'time_limit' => 'nullable|integer|min:1',
+            'pdf_ids' => 'nullable|array',
+            'pdf_ids.*' => 'integer|exists:media_files,id',
         ];
     }
 

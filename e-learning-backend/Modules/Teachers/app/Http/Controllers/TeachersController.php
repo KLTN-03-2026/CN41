@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Modules\Teachers\Http\Requests\BulkDeleteTeachersRequest;
 use Modules\Teachers\Http\Requests\BulkForceDeleteTeachersRequest;
 use Modules\Teachers\Http\Requests\BulkRestoreTeachersRequest;
@@ -13,6 +14,7 @@ use Modules\Teachers\Http\Requests\IndexTeachersRequest;
 use Modules\Teachers\Http\Requests\StoreTeachersRequest;
 use Modules\Teachers\Http\Requests\UpdateTeachersRequest;
 use Modules\Teachers\Http\Resources\TeacherResource;
+use Modules\Teachers\Models\Teachers;
 use Modules\Teachers\Repositories\TeachersRepositoryInterface;
 
 class TeachersController extends Controller
@@ -47,7 +49,13 @@ class TeachersController extends Controller
      */
     public function store(StoreTeachersRequest $request): JsonResponse
     {
-        $teacher = $this->repository->create($request->validated());
+        $data = $request->validated();
+
+        if (empty($data['slug'])) {
+            $data['slug'] = $this->generateUniqueSlug($data['name']);
+        }
+
+        $teacher = $this->repository->create($data);
         $teacher->refresh();
 
         return $this->success(new TeacherResource($teacher), 'Giảng viên đã được tạo thành công.', 201);
@@ -177,6 +185,24 @@ class TeachersController extends Controller
             ['deleted_count' => $deleted, 'deleted_ids' => $request->ids],
             "Đã xoá vĩnh viễn {$deleted} giảng viên."
         );
+    }
+
+    // ── Helpers ──
+
+    private function generateUniqueSlug(string $name): string
+    {
+        $baseSlug = Str::slug($name);
+        if (empty($baseSlug)) {
+            $baseSlug = 'giang-vien';
+        }
+
+        $slug = $baseSlug;
+        $i = 1;
+        while (Teachers::where('slug', $slug)->exists()) {
+            $slug = $baseSlug.'-'.$i++;
+        }
+
+        return $slug;
     }
 
     // ── Public API ──

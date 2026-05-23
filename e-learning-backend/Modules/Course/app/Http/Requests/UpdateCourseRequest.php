@@ -35,7 +35,7 @@ class UpdateCourseRequest extends FormRequest
      */
     public function rules(): array
     {
-        $courseId = $this->route('course');
+        $courseId = $this->route('course') ?? $this->route('id');
 
         return [
             'name' => 'sometimes|required|string|max:255',

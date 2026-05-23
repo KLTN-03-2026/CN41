@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Modules\Quiz\Http\Controllers\Admin\AdminQuizController;
 use Modules\Quiz\Http\Controllers\Admin\QuizGenerateController;
 use Modules\Quiz\Http\Controllers\Student\QuizController;
+use Modules\Quiz\Http\Controllers\Teacher\TeacherQuizController;
 
 // ── Admin: Quiz management (standalone) ──────────────────────
 Route::middleware(['auth:admin'])->prefix('admin')->group(function () {
@@ -25,6 +26,16 @@ Route::middleware(['auth:admin'])->prefix('admin')->group(function () {
     // ── Sửa/xóa từng câu hỏi ──
     Route::patch('quiz-questions/{questionId}', [QuizGenerateController::class, 'updateQuestion'])->middleware('permission:quizzes.edit');
     Route::delete('quiz-questions/{questionId}', [QuizGenerateController::class, 'deleteQuestion'])->middleware('permission:quizzes.delete');
+});
+
+// ── Teacher: Quiz management ─────────────────────────────────
+Route::middleware(['auth:admin', 'role:teacher'])->prefix('teacher')->group(function () {
+    Route::get('lesson-quiz/jobs/{jobId}', [TeacherQuizController::class, 'jobStatus']);
+    Route::get('lesson-quiz/{lessonId}', [TeacherQuizController::class, 'show']);
+    Route::post('lesson-quiz/{lessonId}/generate', [TeacherQuizController::class, 'generate']);
+    Route::get('lesson-quiz/{lessonId}/chapter-pdfs', [TeacherQuizController::class, 'chapterPdfs']);
+    Route::patch('quiz-questions/{questionId}', [TeacherQuizController::class, 'updateQuestion']);
+    Route::delete('quiz-questions/{questionId}', [TeacherQuizController::class, 'deleteQuestion']);
 });
 
 // ── Student: làm bài quiz ────────────────────────────────────
