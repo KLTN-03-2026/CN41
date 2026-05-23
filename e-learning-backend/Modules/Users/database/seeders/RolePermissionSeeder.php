@@ -41,7 +41,7 @@ class RolePermissionSeeder extends Seeder
             // Quizzes
             'quizzes.view', 'quizzes.create', 'quizzes.edit', 'quizzes.delete',
             // Orders & Coupons
-            'orders.view', 'orders.edit',
+            'orders.view', 'orders.edit', 'orders.export',
             'coupons.view', 'coupons.create', 'coupons.edit', 'coupons.delete',
             // Students
             'students.view', 'students.edit',
@@ -50,8 +50,8 @@ class RolePermissionSeeder extends Seeder
             'tags.view', 'tags.create', 'tags.edit', 'tags.delete',
             'comments.view', 'comments.delete',
             // Commission module
-            'payouts.view', 'payouts.approve',
-            'teacher_earnings.view',
+            'payouts.view', 'payouts.approve', 'payouts.export',
+            'teacher_earnings.view', 'teacher_earnings.export',
             'commission_settings.view', 'commission_settings.update',
             // Dashboard
             'dashboard.view',
@@ -84,6 +84,7 @@ class RolePermissionSeeder extends Seeder
             'quizzes.view', 'quizzes.create', 'quizzes.edit',
             'dashboard.view',
             'course_categories.view',
+            'teacher_earnings.export',
         ]);
     }
 }
