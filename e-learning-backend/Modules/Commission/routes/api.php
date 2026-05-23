@@ -16,6 +16,8 @@ Route::middleware(['auth:admin'])->prefix('admin')->group(function () {
     Route::patch('commission-settings', [CommissionSettingsController::class, 'update'])
         ->middleware('permission:commission_settings.update');
 
+    Route::get('payouts/export', [PayoutController::class, 'export'])
+        ->middleware('permission:payouts.export');
     Route::get('payouts', [PayoutController::class, 'index'])
         ->middleware('permission:payouts.view');
     Route::patch('payouts/{id}/approve', [PayoutController::class, 'approve'])

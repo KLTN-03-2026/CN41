@@ -4,6 +4,7 @@ namespace Tests\Feature\Admin;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Maatwebsite\Excel\Facades\Excel;
+use Modules\Commission\Models\TeacherPayout;
 use Modules\Course\Models\Course;
 use Modules\Payment\Models\Order;
 use Modules\Payment\Models\OrderItem;
@@ -95,5 +96,42 @@ class ExcelExportTest extends TestCase
         $this->actingAs($regularAdmin, 'admin');
 
         $this->getJson('/api/v1/admin/orders/export')->assertStatus(403);
+    }
+
+    public function test_admin_can_export_payouts_as_excel(): void
+    {
+        Excel::fake();
+        $this->setupAdmin();
+        [$teacher] = $this->makeTeacherAndCourse();
+        TeacherPayout::create([
+            'teacher_id' => $teacher->id,
+            'amount'     => 200000,
+            'status'     => 'paid',
+        ]);
+
+        $from = now()->startOfMonth()->format('Y-m-d');
+        $to   = now()->format('Y-m-d');
+
+        $this->getJson("/api/v1/admin/payouts/export?from={$from}&to={$to}")
+            ->assertStatus(200);
+
+        Excel::assertDownloaded("rut-tien_{$from}_{$to}.xlsx");
+    }
+
+    public function test_admin_without_payouts_export_permission_gets_403(): void
+    {
+        Excel::fake();
+        $this->seed(RolePermissionSeeder::class);
+        $admin = User::forceCreate([
+            'name'     => 'Admin No Export',
+            'email'    => 'admin2@test.com',
+            'password' => 'pw',
+        ]);
+        $adminRole = Role::where('name', 'admin')->where('guard_name', 'admin')->first();
+        $adminRole->revokePermissionTo('payouts.export');
+        $admin->assignRole($adminRole);
+        $this->actingAs($admin, 'admin');
+
+        $this->getJson('/api/v1/admin/payouts/export')->assertStatus(403);
     }
 }

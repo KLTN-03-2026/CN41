@@ -6,13 +6,30 @@ use App\Http\Controllers\Controller;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
+use Modules\Commission\Exports\PayoutsExport;
+use Modules\Commission\Http\Requests\ExportPayoutsRequest;
 use Modules\Commission\Http\Resources\TeacherPayoutResource;
 use Modules\Commission\Models\TeacherPayout;
 use Modules\Notifications\Services\NotificationService;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class PayoutController extends Controller
 {
     use ApiResponse;
+
+    public function export(ExportPayoutsRequest $request): BinaryFileResponse
+    {
+        $from = $request->query('from', now()->startOfMonth()->format('Y-m-d'));
+        $to = $request->query('to', now()->format('Y-m-d'));
+
+        $filename = "rut-tien_{$from}_{$to}.xlsx";
+
+        return Excel::download(
+            new PayoutsExport($from, $to, $request->query('status')),
+            $filename
+        );
+    }
 
     public function index(Request $request): JsonResponse
     {
