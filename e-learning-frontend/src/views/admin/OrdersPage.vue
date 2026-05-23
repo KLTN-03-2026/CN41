@@ -221,7 +221,7 @@
         { value: 'paid', label: 'Đã thanh toán' },
         { value: 'pending', label: 'Chờ thanh toán' },
         { value: 'failed', label: 'Thất bại' },
-        { value: 'cancelled', label: 'Đã hủy' },
+        { value: 'cancelled', label: 'Đã huỷ' },
         { value: 'refunded', label: 'Hoàn tiền' },
       ]"
       @close="showExportModal = false"
