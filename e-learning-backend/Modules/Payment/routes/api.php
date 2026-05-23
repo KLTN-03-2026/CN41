@@ -13,6 +13,7 @@ use Modules\Payment\Http\Controllers\ZalopayController;
 */
 Route::middleware(['auth:admin'])->prefix('admin')->group(function () {
     // Extra routes trước để tránh conflict với {id}
+    Route::get('orders/export', [AdminOrderController::class, 'export'])->middleware('permission:orders.export');
     Route::get('orders/trashed', [AdminOrderController::class, 'trashed'])->middleware('permission:orders.view');
     Route::delete('orders/bulk-delete', [AdminOrderController::class, 'bulkDelete'])->middleware('permission:orders.edit');
     Route::get('orders/stats/revenue', [AdminOrderController::class, 'revenueStats'])->middleware('permission:orders.view');

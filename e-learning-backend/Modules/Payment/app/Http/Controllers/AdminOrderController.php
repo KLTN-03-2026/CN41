@@ -6,14 +6,18 @@ use App\Http\Controllers\Controller;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
 use Modules\Payment\Events\OrderRefunded;
+use Modules\Payment\Exports\OrdersExport;
 use Modules\Payment\Http\Requests\AdminIndexOrderRequest;
 use Modules\Payment\Http\Requests\AdminTrashedOrderRequest;
 use Modules\Payment\Http\Requests\BulkDeleteOrdersRequest;
+use Modules\Payment\Http\Requests\ExportOrdersRequest;
 use Modules\Payment\Http\Requests\RevenueStatsRequest;
 use Modules\Payment\Http\Requests\UpdateOrderStatusRequest;
 use Modules\Payment\Http\Resources\OrderResource;
 use Modules\Payment\Repositories\OrderRepositoryInterface;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class AdminOrderController extends Controller
 {
@@ -114,5 +118,18 @@ class AdminOrderController extends Controller
         $stats = $this->repository->getRevenueStats($period, $from, $to);
 
         return $this->success($stats, 'Lấy thống kê doanh thu thành công.');
+    }
+
+    public function export(ExportOrdersRequest $request): BinaryFileResponse
+    {
+        $from = $request->query('from', now()->startOfMonth()->format('Y-m-d'));
+        $to = $request->query('to', now()->format('Y-m-d'));
+
+        $filename = "don-hang_{$from}_{$to}.xlsx";
+
+        return Excel::download(
+            new OrdersExport($from, $to, $request->query('status')),
+            $filename
+        );
     }
 }
