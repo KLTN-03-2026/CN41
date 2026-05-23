@@ -33,6 +33,7 @@ export interface Post {
   author?: {
     id: number
     name: string
+    avatar?: string | null
   }
   category?: PostCategory
   tags?: Tag[]

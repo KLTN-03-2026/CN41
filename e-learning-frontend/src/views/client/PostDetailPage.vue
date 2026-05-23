@@ -37,10 +37,19 @@
 
         <div class="flex flex-wrap items-center gap-6 pb-8 border-b border-gray-100 mb-12">
           <div class="flex items-center gap-3">
-            <div
-              class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-sm font-bold text-blue-600 uppercase"
-            >
-              {{ post.author?.name?.charAt(0) || 'A' }}
+            <div class="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
+              <img
+                v-if="post.author?.avatar"
+                :src="post.author.avatar"
+                :alt="post.author.name"
+                class="w-full h-full object-cover"
+              />
+              <div
+                v-else
+                class="w-full h-full bg-blue-100 flex items-center justify-center text-sm font-bold text-blue-600 uppercase"
+              >
+                {{ post.author?.name?.charAt(0) || 'A' }}
+              </div>
             </div>
             <div>
               <div class="text-sm font-bold text-gray-900">{{ post.author?.name }}</div>

@@ -1,34 +1,30 @@
 <template>
-  <div class="min-h-screen bg-gray-50 py-8 px-4">
+  <div class="min-h-screen bg-gradient-to-b from-indigo-50 via-blue-50 to-gray-50 py-10 px-4">
     <div class="max-w-2xl mx-auto">
+
       <!-- Loading -->
-      <div v-if="loading" class="flex justify-center py-20">
-        <div
-          class="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"
-        />
+      <div v-if="loading" class="flex flex-col items-center py-24 gap-4">
+        <div class="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+        <p class="text-gray-400 text-sm">Đang tải bài quiz...</p>
       </div>
 
       <!-- Error -->
-      <div v-else-if="error" class="text-center py-20">
-        <p class="text-gray-500">{{ error }}</p>
-        <button @click="router.back()" class="mt-4 text-sm text-blue-500 hover:underline">
+      <div v-else-if="error" class="text-center py-24">
+        <div class="text-5xl mb-4">⚠️</div>
+        <p class="text-gray-600 font-medium">{{ error }}</p>
+        <button @click="router.back()" class="mt-5 px-5 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-600 hover:bg-gray-50 font-medium shadow-sm">
           Quay lại
         </button>
       </div>
 
       <!-- Exceeded attempts -->
-      <div
-        v-else-if="quiz && attemptsExceeded"
-        class="bg-white rounded-2xl p-8 text-center shadow-sm"
-      >
-        <div class="text-4xl mb-3">🚫</div>
-        <h2 class="text-lg font-semibold text-gray-800 mb-2">Đã hết lượt làm bài</h2>
-        <p class="text-sm text-gray-500 mb-5">
-          Bạn đã dùng hết {{ quiz.max_attempts }}/{{ quiz.max_attempts }} lượt.
-        </p>
+      <div v-else-if="quiz && attemptsExceeded" class="bg-white rounded-3xl p-10 text-center shadow-md border border-gray-100">
+        <div class="text-6xl mb-4">🚫</div>
+        <h2 class="text-xl font-bold text-gray-800 mb-2">Đã hết lượt làm bài</h2>
+        <p class="text-gray-500 mb-6">Bạn đã dùng hết {{ quiz.max_attempts }}/{{ quiz.max_attempts }} lượt cho bài quiz này.</p>
         <button
           @click="router.push({ name: 'quiz-history', params: { id: quiz.id } })"
-          class="px-4 py-2 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+          class="px-6 py-3 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200"
         >
           Xem lịch sử làm bài
         </button>
@@ -37,48 +33,33 @@
       <!-- ── RESULT MODE ── -->
       <div v-else-if="resultData">
         <!-- Score card -->
-        <div class="bg-white rounded-2xl p-6 mb-5 shadow-sm text-center">
-          <div class="text-5xl mb-3">
+        <div
+          :class="resultData.percentage >= 80 ? 'from-green-500 to-emerald-600' : resultData.percentage >= 50 ? 'from-yellow-400 to-orange-500' : 'from-red-500 to-rose-600'"
+          class="bg-gradient-to-br rounded-3xl p-8 mb-6 text-white text-center shadow-xl"
+        >
+          <div class="text-6xl mb-3">
             {{ resultData.percentage >= 80 ? '🎉' : resultData.percentage >= 50 ? '👍' : '😢' }}
           </div>
-          <h2 class="text-xl font-bold text-gray-800 mb-1">
+          <div class="text-6xl font-black mb-1">{{ resultData.percentage }}%</div>
+          <p class="text-white/80 text-lg font-medium mb-4">
             {{ resultData.score }}/{{ resultData.total_questions }} câu đúng
-          </h2>
-          <div
-            :class="
-              resultData.percentage >= 80
-                ? 'text-green-600'
-                : resultData.percentage >= 50
-                  ? 'text-yellow-600'
-                  : 'text-red-600'
-            "
-            class="text-3xl font-extrabold mb-3"
-          >
-            {{ resultData.percentage }}%
-          </div>
-          <div class="h-2.5 bg-gray-100 rounded-full overflow-hidden max-w-xs mx-auto mb-4">
+          </p>
+          <div class="h-3 bg-white/30 rounded-full overflow-hidden max-w-xs mx-auto mb-6">
             <div
               :style="{ width: resultData.percentage + '%' }"
-              :class="
-                resultData.percentage >= 80
-                  ? 'bg-green-500'
-                  : resultData.percentage >= 50
-                    ? 'bg-yellow-500'
-                    : 'bg-red-500'
-              "
-              class="h-full rounded-full transition-all duration-700"
+              class="h-full bg-white rounded-full transition-all duration-700"
             />
           </div>
           <div class="flex justify-center gap-3">
             <button
               @click="router.push({ name: 'quiz-history', params: { id: quiz!.id } })"
-              class="px-4 py-2 text-sm border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50"
+              class="px-5 py-2.5 bg-white/20 hover:bg-white/30 border border-white/40 text-white font-semibold rounded-xl transition-colors"
             >
               Lịch sử làm bài
             </button>
             <button
               @click="router.back()"
-              class="px-4 py-2 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+              class="px-5 py-2.5 bg-white text-gray-800 font-semibold rounded-xl hover:bg-gray-50 transition-colors shadow-sm"
             >
               Quay lại bài học
             </button>
@@ -90,40 +71,32 @@
           <div
             v-for="(q, index) in questions"
             :key="q.id"
-            class="bg-white rounded-2xl p-5 shadow-sm"
+            :class="isCorrect(q.id) ? 'border-green-200 bg-green-50/50' : 'border-red-200 bg-red-50/50'"
+            class="rounded-2xl p-5 border-2 shadow-sm"
           >
-            <div class="flex items-start gap-2 mb-3">
+            <div class="flex items-start gap-3 mb-4">
               <span
-                :class="isCorrect(q.id) ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'"
-                class="mt-0.5 flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold"
+                :class="isCorrect(q.id) ? 'bg-green-500 text-white' : 'bg-red-500 text-white'"
+                class="mt-0.5 flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold shadow-sm"
               >
                 {{ isCorrect(q.id) ? '✓' : '✗' }}
               </span>
-              <p class="font-medium text-gray-800 text-sm">{{ index + 1 }}. {{ q.question }}</p>
+              <p class="font-semibold text-gray-800 text-base leading-snug">{{ index + 1 }}. {{ q.question }}</p>
             </div>
-            <div class="space-y-2">
+            <div class="space-y-2.5">
               <div
                 v-for="opt in ['A', 'B', 'C', 'D'] as const"
                 :key="opt"
                 :class="optionResultClass(q.id, opt)"
-                class="flex items-center gap-3 px-4 py-3 rounded-xl border text-sm"
+                class="flex items-center gap-3 px-4 py-3.5 rounded-xl border-2 text-base font-medium"
               >
                 <span
                   :class="optionBadgeClass(q.id, opt)"
-                  class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
-                  >{{ opt }}</span
-                >
-                <span>{{ q[`option_${opt.toLowerCase()}` as keyof typeof q] }}</span>
-                <span
-                  v-if="getCorrectAnswer(q.id) === opt"
-                  class="ml-auto text-green-600 text-xs font-medium"
-                  >Đáp án đúng</span
-                >
-                <span
-                  v-else-if="getStudentAnswer(q.id) === opt && !isCorrect(q.id)"
-                  class="ml-auto text-red-500 text-xs font-medium"
-                  >Bạn chọn</span
-                >
+                  class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
+                >{{ opt }}</span>
+                <span class="flex-1">{{ q[`option_${opt.toLowerCase()}` as keyof typeof q] }}</span>
+                <span v-if="getCorrectAnswer(q.id) === opt" class="text-green-700 text-xs font-bold bg-green-100 px-2 py-1 rounded-lg">✓ Đáp án đúng</span>
+                <span v-else-if="getStudentAnswer(q.id) === opt && !isCorrect(q.id)" class="text-red-600 text-xs font-bold bg-red-100 px-2 py-1 rounded-lg">Bạn chọn</span>
               </div>
             </div>
           </div>
@@ -132,96 +105,111 @@
 
       <!-- ── QUIZ FORM ── -->
       <div v-else-if="quiz && questions.length">
+
         <!-- Header -->
-        <div class="bg-white rounded-2xl p-5 mb-4 shadow-sm">
-          <div class="flex items-start justify-between">
-            <div>
-              <h1 class="font-semibold text-gray-800 text-lg">{{ quiz.title }}</h1>
-              <p v-if="quiz.description" class="text-sm text-gray-500 mt-1">
-                {{ quiz.description }}
-              </p>
+        <div class="bg-white rounded-3xl p-6 mb-6 shadow-md border border-gray-100">
+          <div class="flex items-start justify-between gap-4">
+            <div class="flex-1">
+              <h1 class="font-bold text-gray-900 text-xl leading-tight">{{ quiz.title }}</h1>
+              <p v-if="quiz.description" class="text-gray-500 mt-1.5 text-base">{{ quiz.description }}</p>
             </div>
             <!-- Timer -->
-            <div v-if="quiz.time_limit && timeLeft !== null" class="text-right">
+            <div v-if="quiz.time_limit && timeLeft !== null" class="flex-shrink-0">
               <div
-                :class="timeLeft < 60 ? 'text-red-500' : 'text-gray-700'"
-                class="text-xl font-mono font-bold"
+                :class="timeLeft < 60 ? 'bg-red-50 border-red-300 text-red-600' : 'bg-indigo-50 border-indigo-200 text-indigo-700'"
+                class="border-2 rounded-2xl px-4 py-2 text-center"
               >
-                {{ formatTime(timeLeft) }}
+                <div class="text-2xl font-mono font-black">{{ formatTime(timeLeft) }}</div>
+                <p class="text-xs font-medium opacity-70">còn lại</p>
               </div>
-              <p class="text-xs text-gray-400">còn lại</p>
             </div>
           </div>
-          <div class="flex gap-4 mt-3 text-xs text-gray-400">
-            <span>{{ questions.length }} câu hỏi</span>
-            <span>{{ quiz.max_attempts }} lượt làm</span>
-            <span v-if="quiz.time_limit">{{ quiz.time_limit }} phút</span>
+          <div class="flex flex-wrap gap-3 mt-4">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 text-indigo-700 text-sm font-semibold rounded-lg">
+              📝 {{ questions.length }} câu hỏi
+            </span>
+            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 text-sm font-semibold rounded-lg">
+              🔁 {{ quiz.max_attempts }} lượt làm
+            </span>
+            <span v-if="quiz.time_limit" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-orange-50 text-orange-700 text-sm font-semibold rounded-lg">
+              ⏱ {{ quiz.time_limit }} phút
+            </span>
           </div>
         </div>
 
         <!-- Questions -->
-        <div class="space-y-4 mb-6">
+        <div class="space-y-5 mb-6">
           <div
             v-for="(q, index) in questions"
             :key="q.id"
-            class="bg-white rounded-2xl p-5 shadow-sm"
+            class="bg-white rounded-3xl p-6 shadow-md border border-gray-100"
           >
-            <p class="font-medium text-gray-800 mb-3 text-sm">{{ index + 1 }}. {{ q.question }}</p>
-            <div class="space-y-2">
+            <!-- Question header -->
+            <div class="flex items-start gap-3 mb-5">
+              <span class="flex-shrink-0 w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold text-sm shadow-sm">
+                {{ index + 1 }}
+              </span>
+              <p class="font-semibold text-gray-900 text-base leading-relaxed">{{ q.question }}</p>
+            </div>
+
+            <!-- Options -->
+            <div class="space-y-3">
               <label
                 v-for="opt in ['A', 'B', 'C', 'D'] as const"
                 :key="opt"
                 :class="
                   answers[q.id] === opt
-                    ? 'border-blue-500 bg-blue-50 text-blue-800'
-                    : 'border-gray-200 text-gray-700 hover:border-gray-300'
+                    ? 'border-indigo-500 bg-indigo-50 shadow-md shadow-indigo-100'
+                    : 'border-gray-200 bg-white hover:border-indigo-300 hover:bg-indigo-50/40'
                 "
-                class="flex items-center gap-3 px-4 py-3 rounded-xl border cursor-pointer transition-all text-sm"
+                class="flex items-center gap-4 px-5 py-4 rounded-2xl border-2 cursor-pointer transition-all duration-150"
               >
-                <input
-                  type="radio"
-                  :name="`q_${q.id}`"
-                  :value="opt"
-                  v-model="answers[q.id]"
-                  class="hidden"
-                />
+                <input type="radio" :name="`q_${q.id}`" :value="opt" v-model="answers[q.id]" class="hidden" />
                 <span
-                  :class="
-                    answers[q.id] === opt ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-500'
-                  "
-                  class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
-                  >{{ opt }}</span
-                >
-                <span>{{ q[`option_${opt.toLowerCase()}` as keyof typeof q] }}</span>
+                  :class="answers[q.id] === opt ? 'bg-indigo-600 text-white shadow-sm' : 'bg-gray-100 text-gray-500'"
+                  class="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold flex-shrink-0 transition-colors"
+                >{{ opt }}</span>
+                <span
+                  :class="answers[q.id] === opt ? 'text-indigo-900 font-semibold' : 'text-gray-700'"
+                  class="text-base leading-snug"
+                >{{ q[`option_${opt.toLowerCase()}` as keyof typeof q] }}</span>
               </label>
             </div>
           </div>
         </div>
 
-        <!-- Submit -->
-        <div class="bg-white rounded-2xl p-5 shadow-sm">
-          <div class="flex items-center justify-between">
-            <p class="text-sm text-gray-500">
-              Đã trả lời:
-              <span class="font-medium text-gray-800"
-                >{{ answeredCount }}/{{ questions.length }}</span
-              >
-            </p>
-            <button
-              @click="submitQuiz"
-              :disabled="submitting || answeredCount === 0"
-              class="px-5 py-2 bg-blue-500 text-white text-sm font-medium rounded-lg hover:bg-blue-600 disabled:opacity-50 transition-colors"
-            >
-              {{ submitting ? 'Đang nộp...' : 'Nộp bài' }}
-            </button>
+        <!-- Submit bar -->
+        <div class="bg-white rounded-3xl px-6 py-5 shadow-md border border-gray-100 flex items-center justify-between gap-4">
+          <div>
+            <p class="text-gray-500 text-sm">Đã trả lời</p>
+            <p class="font-bold text-gray-900 text-lg">{{ answeredCount }}<span class="text-gray-400 font-normal text-base">/{{ questions.length }} câu</span></p>
           </div>
+          <!-- Progress dots -->
+          <div class="flex-1 hidden sm:flex items-center gap-1 flex-wrap">
+            <span
+              v-for="(q, i) in questions"
+              :key="q.id"
+              :class="answers[q.id] ? 'bg-indigo-500' : 'bg-gray-200'"
+              class="w-2.5 h-2.5 rounded-full transition-colors"
+              :title="`Câu ${i + 1}`"
+            />
+          </div>
+          <button
+            @click="submitQuiz"
+            :disabled="submitting || answeredCount === 0"
+            class="px-7 py-3.5 bg-indigo-600 text-white font-bold text-base rounded-2xl hover:bg-indigo-700 disabled:opacity-40 transition-all shadow-lg shadow-indigo-200 disabled:shadow-none"
+          >
+            {{ submitting ? 'Đang nộp...' : 'Nộp bài' }}
+          </button>
         </div>
       </div>
 
       <!-- No quiz -->
-      <div v-else-if="!loading" class="text-center py-20">
-        <p class="text-gray-500 text-sm">Bài học này chưa có quiz.</p>
+      <div v-else-if="!loading" class="text-center py-24">
+        <div class="text-5xl mb-4">📭</div>
+        <p class="text-gray-500 font-medium">Bài học này chưa có quiz.</p>
       </div>
+
     </div>
   </div>
 </template>

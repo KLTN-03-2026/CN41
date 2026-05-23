@@ -40,22 +40,17 @@ export function optionResultClass(
   answers: Record<string, string> | null | undefined,
   questionId: number,
   opt: Option,
-  theme: 'light' | 'dark' = 'light',
 ): string {
   const correct = getCorrectAnswer(correctAnswers, questionId)
   const chosen = getStudentAnswer(answers, questionId)
 
   if (opt === correct) {
-    return theme === 'dark'
-      ? 'border-green-400 bg-green-900/20 text-green-300'
-      : 'border-green-400 bg-green-50 text-green-800'
+    return 'border-green-400 bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-300 font-medium'
   }
   if (opt === chosen && chosen !== correct) {
-    return theme === 'dark'
-      ? 'border-red-400 bg-red-900/20 text-red-300'
-      : 'border-red-400 bg-red-50 text-red-800'
+    return 'border-red-400 bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-300 font-medium'
   }
-  return theme === 'dark' ? 'border-gray-700 text-gray-400' : 'border-gray-100 text-gray-500'
+  return 'border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-400'
 }
 
 export function optionBadgeClass(
@@ -69,7 +64,7 @@ export function optionBadgeClass(
 
   if (opt === correct) return 'bg-green-500 text-white'
   if (opt === chosen && chosen !== correct) return 'bg-red-500 text-white'
-  return 'bg-gray-100 text-gray-400'
+  return 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'
 }
 
 /** Label nhỏ bên phải mỗi option */

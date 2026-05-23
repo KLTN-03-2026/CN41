@@ -66,6 +66,11 @@
 
     <!-- Main content -->
     <div class="flex-1 ml-[220px]">
+      <!-- Top header -->
+      <header class="sticky top-0 z-40 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-6 h-14 flex items-center justify-end gap-3">
+        <NotificationMenu />
+      </header>
+
       <div class="p-6 max-w-screen-xl mx-auto">
         <router-view />
       </div>
@@ -85,6 +90,7 @@ import {
   LogoutIcon,
   PageIcon,
 } from '@/components/icons'
+import NotificationMenu from '@/components/layout/header/NotificationMenu.vue'
 
 const route = useRoute()
 const router = useRouter()

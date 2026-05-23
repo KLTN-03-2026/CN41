@@ -6,6 +6,7 @@ import ExportExcelModal from '@/components/common/ExportExcelModal.vue'
 const { payouts, loading, filters, loadPayouts, approvePayout, rejectPayout, markPaid } = usePayouts()
 
 const confirmModal = ref({ show: false, id: 0, action: '', note: '' })
+const confirmLoading = ref(false)
 const showExportModal = ref(false)
 
 function openModal(id: number, action: string) {
@@ -14,10 +15,15 @@ function openModal(id: number, action: string) {
 
 async function confirmAction() {
   const { id, action, note } = confirmModal.value
-  if (action === 'approve') await approvePayout(id, note)
-  else if (action === 'reject') await rejectPayout(id, note)
-  else if (action === 'mark-paid') await markPaid(id)
-  confirmModal.value.show = false
+  confirmLoading.value = true
+  try {
+    if (action === 'approve') await approvePayout(id, note)
+    else if (action === 'reject') await rejectPayout(id, note)
+    else if (action === 'mark-paid') await markPaid(id)
+    confirmModal.value.show = false
+  } finally {
+    confirmLoading.value = false
+  }
 }
 
 const statusLabel: Record<string, string> = {
@@ -116,8 +122,10 @@ onMounted(loadPayouts)
         <textarea v-if="confirmModal.action !== 'mark-paid'" v-model="confirmModal.note"
           class="w-full border rounded px-3 py-2 text-sm mb-4" rows="3" placeholder="Ghi chú (tùy chọn)" />
         <div class="flex justify-end gap-2">
-          <button @click="confirmModal.show = false" class="px-4 py-2 border rounded text-sm">Hủy</button>
-          <button @click="confirmAction" class="px-4 py-2 bg-blue-600 text-white rounded text-sm">Xác nhận</button>
+          <button @click="confirmModal.show = false" :disabled="confirmLoading" class="px-4 py-2 border rounded text-sm disabled:opacity-50">Hủy</button>
+          <button @click="confirmAction" :disabled="confirmLoading" class="px-4 py-2 bg-blue-600 text-white rounded text-sm disabled:opacity-50">
+            {{ confirmLoading ? 'Đang xử lý...' : 'Xác nhận' }}
+          </button>
         </div>
       </div>
     </div>

@@ -151,7 +151,7 @@
                     </svg>
                   </button>
                   <button
-                    v-permission="'orders.edit'"
+                    v-permission="'orders.delete'"
                     @click="deleteOrder.confirm(order)"
                     class="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                     title="Xoá"

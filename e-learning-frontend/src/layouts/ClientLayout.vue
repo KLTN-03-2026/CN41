@@ -76,7 +76,14 @@
           <template v-else>
             <div class="relative group">
               <button class="flex items-center gap-2 focus:outline-none block p-0">
+                <img
+                  v-if="studentStore.student?.avatar"
+                  :src="studentStore.student.avatar"
+                  :alt="studentStore.fullName"
+                  class="w-9 h-9 rounded-full object-cover border border-primary-200"
+                />
                 <div
+                  v-else
                   class="w-9 h-9 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center font-bold text-sm border border-primary-200"
                 >
                   {{ studentStore.fullName?.charAt(0).toUpperCase() || 'U' }}

@@ -71,8 +71,7 @@ function optionClass(questionId: number, opt: Option) {
     props.attempt.correct_answers,
     props.attempt.answers,
     questionId,
-    opt,
-    'dark',
+    opt
   )
 }
 

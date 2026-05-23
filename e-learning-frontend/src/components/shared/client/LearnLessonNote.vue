@@ -103,8 +103,11 @@
 
 <script setup lang="ts">
 import { ref, watch, nextTick } from 'vue'
+import { useToast } from 'vue-toastification'
 import { lessonService } from '@/services/lesson.service'
 import type { LessonNote } from '@/types'
+
+const toast = useToast()
 
 const props = defineProps<{
   lessonId: number
@@ -177,7 +180,7 @@ async function addNote() {
     }
     cancelAdd()
   } catch {
-    // keep form open on error
+    toast.error('Không thể thêm ghi chú. Vui lòng thử lại.')
   } finally {
     saving.value = false
   }
@@ -205,7 +208,7 @@ async function saveEdit(noteId: number) {
     }
     cancelEdit()
   } catch {
-    // keep edit mode on error
+    toast.error('Không thể lưu ghi chú. Vui lòng thử lại.')
   } finally {
     saving.value = false
   }
@@ -217,7 +220,7 @@ async function deleteNote(noteId: number) {
     await lessonService.deleteNote(noteId)
     notes.value = notes.value.filter((n) => n.id !== noteId)
   } catch {
-    // ignore
+    toast.error('Không thể xóa ghi chú. Vui lòng thử lại.')
   } finally {
     deletingId.value = null
   }

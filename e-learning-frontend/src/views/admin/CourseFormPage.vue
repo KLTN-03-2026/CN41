@@ -240,9 +240,10 @@ async function submitForm() {
       await courseService.update(courseId.value!, payload)
       toast.success('Cập nhật khóa học thành công')
     } else {
-      await courseService.store(payload)
+      const res = await courseService.store(payload)
+      const newId = res.data.data.id
       toast.success('Tạo khóa học thành công')
-      router.push('/admin/courses')
+      router.push(`/admin/courses/${newId}/edit?tab=lessons`)
     }
   } catch (err: unknown) {
     handleApiError(err)
