@@ -5,6 +5,7 @@ import { commissionService } from '@/services/commission.service'
 interface TeacherProfile {
   id: number
   name: string
+  email: string
   description: string | null
   image: string | null
   bank_name: string | null

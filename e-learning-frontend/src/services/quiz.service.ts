@@ -132,4 +132,31 @@ export const quizService = {
 
   destroyQuestion: (id: number): Promise<AxiosResponse<ApiResponse<null>>> =>
     http.delete(`/admin/quiz-questions/${id}`),
+
+  // ── Teacher lesson-quiz ────────────────────────────────────
+  teacherLessonQuizGet: (lessonId: number): Promise<AxiosResponse<ApiResponse<{ questions: QuizQuestion[] } | null>>> =>
+    http.get(`/teacher/lesson-quiz/${lessonId}`),
+
+  teacherLessonQuizChapterPdfs: (lessonId: number): Promise<AxiosResponse<ApiResponse<ChapterPdf[]>>> =>
+    http.get(`/teacher/lesson-quiz/${lessonId}/chapter-pdfs`),
+
+  teacherLessonQuizGenerate: (
+    lessonId: number,
+    data: FormData,
+  ): Promise<AxiosResponse<ApiResponse<{ job_id: number }>>> =>
+    http.post(`/teacher/lesson-quiz/${lessonId}/generate`, data, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }),
+
+  teacherLessonQuizJobStatus: (jobId: number): Promise<AxiosResponse<ApiResponse<GenerateJobStatus>>> =>
+    http.get(`/teacher/lesson-quiz/jobs/${jobId}`),
+
+  teacherUpdateQuestion: (
+    id: number,
+    data: Partial<Omit<QuizQuestion, 'id' | 'quiz_id' | 'order'>>,
+  ): Promise<AxiosResponse<ApiResponse<QuizQuestion>>> =>
+    http.patch(`/teacher/quiz-questions/${id}`, data),
+
+  teacherDestroyQuestion: (id: number): Promise<AxiosResponse<ApiResponse<null>>> =>
+    http.delete(`/teacher/quiz-questions/${id}`),
 }

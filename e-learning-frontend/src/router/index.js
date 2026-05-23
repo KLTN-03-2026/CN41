@@ -78,6 +78,16 @@ const router = createRouter({
           component: () => import('@/views/teacher/TeacherCoursesPage.vue'),
         },
         {
+          path: 'courses/create',
+          name: 'teacher.courses.create',
+          component: () => import('@/views/teacher/TeacherCourseFormPage.vue'),
+        },
+        {
+          path: 'courses/:id/edit',
+          name: 'teacher.courses.edit',
+          component: () => import('@/views/teacher/TeacherCourseFormPage.vue'),
+        },
+        {
           path: 'earnings',
           name: 'teacher.earnings',
           component: () => import('@/views/teacher/EarningsPage.vue'),

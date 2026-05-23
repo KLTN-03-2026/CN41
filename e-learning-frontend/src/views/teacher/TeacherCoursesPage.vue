@@ -1,6 +1,17 @@
 <template>
   <div>
-    <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Khóa học của tôi</h1>
+    <div class="flex items-center justify-between mb-6">
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Khóa học của tôi</h1>
+      <router-link
+        to="/teacher/courses/create"
+        class="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
+      >
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+        </svg>
+        Thêm khóa học
+      </router-link>
+    </div>
 
     <div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
       <table class="w-full text-sm">
@@ -10,14 +21,15 @@
             <th class="px-5 py-3 text-right font-semibold">Học viên</th>
             <th class="px-5 py-3 text-right font-semibold">Giá</th>
             <th class="px-5 py-3 text-center font-semibold">Trạng thái</th>
+            <th class="px-5 py-3 text-center font-semibold">Hành động</th>
           </tr>
         </thead>
         <tbody>
           <tr v-if="loading">
-            <td colspan="4" class="px-5 py-10 text-center text-gray-400">Đang tải...</td>
+            <td colspan="5" class="px-5 py-10 text-center text-gray-400">Đang tải...</td>
           </tr>
           <tr v-else-if="!courses.length">
-            <td colspan="4" class="px-5 py-10 text-center text-gray-400">Chưa có khóa học nào.</td>
+            <td colspan="5" class="px-5 py-10 text-center text-gray-400">Chưa có khóa học nào.</td>
           </tr>
           <tr
             v-for="course in courses"
@@ -50,6 +62,14 @@
               >
                 {{ course.status === 1 ? 'Đã xuất bản' : 'Bản nháp' }}
               </span>
+            </td>
+            <td class="px-5 py-3 text-center">
+              <router-link
+                :to="`/teacher/courses/${course.id}/edit`"
+                class="inline-flex items-center gap-1 px-3 py-1 text-xs text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-700 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+              >
+                Sửa
+              </router-link>
             </td>
           </tr>
         </tbody>

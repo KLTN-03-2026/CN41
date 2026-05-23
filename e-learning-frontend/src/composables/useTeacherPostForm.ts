@@ -26,6 +26,7 @@ export function useTeacherPostForm() {
     content: '',
     post_category_id: null as number | null,
     tag_ids: [] as number[],
+    thumbnail: '',
   })
 
   function autoSlug(title: string): string {
@@ -68,6 +69,7 @@ export function useTeacherPostForm() {
         form.content = post.content ?? ''
         form.post_category_id = post.category?.id ?? null
         form.tag_ids = post.tags?.map((t: Tag) => t.id) ?? []
+        form.thumbnail = post.thumbnail ?? ''
       }
     } catch {
       toast.error('Không thể tải thông tin bài viết.')
