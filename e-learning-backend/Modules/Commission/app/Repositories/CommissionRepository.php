@@ -13,9 +13,11 @@ class CommissionRepository implements CommissionRepositoryInterface
     {
         $totalEarned = TeacherEarning::where('teacher_id', $teacherId)->where('type', 'credit')->sum('amount');
         $totalDeducted = TeacherEarning::where('teacher_id', $teacherId)->where('type', 'debit')->sum('amount');
-        $pendingPayouts = TeacherPayout::where('teacher_id', $teacherId)->whereIn('status', ['pending', 'approved'])->sum('amount');
+        $totalWithdrawn = TeacherPayout::where('teacher_id', $teacherId)
+            ->whereIn('status', ['pending', 'approved', 'paid'])
+            ->sum('amount');
 
-        return (float) max(0, $totalEarned - $totalDeducted - $pendingPayouts);
+        return (float) max(0, $totalEarned - $totalDeducted - $totalWithdrawn);
     }
 
     public function getTotalEarned(int $teacherId): float
@@ -53,10 +55,11 @@ class CommissionRepository implements CommissionRepositoryInterface
                 DB::raw("COALESCE((SELECT SUM(amount) FROM teacher_earnings WHERE teacher_id = teachers.id AND type = 'credit'), 0) as total_earned"),
                 DB::raw("COALESCE((SELECT SUM(amount) FROM teacher_earnings WHERE teacher_id = teachers.id AND type = 'debit'), 0) as total_deducted"),
                 DB::raw("COALESCE((SELECT SUM(amount) FROM teacher_payouts WHERE teacher_id = teachers.id AND status IN ('pending', 'approved')), 0) as pending_payout"),
+                DB::raw("COALESCE((SELECT SUM(amount) FROM teacher_payouts WHERE teacher_id = teachers.id AND status = 'paid'), 0) as total_paid"),
             ])
             ->paginate($perPage)
             ->through(function ($row) {
-                $row->available_balance = max(0, $row->total_earned - $row->total_deducted - $row->pending_payout);
+                $row->available_balance = max(0, $row->total_earned - $row->total_deducted - $row->pending_payout - $row->total_paid);
 
                 return $row;
             });

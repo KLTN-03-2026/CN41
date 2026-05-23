@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
+use Modules\Course\Repositories\CourseRepositoryInterface;
 use Modules\Quiz\Http\Requests\SubmitQuizRequest;
 use Modules\Quiz\Http\Resources\QuizAttemptResource;
 use Modules\Quiz\Http\Resources\QuizQuestionResource;
@@ -16,11 +17,31 @@ class QuizController extends Controller
 {
     use ApiResponse;
 
-    public function __construct(private QuizRepositoryInterface $repository) {}
+    public function __construct(
+        private QuizRepositoryInterface $repository,
+        private CourseRepositoryInterface $courseRepository
+    ) {}
+
+    private function checkAccess($quiz): void
+    {
+        $quiz->loadMissing('lesson');
+        $lesson = $quiz->lesson;
+
+        if (! $lesson || ! $lesson->is_preview) {
+            $student = auth('api')->user();
+            if (! $student) {
+                abort(401, 'Vui lòng đăng nhập để xem nội dung này.');
+            }
+            if (! $this->courseRepository->isEnrolled($lesson->course_id, $student->id)) {
+                abort(403, 'Bạn phải đăng ký khóa học này để làm bài kiểm tra.');
+            }
+        }
+    }
 
     public function show(int $lessonId): JsonResponse
     {
         $quiz = $this->repository->findPublishedByLesson($lessonId);
+        $this->checkAccess($quiz);
 
         return $this->success([
             'quiz' => new QuizResource($quiz),
@@ -31,6 +52,7 @@ class QuizController extends Controller
     public function submit(SubmitQuizRequest $request, int $id): JsonResponse
     {
         $quiz = $this->repository->findPublishedWithQuestions($id);
+        $this->checkAccess($quiz);
         $student = auth('api')->user();
 
         $attemptCount = $this->repository->countStudentAttempts($id, $student->id);
@@ -67,9 +89,9 @@ class QuizController extends Controller
 
     public function attempts(int $id): JsonResponse
     {
+        $quiz = $this->repository->findOrFail($id);
+        $this->checkAccess($quiz);
         $student = auth('api')->user();
-
-        $this->repository->findOrFail($id);
 
         return $this->success(
             QuizAttemptResource::collection(

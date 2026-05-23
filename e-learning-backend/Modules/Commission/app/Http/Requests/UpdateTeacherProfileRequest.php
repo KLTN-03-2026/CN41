@@ -18,7 +18,7 @@ class UpdateTeacherProfileRequest extends FormRequest
         return [
             'description' => 'nullable|string|max:1000',
             'bank_name' => 'nullable|string|max:255',
-            'image' => 'nullable|string|max:255',
+            'image' => 'nullable|string|max:500',
             'bank_account_number' => 'nullable|string|max:50',
             'bank_account_name' => 'nullable|string|max:255',
         ];

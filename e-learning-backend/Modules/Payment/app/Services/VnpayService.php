@@ -242,14 +242,14 @@ class VnpayService
                 Course::where('id', $item->course_id)->increment('total_students');
 
                 // Notify the teacher about the new enrollment
-                $course = Course::select('id', 'title', 'teacher_id')->find($item->course_id);
+                $course = Course::select('id', 'name', 'teacher_id')->find($item->course_id);
                 if ($course && $course->teacher_id) {
                     $studentName = $order->student?->name ?? 'Học viên';
                     try {
                         app(NotificationService::class)->notifyEnrollment(
                             teacherId: $course->teacher_id,
                             studentName: $studentName,
-                            courseTitle: $course->title,
+                            courseTitle: $course->name,
                             courseId: $course->id,
                         );
                     } catch (\Throwable) {

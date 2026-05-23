@@ -11,6 +11,7 @@ class TeacherResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'user_id' => $this->user_id,
             'name' => $this->name,
             'email' => $this->whenLoaded('user', fn () => $this->user->email),
             'slug' => $this->slug,

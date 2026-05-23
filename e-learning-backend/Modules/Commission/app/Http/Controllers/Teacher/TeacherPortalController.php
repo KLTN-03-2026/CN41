@@ -84,7 +84,16 @@ class TeacherPortalController extends Controller
     public function updateProfile(UpdateTeacherProfileRequest $request): JsonResponse
     {
         $teacher = $this->getTeacher();
-        $teacher->update($request->validated());
+        $data = $request->validated();
+
+        // Normalize image: frontend may send a full URL (e.g. after upload),
+        // but the DB stores only the relative path (e.g. "avatars/uuid.jpg").
+        if (! empty($data['image']) && str_starts_with($data['image'], 'http')) {
+            $path = parse_url($data['image'], PHP_URL_PATH); // "/storage/avatars/uuid.jpg"
+            $data['image'] = ltrim(str_replace('/storage/', '', $path), '/');
+        }
+
+        $teacher->update($data);
         $teacher->refresh();
 
         return $this->success($this->profileData($teacher), 'Cập nhật hồ sơ thành công.');

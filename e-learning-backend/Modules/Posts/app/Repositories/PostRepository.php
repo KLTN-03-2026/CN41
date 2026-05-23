@@ -73,6 +73,10 @@ class PostRepository extends BaseRepository implements PostRepositoryInterface
             });
         }
 
+        if (! empty($filters['author_id'])) {
+            $query->where('author_id', $filters['author_id']);
+        }
+
         return $query->paginate($perPage);
     }
 

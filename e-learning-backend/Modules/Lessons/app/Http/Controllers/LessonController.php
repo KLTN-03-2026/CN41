@@ -450,7 +450,7 @@ class LessonController extends Controller
         $note->update(['content' => $request->validated()['content']]);
 
         return $this->success(
-            $note->fresh(['id', 'content', 'timestamp_seconds', 'created_at', 'updated_at']),
+            $note->refresh()->only(['id', 'content', 'timestamp_seconds', 'created_at', 'updated_at']),
             'Đã cập nhật ghi chú.'
         );
     }
