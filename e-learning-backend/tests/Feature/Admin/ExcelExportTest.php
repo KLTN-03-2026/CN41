@@ -4,7 +4,6 @@ namespace Tests\Feature\Admin;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Maatwebsite\Excel\Facades\Excel;
-use Modules\Commission\Models\TeacherEarning;
 use Modules\Commission\Models\TeacherPayout;
 use Modules\Course\Models\Course;
 use Modules\Payment\Models\Order;
@@ -68,7 +67,7 @@ class ExcelExportTest extends TestCase
         $this->makeOrderWithItem($course->id);
 
         $from = now()->startOfMonth()->format('Y-m-d');
-        $to   = now()->format('Y-m-d');
+        $to = now()->format('Y-m-d');
 
         $this->getJson("/api/v1/admin/orders/export?from={$from}&to={$to}")
             ->assertStatus(200);
@@ -85,8 +84,8 @@ class ExcelExportTest extends TestCase
 
         // Create a regular admin user (not super-admin — super-admin bypasses all permission checks)
         $regularAdmin = User::forceCreate([
-            'name'     => 'Regular Admin',
-            'email'    => 'regular_admin@test.com',
+            'name' => 'Regular Admin',
+            'email' => 'regular_admin@test.com',
             'password' => 'password123',
         ]);
         $adminRole = Role::where('name', 'admin')->where('guard_name', 'admin')->first();
@@ -106,12 +105,12 @@ class ExcelExportTest extends TestCase
         [$teacher] = $this->makeTeacherAndCourse();
         TeacherPayout::create([
             'teacher_id' => $teacher->id,
-            'amount'     => 200000,
-            'status'     => 'paid',
+            'amount' => 200000,
+            'status' => 'paid',
         ]);
 
         $from = now()->startOfMonth()->format('Y-m-d');
-        $to   = now()->format('Y-m-d');
+        $to = now()->format('Y-m-d');
 
         $this->getJson("/api/v1/admin/payouts/export?from={$from}&to={$to}")
             ->assertStatus(200);
@@ -124,8 +123,8 @@ class ExcelExportTest extends TestCase
         Excel::fake();
         $this->seed(RolePermissionSeeder::class);
         $admin = User::forceCreate([
-            'name'     => 'Admin No Export',
-            'email'    => 'admin2@test.com',
+            'name' => 'Admin No Export',
+            'email' => 'admin2@test.com',
             'password' => 'pw',
         ]);
         $adminRole = Role::where('name', 'admin')->where('guard_name', 'admin')->first();
@@ -142,7 +141,7 @@ class ExcelExportTest extends TestCase
         $this->setupAdmin();
 
         $from = now()->startOfMonth()->format('Y-m-d');
-        $to   = now()->format('Y-m-d');
+        $to = now()->format('Y-m-d');
 
         $this->getJson("/api/v1/admin/teacher-earnings/export?from={$from}&to={$to}")
             ->assertStatus(200);
@@ -158,14 +157,14 @@ class ExcelExportTest extends TestCase
         $user = User::forceCreate([
             'name' => 'Teacher Export', 'email' => 'teacher_export@test.com', 'password' => 'pw',
         ]);
-        $teacherRole = \Spatie\Permission\Models\Role::where('name', 'teacher')->where('guard_name', 'admin')->first();
+        $teacherRole = Role::where('name', 'teacher')->where('guard_name', 'admin')->first();
         $user->assignRole($teacherRole);
         $this->actingAs($user, 'admin');
 
         Teachers::create(['user_id' => $user->id, 'name' => 'T Export', 'slug' => 't-export', 'exp' => 1, 'status' => 1]);
 
         $from = now()->startOfMonth()->format('Y-m-d');
-        $to   = now()->format('Y-m-d');
+        $to = now()->format('Y-m-d');
 
         $this->getJson("/api/v1/teacher/earnings/export?from={$from}&to={$to}")
             ->assertStatus(200);
