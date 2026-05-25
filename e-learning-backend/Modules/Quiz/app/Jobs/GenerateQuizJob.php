@@ -26,7 +26,10 @@ class GenerateQuizJob implements ShouldQueue
 
     public int $tries = 1;
 
-    public function __construct(private int $jobRecordId) {}
+    public function __construct(private int $jobRecordId)
+    {
+        $this->onQueue('ai');
+    }
 
     public function middleware(): array
     {

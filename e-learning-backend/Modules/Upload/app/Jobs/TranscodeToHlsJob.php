@@ -21,7 +21,10 @@ class TranscodeToHlsJob implements ShouldQueue
 
     public int $timeout = 600; // 10 minutes — large videos need time
 
-    public function __construct(public readonly int $mediaId) {}
+    public function __construct(public readonly int $mediaId)
+    {
+        $this->onQueue('hls');
+    }
 
     public function handle(HlsService $service): void
     {
