@@ -51,7 +51,8 @@ class BroadcastTest extends TestCase
         $expectedChannel = 'private-quiz-job.'.$jobRecord->id;
         Event::assertDispatched(AnonymousEvent::class, function (AnonymousEvent $event) use ($expectedChannel) {
             foreach ((array) $event->broadcastOn() as $channel) {
-                if ($channel instanceof PrivateChannel && $channel->name === $expectedChannel) {
+                $name = $channel instanceof PrivateChannel ? $channel->name : (string) $channel;
+                if ($name === $expectedChannel) {
                     return true;
                 }
             }
@@ -88,7 +89,8 @@ class BroadcastTest extends TestCase
         $expectedChannel = 'private-quiz-job.'.$jobRecord->id;
         Event::assertDispatched(AnonymousEvent::class, function (AnonymousEvent $event) use ($expectedChannel) {
             foreach ((array) $event->broadcastOn() as $channel) {
-                if ($channel instanceof PrivateChannel && $channel->name === $expectedChannel) {
+                $name = $channel instanceof PrivateChannel ? $channel->name : (string) $channel;
+                if ($name === $expectedChannel) {
                     return true;
                 }
             }
@@ -116,7 +118,8 @@ class BroadcastTest extends TestCase
         $expectedChannel = 'private-hls.'.$media->id;
         Event::assertDispatched(AnonymousEvent::class, function (AnonymousEvent $event) use ($expectedChannel) {
             foreach ((array) $event->broadcastOn() as $channel) {
-                if ($channel instanceof PrivateChannel && $channel->name === $expectedChannel) {
+                $name = $channel instanceof PrivateChannel ? $channel->name : (string) $channel;
+                if ($name === $expectedChannel) {
                     return true;
                 }
             }
@@ -151,7 +154,8 @@ class BroadcastTest extends TestCase
         $expectedChannel = 'private-hls.'.$media->id;
         Event::assertDispatched(AnonymousEvent::class, function (AnonymousEvent $event) use ($expectedChannel) {
             foreach ((array) $event->broadcastOn() as $channel) {
-                if ($channel instanceof PrivateChannel && $channel->name === $expectedChannel) {
+                $name = $channel instanceof PrivateChannel ? $channel->name : (string) $channel;
+                if ($name === $expectedChannel) {
                     return true;
                 }
             }

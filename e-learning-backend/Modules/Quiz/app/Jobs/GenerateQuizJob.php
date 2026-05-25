@@ -8,6 +8,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\Middleware\WithoutOverlapping;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -92,12 +93,29 @@ class GenerateQuizJob implements ShouldQueue
                 ],
             ]);
 
+            Broadcast::on("private-quiz-job.{$this->jobRecordId}")
+                ->as('QuizGenerationCompleted')
+                ->with([
+                    'status' => 'done',
+                    'quiz_id' => $quiz->id,
+                    'questions' => $quiz->questions->map(fn ($q) => (new QuizQuestionResource($q))->resolve())->values()->all(),
+                ])
+                ->send();
+
         } catch (\Exception $e) {
             Log::error('GenerateQuizJob failed', ['job_record_id' => $this->jobRecordId, 'error' => $e->getMessage()]);
             $jobRecord->update([
                 'status' => 'failed',
                 'error' => $this->friendlyError($e->getMessage()),
             ]);
+
+            Broadcast::on("private-quiz-job.{$this->jobRecordId}")
+                ->as('QuizGenerationCompleted')
+                ->with([
+                    'status' => 'failed',
+                    'error' => $this->friendlyError($e->getMessage()),
+                ])
+                ->send();
         }
     }
 
