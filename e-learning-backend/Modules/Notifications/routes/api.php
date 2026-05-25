@@ -1,7 +1,10 @@
 <?php
 
+use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Route;
 use Modules\Notifications\Http\Controllers\NotificationsController;
+
+Broadcast::routes(['middleware' => ['auth:admin']]);
 
 // Admin notification routes
 Route::middleware(['auth:admin'])->prefix('api/v1/admin')->group(function () {
