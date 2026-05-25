@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
+use Laravel\Pennant\Feature;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -30,7 +31,8 @@ class AppServiceProvider extends ServiceProvider
             //
         }
 
-        // Register Activity Log Listener (Laravel 11 tự động discovery nếu để trong App/Listeners)
-        // \Illuminate\Support\Facades\Event::subscribe(\App\Listeners\LogActivityListener::class);
+        Feature::define('ai-quiz', true);
+        Feature::define('hls-transcoding', true);
+        Feature::define('payout-requests', true);
     }
 }

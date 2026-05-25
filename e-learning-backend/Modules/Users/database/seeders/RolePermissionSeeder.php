@@ -57,6 +57,8 @@ class RolePermissionSeeder extends Seeder
             'dashboard.view',
             // System logs
             'system.logs.view', 'system.logs.delete',
+            // Feature flags (super-admin only — assigned via Gate::before)
+            'feature_flags.view', 'feature_flags.update',
         ];
 
         foreach ($permissions as $permission) {
