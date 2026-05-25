@@ -1,6 +1,7 @@
 <?php
 
 use App\Providers\AppServiceProvider;
+use App\Providers\HorizonServiceProvider;
 use Modules\Auth\Providers\AuthServiceProvider;
 use Modules\Categories\Providers\CategoriesServiceProvider;
 use Modules\Coupons\Providers\CouponsServiceProvider;
@@ -17,10 +18,11 @@ use Modules\Users\Providers\UsersServiceProvider;
 
 return [
     AppServiceProvider::class,
+    HorizonServiceProvider::class,
     AuthServiceProvider::class,
     CategoriesServiceProvider::class,
-    CourseServiceProvider::class,
     CouponsServiceProvider::class,
+    CourseServiceProvider::class,
     DashboardServiceProvider::class,
     LessonsServiceProvider::class,
     PaymentServiceProvider::class,
