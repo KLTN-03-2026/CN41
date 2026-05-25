@@ -44,6 +44,8 @@
 | **MySQL 8.0** | Cơ sở dữ liệu quan hệ |
 | **Laravel Sanctum** | Xác thực API token (hai guard riêng: `admin` / `api`) |
 | **Laravel Reverb** | WebSocket server tự host (Pusher protocol) — thông báo real-time |
+| **Laravel Horizon** | Dashboard giám sát queue — 3 supervisor (`default`, `ai`, `hls`); truy cập tại `/horizon` |
+| **Redis** | Backend cho queue driver (`predis/predis`) — thay thế database queue |
 | **Spatie Laravel Permission** | Quản lý phân quyền theo vai trò (RBAC) |
 
 ### Tích hợp & Dịch vụ
@@ -65,6 +67,7 @@
 - Composer >= 2.x
 - Node.js >= 18.x & NPM
 - MySQL >= 8.0
+- Redis >= 7.0 (WSL Ubuntu: `sudo apt-get install redis-server`)
 - Git
 - `pdftotext` (poppler-utils) — tùy chọn, cải thiện độ chính xác trích xuất PDF cho AI Quiz
 
@@ -118,14 +121,14 @@ php artisan storage:link
 
 **8. Khởi chạy ứng dụng**
 ```bash
-# Terminal 1 — API server
+# Terminal 1 — Redis (một lần mỗi phiên WSL)
+sudo service redis-server start
+
+# Terminal 2 — Horizon: queue workers + dashboard (thay thế queue:work)
+php artisan horizon
+
+# Terminal 3 — API server
 php artisan serve
-
-# Terminal 2 — Queue worker: xử lý email/payment
-php artisan queue:work --queue=default --tries=3
-
-# Terminal 3 — Queue worker: AI quiz generation (bắt buộc khi dùng tính năng AI)
-php artisan queue:work --queue=ai --timeout=130 --tries=1
 
 # Terminal 4 — Reverb WebSocket server (bắt buộc để nhận thông báo real-time)
 php artisan reverb:start
@@ -136,8 +139,11 @@ php artisan schedule:work
 
 > Truy cập API: `http://localhost:8000`
 > WebSocket: `ws://localhost:8080`
+> **Horizon dashboard: `http://localhost:8000/horizon`** (cần đăng nhập admin trước)
 >
-> 💡 Trên Windows/WSL: chạy `./start.sh` từ thư mục gốc để mở tất cả 6 tiến trình cùng lúc.
+> ⚠️ **Redis phải chạy trước khi khởi động Horizon.** Kiểm tra bằng `redis-cli ping` — phải trả về `PONG`.
+>
+> 💡 Trên Windows/WSL: chạy `./start.sh` từ thư mục gốc để mở tất cả 5 tiến trình cùng lúc.
 
 **Cấu hình `.env` cần thiết:**
 ```env

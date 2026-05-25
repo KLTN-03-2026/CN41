@@ -62,6 +62,8 @@ e-learning/
 | **MySQL 8.0** | Cơ sở dữ liệu quan hệ |
 | **Laravel Sanctum** | Xác thực API token (hai guard: admin / api) |
 | **Laravel Reverb** | WebSocket server tự host — thông báo real-time |
+| **Laravel Horizon** | Dashboard giám sát và quản lý queue (Redis-backed) |
+| **Redis** | Backend cho queue driver — thay thế database queue |
 | **Spatie Laravel Permission** | Quản lý phân quyền theo vai trò (RBAC) |
 
 ### Frontend (`e-learning-frontend/`) — [Xem chi tiết](./e-learning-frontend/README.md)
@@ -97,6 +99,7 @@ e-learning/
 - PHP >= 8.2 + Composer >= 2.x
 - Node.js >= 18.x + NPM
 - MySQL >= 8.0
+- Redis >= 7.0 (WSL Ubuntu: `sudo apt-get install redis-server`)
 - Git
 
 ### Backend
@@ -121,16 +124,19 @@ php artisan migrate --seed
 php artisan storage:link
 
 # Khởi chạy (mỗi lệnh chạy ở tab terminal riêng)
-php artisan serve                                                          # Tab 1 — API server
-php artisan queue:work --queue=default --tries=3                          # Tab 2 — Worker email/payment
-php artisan queue:work --queue=ai --timeout=130 --tries=1                 # Tab 3 — Worker AI quiz
+sudo service redis-server start                                            # Tab 1 — Redis (một lần mỗi phiên WSL)
+php artisan horizon                                                        # Tab 2 — Horizon (queue workers + dashboard)
+php artisan serve                                                          # Tab 3 — API server
 php artisan reverb:start                                                   # Tab 4 — WebSocket server (thông báo real-time)
 php artisan schedule:work                                                  # Tab 5 — Scheduler (cleanup)
 ```
 
 > Backend chạy tại: `http://localhost:8000` | WebSocket tại: `ws://localhost:8080`
+> Horizon dashboard tại: `http://localhost:8000/horizon` (đăng nhập admin trước)
 >
-> ⚠️ **Tab 3 (AI worker) là bắt buộc** khi dùng tính năng sinh câu hỏi AI — nếu không bật, job sẽ nằm mãi ở trạng thái `pending`.
+> ⚠️ **Tab 1 (Redis) là bắt buộc** — Horizon không hoạt động nếu Redis chưa chạy.
+>
+> ⚠️ **Tab 2 (Horizon) thay thế hoàn toàn `queue:work`** — quản lý tất cả các queue (`default`, `ai`, `hls`) với dashboard giám sát real-time.
 >
 > ⚠️ **Tab 4 (Reverb) là bắt buộc** để nhận thông báo real-time — Admin và Giảng viên sẽ không nhận được push notification nếu không khởi chạy.
 
@@ -169,14 +175,14 @@ npm run dev
 
 ### Backend
 ```bash
+sudo service redis-server start                                            # Khởi chạy Redis (một lần mỗi phiên WSL)
 php artisan serve                                                          # Khởi chạy API server
-php artisan queue:work --queue=default --tries=3                          # Worker email/payment
-php artisan queue:work --queue=ai --timeout=130 --tries=1                 # Worker AI quiz generation
+php artisan horizon                                                        # Horizon — queue workers + dashboard (thay thế queue:work)
 php artisan reverb:start                                                   # WebSocket server (real-time notifications)
 php artisan schedule:work                                                  # Scheduler (cleanup jobs/files)
 php artisan module:migrate Notifications                                   # Migrate module thông báo
 php artisan migrate --seed                                                 # Migrate toàn bộ + seed
-php artisan test                                                           # Chạy feature tests (225 cases)
+php artisan test                                                           # Chạy feature tests (229 cases)
 ```
 
 > 💡 **Shortcut:** Chạy `./start.sh` (Linux/macOS/WSL) từ thư mục gốc để mở tất cả 6 tiến trình cùng lúc trong các cửa sổ terminal riêng.
