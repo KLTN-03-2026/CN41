@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Laravel\Pennant\Feature;
 use Maatwebsite\Excel\Facades\Excel;
 use Modules\Commission\Exports\PayoutsExport;
 use Modules\Commission\Http\Requests\ExportPayoutsRequest;
@@ -52,6 +53,10 @@ class PayoutController extends Controller
 
     public function approve(Request $request, int $id): JsonResponse
     {
+        if (! Feature::active('payout-requests')) {
+            return $this->error('Tính năng rút tiền tạm thời bị khóa.', 503);
+        }
+
         $payout = TeacherPayout::findOrFail($id);
 
         if ($payout->status !== 'pending') {
@@ -75,6 +80,10 @@ class PayoutController extends Controller
 
     public function reject(Request $request, int $id): JsonResponse
     {
+        if (! Feature::active('payout-requests')) {
+            return $this->error('Tính năng rút tiền tạm thời bị khóa.', 503);
+        }
+
         $payout = TeacherPayout::findOrFail($id);
 
         if (! in_array($payout->status, ['pending', 'approved'])) {
@@ -98,6 +107,10 @@ class PayoutController extends Controller
 
     public function markPaid(int $id): JsonResponse
     {
+        if (! Feature::active('payout-requests')) {
+            return $this->error('Tính năng rút tiền tạm thời bị khóa.', 503);
+        }
+
         $payout = TeacherPayout::findOrFail($id);
 
         if ($payout->status !== 'approved') {

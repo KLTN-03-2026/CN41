@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Laravel\Pennant\Feature;
 use Modules\Upload\Jobs\TranscodeToHlsJob;
 use Modules\Upload\Models\MediaFile;
 
@@ -36,7 +37,7 @@ class UploadService
             'uploaded_by' => $uploadedBy,
         ], $metadata));
 
-        if (in_array($media->disk, ['local', 'public'])) {
+        if (in_array($media->disk, ['local', 'public']) && Feature::active('hls-transcoding')) {
             TranscodeToHlsJob::dispatch($media->id);
         }
 

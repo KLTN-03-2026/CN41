@@ -8,6 +8,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Laravel\Pennant\Feature;
 use Modules\Quiz\Http\Requests\StoreQuizRequest;
 use Modules\Quiz\Http\Requests\UpdateQuizRequest;
 use Modules\Quiz\Http\Resources\QuizQuestionResource;
@@ -75,6 +76,10 @@ class AdminQuizController extends Controller
 
     public function generate(Request $request, int $id): JsonResponse
     {
+        if (! Feature::active('ai-quiz')) {
+            return $this->error('Tính năng AI Quiz tạm thời ngừng hoạt động.', 503);
+        }
+
         try {
             $quiz = $this->repository->findOrFail($id);
             $quiz->load('lesson');
