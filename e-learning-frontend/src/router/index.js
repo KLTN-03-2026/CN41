@@ -57,6 +57,12 @@ const router = createRouter({
           component: () => import('@/views/admin/CommissionSettingsPage.vue'),
           meta: { requiresAuth: true, guard: 'admin' },
         },
+        {
+          path: 'feature-flags',
+          name: 'admin.feature-flags',
+          component: () => import('@/views/admin/FeatureFlagsPage.vue'),
+          meta: { requiresAuth: true, guard: 'admin' },
+        },
       ],
     },
 

@@ -162,6 +162,7 @@ import {
   TaskIcon,
   BarChartIcon,
   SettingsIcon,
+  FlagIcon,
 } from '@/components/icons'
 import { useSidebar } from '@/composables/useSidebar'
 import { useAdminAuthStore } from '@/stores/adminAuth.store'
@@ -261,6 +262,12 @@ const rawMenuGroups: MenuGroup[] = [
   {
     title: 'Hệ thống',
     items: [
+      {
+        icon: FlagIcon,
+        name: 'Tính năng hệ thống',
+        path: '/admin/feature-flags',
+        permission: 'feature_flags.view',
+      },
       {
         icon: PieChartIcon,
         name: 'Phân quyền',
