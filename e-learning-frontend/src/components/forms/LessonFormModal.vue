@@ -152,6 +152,19 @@
             <p v-if="errors.content" class="error-msg mt-1">{{ errors.content }}</p>
             <p v-if="errors.video_id" class="error-msg mt-1">{{ errors.video_id }}</p>
             <p v-if="errors.document_id" class="error-msg mt-1">{{ errors.document_id }}</p>
+            <p
+              v-if="localForm.type === 'video' && hlsStatus !== 'idle'"
+              class="mt-2 text-xs font-medium"
+              :class="{
+                'text-blue-500': hlsStatus === 'processing',
+                'text-green-500': hlsStatus === 'ready',
+                'text-red-500': hlsStatus === 'failed',
+              }"
+            >
+              <span v-if="hlsStatus === 'processing'">Đang xử lý HLS...</span>
+              <span v-else-if="hlsStatus === 'ready'">HLS hoàn thành</span>
+              <span v-else-if="hlsStatus === 'failed'">Lỗi transcode HLS</span>
+            </p>
           </div>
 
           <!-- Thời lượng (nếu là video) -->
@@ -231,9 +244,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, onUnmounted } from 'vue'
 import { useToast } from 'vue-toastification'
 import { uploadService } from '@/services/upload.service'
+import { useHlsChannel } from '@/composables/useHlsChannel'
 
 const props = defineProps<{
   show: boolean
@@ -262,6 +276,7 @@ const emit = defineEmits<{
 }>()
 
 const toast = useToast()
+const { hlsStatus, subscribeHls, unsubscribeHls } = useHlsChannel()
 
 // Local state to avoid mutating props directly
 const localForm = ref({ ...props.form })
@@ -337,7 +352,8 @@ async function uploadLessonFile(file: File) {
     }
 
     let url = res.data.data.url
-    localForm.value.media_id = res.data.data.id
+    const mediaId = res.data.data.id
+    localForm.value.media_id = mediaId
     try {
       const parsed = new URL(url)
       if (parsed.origin !== window.location.origin) {
@@ -348,7 +364,9 @@ async function uploadLessonFile(file: File) {
     }
 
     localForm.value.content = url
-    toast.success('Tải lên thành công')
+    if (localForm.value.type === 'video') {
+      subscribeHls(mediaId)
+    }
     toast.success('Tải lên thành công')
   } catch (err: unknown) {
     const axiosError = err as { response?: { data?: { message?: string } } }
@@ -360,6 +378,12 @@ async function uploadLessonFile(file: File) {
     }, 1000)
   }
 }
+
+onUnmounted(() => {
+  if (localForm.value.media_id) {
+    unsubscribeHls(localForm.value.media_id)
+  }
+})
 
 function handleSubmit() {
   emit('submit', localForm.value)

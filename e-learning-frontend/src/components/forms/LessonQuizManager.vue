@@ -268,9 +268,11 @@ import { ref, onMounted } from 'vue'
 import { useToast } from 'vue-toastification'
 import { quizService } from '@/services/quiz.service'
 import type { QuizQuestion, ChapterPdf } from '@/services/quiz.service'
+import { useQuizJobChannel } from '@/composables/useQuizJobChannel'
 
 const props = defineProps<{ lessonId: number }>()
 const toast = useToast()
+const { waitForJob } = useQuizJobChannel()
 
 const questions = ref<QuizQuestion[]>([])
 const showGeneratePanel = ref(false)
@@ -344,7 +346,10 @@ async function doGenerate() {
     const res = await quizService.lessonQuizGenerate(props.lessonId, formData)
     const jobId = res.data.data.job_id
     generatingStep.value = 'AI đang sinh câu hỏi...'
-    await pollJobStatus(jobId)
+    const result = await waitForJob(jobId)
+    questions.value = result.questions as QuizQuestion[]
+    showGeneratePanel.value = false
+    toast.success(`Đã sinh ${result.questions?.length ?? 0} câu hỏi thành công!`)
   } catch (err) {
     const e = err as {
       response?: { data?: { message?: string; errors?: Record<string, string[]> } }
@@ -361,30 +366,6 @@ async function doGenerate() {
     generating.value = false
     generatingStep.value = ''
   }
-}
-
-async function pollJobStatus(jobId: number): Promise<void> {
-  const MAX_POLLS = 60
-  const INTERVAL_MS = 2000
-
-  for (let i = 0; i < MAX_POLLS; i++) {
-    await new Promise((r) => setTimeout(r, INTERVAL_MS))
-
-    const res = await quizService.lessonQuizJobStatus(jobId)
-    const payload = res.data.data
-
-    if (payload.status === 'done') {
-      questions.value = payload.questions
-      showGeneratePanel.value = false
-      toast.success(`Đã sinh ${payload.questions.length} câu hỏi thành công!`)
-      return
-    }
-
-    if (payload.status === 'failed') {
-      throw new Error(res.data.message || 'Sinh câu hỏi thất bại')
-    }
-  }
-  throw new Error('Hết thời gian chờ. Vui lòng thử lại.')
 }
 
 async function saveQuestion(q: QuizQuestion) {
