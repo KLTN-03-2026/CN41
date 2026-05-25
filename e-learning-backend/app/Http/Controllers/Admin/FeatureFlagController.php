@@ -46,11 +46,7 @@ class FeatureFlagController extends Controller
         ]);
 
         if (! array_key_exists($flag, self::FLAGS)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Flag không hợp lệ.',
-                'errors' => ['flag' => ['Flag không tồn tại trong hệ thống.']],
-            ], 422);
+            return $this->error('Flag không hợp lệ.', 422);
         }
 
         if ($request->boolean('active')) {

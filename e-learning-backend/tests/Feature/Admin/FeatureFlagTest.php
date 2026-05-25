@@ -61,7 +61,8 @@ class FeatureFlagTest extends TestCase
 
         $response = $this->patchJson('/api/v1/admin/feature-flags/ai-quiz', ['active' => true]);
 
-        $response->assertStatus(200);
+        $response->assertStatus(200)
+            ->assertJsonPath('success', true);
         $this->assertTrue(Feature::active('ai-quiz'));
     }
 
