@@ -48,12 +48,15 @@ class AuthController extends Controller
         // Dispatch Event cho Activity Log
         event(new AdminLoggedIn($user, $request->ip(), $request->userAgent() ?? 'Unknown'));
 
+        $user->load('teacher');
+
         return $this->success([
             'token' => $token,
             'user' => [
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
+                'avatar' => $user->teacher?->image ? asset('storage/'.$user->teacher->image) : ($user->avatar ? asset('storage/'.$user->avatar) : null),
                 'roles' => $user->getRoleNames(),
                 'permissions' => $user->getAllPermissions()->pluck('name'),
             ],
@@ -87,6 +90,7 @@ class AuthController extends Controller
             'id' => $user->id,
             'name' => $user->name,
             'email' => $user->email,
+            'avatar' => $user->avatar ? asset('storage/'.$user->avatar) : null,
             'roles' => $user->getRoleNames(),
             'permissions' => $user->getAllPermissions()->pluck('name'),
             'created_at' => $user->created_at,
@@ -95,6 +99,9 @@ class AuthController extends Controller
         // Expose teacher ID so the frontend can subscribe to teacher broadcast channel
         if ($user->teacher) {
             $data['teacher_id'] = $user->teacher->id;
+            if ($user->teacher->image) {
+                $data['avatar'] = asset('storage/'.$user->teacher->image);
+            }
         }
 
         return $this->success($data);

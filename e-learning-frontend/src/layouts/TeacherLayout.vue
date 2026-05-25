@@ -42,7 +42,14 @@
       <!-- User info + logout -->
       <div class="p-4 border-t border-gray-200 dark:border-gray-700">
         <div class="flex items-center gap-3 mb-3 px-1">
+          <img
+            v-if="userAvatar"
+            :src="userAvatar"
+            :alt="userName"
+            class="w-8 h-8 rounded-full object-cover flex-shrink-0"
+          />
           <div
+            v-else
             class="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-700 dark:text-blue-300 text-sm font-bold flex-shrink-0"
           >
             {{ userInitial }}
@@ -107,6 +114,7 @@ const menuItems = [
 const isActive = (path: string) => route.path === path || route.path.startsWith(path + '/')
 const userName = computed(() => adminStore.user?.name || 'Giảng viên')
 const userInitial = computed(() => userName.value.charAt(0).toUpperCase())
+const userAvatar = computed(() => adminStore.user?.avatar || null)
 
 async function handleLogout() {
   await adminStore.logout()

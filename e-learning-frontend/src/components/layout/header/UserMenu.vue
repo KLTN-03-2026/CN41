@@ -5,7 +5,14 @@
       @click.prevent="toggleDropdown"
     >
       <span class="mr-3 overflow-hidden rounded-full h-11 w-11">
+        <img
+          v-if="userAvatar"
+          :src="userAvatar"
+          :alt="userName"
+          class="w-full h-full object-cover"
+        />
         <div
+          v-else
           class="h-11 w-11 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm"
         >
           {{ userInitial }}
@@ -77,6 +84,7 @@ const dropdownRef = ref<HTMLElement | null>(null)
 const userName = computed(() => adminStore.user?.name || 'Administrator')
 const userEmail = computed(() => adminStore.user?.email || '')
 const userInitial = computed(() => userName.value.charAt(0).toUpperCase())
+const userAvatar = computed(() => adminStore.user?.avatar || null)
 
 const menuItems = []
 
